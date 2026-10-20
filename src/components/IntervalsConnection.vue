@@ -33,14 +33,25 @@ async function connect() {
     apiKey.value = ''
     editing.value = false
   } catch (error) {
-    errorMessage.value =
-      error instanceof ApiError && error.status === 422
-        ? 'intervals.icu hat den Schlüssel oder die Athleten-ID abgelehnt. Bitte prüfe beides.'
-        : error instanceof ApiError && error.status === 400
-          ? 'Die Athleten-ID sieht nicht richtig aus (Beispiel: i12345).'
-          : 'intervals.icu ist gerade nicht erreichbar. Bitte versuch es später nochmal.'
+    errorMessage.value = connectErrorMessage(error)
   } finally {
     busy.value = false
+  }
+}
+
+function connectErrorMessage(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'Unerwarteter Fehler. Bitte versuch es nochmal.'
+  switch (error.status) {
+    case 422:
+      return 'intervals.icu hat den Schlüssel oder die Athleten-ID abgelehnt. Bitte prüfe beides.'
+    case 400:
+      return 'Die Athleten-ID sieht nicht richtig aus (Beispiel: i12345).'
+    case 502:
+      return 'intervals.icu ist gerade nicht erreichbar. Bitte versuch es später nochmal.'
+    case 0:
+      return 'Der quaelmich-Server antwortet gerade nicht. Bitte versuch es gleich nochmal.'
+    default:
+      return `Verbinden hat nicht geklappt (Fehler ${error.status}). Bitte versuch es später nochmal.`
   }
 }
 
