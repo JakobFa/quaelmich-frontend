@@ -2,13 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import {
-  getAthlete,
-  getPlannedWorkout,
-  getStoredAthleteId,
-  updateProgress,
-  plannedWorkoutFitUrl,
-} from '../api'
+import { downloadPlannedWorkoutFit, getMyAthlete, getPlannedWorkout, updateProgress } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
@@ -23,6 +17,21 @@ const loading = ref(true)
 const failed = ref(false)
 const saving = ref(false)
 const saveError = ref(false)
+const downloading = ref(false)
+const downloadError = ref(false)
+
+async function download() {
+  if (!planned.value) return
+  downloading.value = true
+  downloadError.value = false
+  try {
+    await downloadPlannedWorkoutFit(planned.value.id)
+  } catch {
+    downloadError.value = true
+  } finally {
+    downloading.value = false
+  }
+}
 
 const ratingLabels: Record<number, string> = {
   1: 'ganz locker',
@@ -43,10 +52,7 @@ const ratingHint = computed(() => {
 onMounted(async () => {
   try {
     planned.value = await getPlannedWorkout(Number(route.params.id))
-    const athleteId = getStoredAthleteId()
-    if (athleteId) {
-      ftp.value = (await getAthlete(athleteId)).ftp
-    }
+    ftp.value = (await getMyAthlete())?.ftp ?? null
   } catch {
     failed.value = true
   } finally {
@@ -157,7 +163,10 @@ function formatDate(iso: string) {
       </div>
 
       <div class="download">
-        <a :href="plannedWorkoutFitUrl(planned.id)" class="button" download>.fit herunterladen</a>
+        <button type="button" class="button" :disabled="downloading" @click="download">
+          {{ downloading ? 'Lädt …' : '.fit herunterladen' }}
+        </button>
+        <p v-if="downloadError" class="error" role="alert">Download hat nicht geklappt.</p>
         <p>
           Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
           rechnet mit deiner dort eingestellten FTP in Watt um.

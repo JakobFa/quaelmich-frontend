@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { getAthlete, getStoredAthleteId } from '../api'
+import { getMyAthlete } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import { levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
 
@@ -9,13 +9,10 @@ const athlete = ref<Athlete | null>(null)
 const loading = ref(true)
 
 onMounted(async () => {
-  const id = getStoredAthleteId()
-  if (id) {
-    try {
-      athlete.value = await getAthlete(id)
-    } catch {
-      athlete.value = null
-    }
+  try {
+    athlete.value = await getMyAthlete()
+  } catch {
+    athlete.value = null
   }
   loading.value = false
 })

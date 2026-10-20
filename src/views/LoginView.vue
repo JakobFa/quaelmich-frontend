@@ -1,0 +1,121 @@
+<script setup lang="ts">
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+
+import { ApiError, login, register } from '../api'
+
+const route = useRoute()
+const router = useRouter()
+
+const mode = ref<'login' | 'register'>(route.query.mode === 'register' ? 'register' : 'login')
+const email = ref('')
+const password = ref('')
+const submitting = ref(false)
+const errorMessage = ref('')
+
+const isRegister = computed(() => mode.value === 'register')
+
+function switchMode() {
+  mode.value = isRegister.value ? 'login' : 'register'
+  errorMessage.value = ''
+}
+
+function messageFor(error: unknown): string {
+  if (!(error instanceof ApiError)) return 'Keine Verbindung zum Server. Bitte versuch es nochmal.'
+  if (error.status === 401) return 'E-Mail oder Passwort stimmt nicht.'
+  if (error.status === 409) return 'Mit dieser E-Mail gibt es schon ein Konto – melde dich an.'
+  if (error.status === 400)
+    return 'Bitte gib eine gültige E-Mail und ein Passwort mit mindestens 8 Zeichen ein.'
+  return 'Das hat nicht geklappt. Bitte versuch es nochmal.'
+}
+
+async function submit() {
+  submitting.value = true
+  errorMessage.value = ''
+  try {
+    if (isRegister.value) {
+      await register(email.value, password.value)
+    } else {
+      await login(email.value, password.value)
+    }
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : null
+    router.push(redirect ?? (isRegister.value ? '/onboarding' : '/plan'))
+  } catch (error) {
+    errorMessage.value = messageFor(error)
+  } finally {
+    submitting.value = false
+  }
+}
+</script>
+
+<template>
+  <section class="login">
+    <p class="kicker">// {{ isRegister ? 'Konto erstellen' : 'Anmelden' }}</p>
+
+    <form class="panel" @submit.prevent="submit">
+      <h2 class="panel-title">{{ isRegister ? 'Neu bei quaelmich?' : 'Willkommen zurück' }}</h2>
+
+      <label class="field">
+        <span>E-Mail</span>
+        <input v-model.trim="email" type="email" autocomplete="email" required />
+      </label>
+
+      <label class="field">
+        <span>Passwort{{ isRegister ? ' (mind. 8 Zeichen)' : '' }}</span>
+        <input
+          v-model="password"
+          type="password"
+          :autocomplete="isRegister ? 'new-password' : 'current-password'"
+          :minlength="isRegister ? 8 : undefined"
+          required
+        />
+      </label>
+
+      <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
+
+      <div class="actions">
+        <button type="submit" class="button" :disabled="submitting">
+          {{ submitting ? 'Einen Moment …' : isRegister ? 'Konto erstellen' : 'Anmelden' }}
+        </button>
+        <button type="button" class="link" @click="switchMode">
+          {{ isRegister ? 'Schon ein Konto? Anmelden' : 'Noch kein Konto? Registrieren' }}
+        </button>
+      </div>
+    </form>
+  </section>
+</template>
+
+<style scoped>
+.login {
+  max-width: 440px;
+}
+
+.panel {
+  margin-top: 12px;
+}
+
+.error {
+  margin: 0 0 16px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-hot);
+}
+
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-lilac);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+</style>

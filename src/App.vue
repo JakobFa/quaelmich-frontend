@@ -1,5 +1,15 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
+
+import { auth, endSession } from './auth'
 import logoUrl from './assets/logo.png'
+
+const router = useRouter()
+
+function logout() {
+  endSession()
+  router.push('/')
+}
 </script>
 
 <template>
@@ -12,9 +22,19 @@ import logoUrl from './assets/logo.png'
     </div>
     <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— quäl dich.</span></p>
     <nav class="nav">
-      <RouterLink to="/plan">Plan</RouterLink>
-      <RouterLink to="/workouts">Workouts</RouterLink>
-      <RouterLink to="/profil">Profil</RouterLink>
+      <template v-if="auth.isLoggedIn.value">
+        <RouterLink to="/plan">Plan</RouterLink>
+        <RouterLink to="/workouts">Workouts</RouterLink>
+        <RouterLink to="/profil">Profil</RouterLink>
+        <span class="spacer"></span>
+        <span class="user" :title="auth.email.value ?? ''">{{ auth.email.value }}</span>
+        <button type="button" class="logout" @click="logout">Abmelden</button>
+      </template>
+      <template v-else>
+        <RouterLink to="/workouts">Workouts</RouterLink>
+        <span class="spacer"></span>
+        <RouterLink to="/login">Anmelden</RouterLink>
+      </template>
     </nav>
   </header>
 
@@ -91,7 +111,9 @@ import logoUrl from './assets/logo.png'
 
 .nav {
   display: flex;
-  gap: 24px;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 8px 24px;
   max-width: 800px;
   margin: 20px auto 0;
   padding: 0 16px;
@@ -107,6 +129,37 @@ import logoUrl from './assets/logo.png'
   color: var(--color-text-muted);
   text-decoration: none;
   border-bottom: 3px solid transparent;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.user {
+  max-width: 180px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+}
+
+.logout {
+  padding: 0 0 4px;
+  border: 0;
+  border-bottom: 3px solid transparent;
+  background: none;
+  color: var(--color-text-muted);
+  font: inherit;
+  text-transform: inherit;
+  letter-spacing: inherit;
+  cursor: pointer;
+}
+
+.logout:hover {
+  color: var(--color-hot);
 }
 
 .nav a:hover {

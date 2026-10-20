@@ -1,38 +1,31 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import {
-  generatePlan,
-  getPlan,
-  getStoredAthleteId,
-  isIntervalsAvailable,
-  syncToIntervals,
-} from '../api'
+import { generatePlan, getMyAthlete, getPlan, isIntervalsAvailable, syncToIntervals } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
 import { phaseLabels, type TrainingPlan } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
-const athleteId = getStoredAthleteId()
 const plan = ref<TrainingPlan | null>(null)
+const hasProfile = ref(false)
 const loading = ref(true)
 const failed = ref(false)
 const generating = ref(false)
 
-// intervals.icu: Button nur zeigen, wenn das Backend den Sync für dieses Profil freigibt
+// intervals.icu: Button nur zeigen, wenn das Backend den Sync für diesen Nutzer freigibt
 const intervalsAvailable = ref(false)
 const syncing = ref(false)
 const syncMessage = ref('')
 const syncFailed = ref(false)
 
 async function sync() {
-  if (!athleteId) return
   syncing.value = true
   syncMessage.value = ''
   syncFailed.value = false
   try {
-    const result = await syncToIntervals(athleteId)
+    const result = await syncToIntervals()
     syncMessage.value =
       result.uploaded === 0
         ? 'In den nächsten 14 Tagen ist nichts geplant.'
@@ -57,14 +50,12 @@ const weeksUntilEvent = computed(() => {
 })
 
 async function load() {
-  if (!athleteId) {
-    loading.value = false
-    return
-  }
   loading.value = true
   failed.value = false
   try {
-    plan.value = await getPlan(athleteId)
+    plan.value = await getPlan()
+    // Ohne Plan: Gibt es wenigstens schon ein Profil? Dann reicht ein Klick auf "Plan erstellen"
+    hasProfile.value = plan.value !== null || (await getMyAthlete()) !== null
     weekIndex.value = weekIndexFor(weeks.value, today)
   } catch {
     failed.value = true
@@ -74,10 +65,9 @@ async function load() {
 }
 
 async function createPlan() {
-  if (!athleteId) return
   generating.value = true
   try {
-    plan.value = await generatePlan(athleteId)
+    plan.value = await generatePlan()
     weekIndex.value = weekIndexFor(weeks.value, today)
   } catch {
     failed.value = true
@@ -104,8 +94,8 @@ function formatDate(iso: string) {
 
 onMounted(async () => {
   await load()
-  if (athleteId && plan.value) {
-    intervalsAvailable.value = await isIntervalsAvailable(athleteId)
+  if (plan.value) {
+    intervalsAvailable.value = await isIntervalsAvailable()
   }
 })
 </script>
@@ -114,19 +104,19 @@ onMounted(async () => {
   <section>
     <p class="kicker">// Dein Plan</p>
 
-    <div v-if="!athleteId" class="panel empty">
+    <LoadingNotice v-if="loading" label="Lädt deinen Plan …" />
+
+    <div v-else-if="failed" class="panel empty" role="alert">
+      <p class="error">Der Plan konnte nicht geladen werden.</p>
+      <button type="button" class="button button-ghost" @click="load">Nochmal versuchen</button>
+    </div>
+
+    <div v-else-if="!plan && !hasProfile" class="panel empty">
       <h2 class="panel-title">Noch kein Plan</h2>
       <p class="hint">
         Leg zuerst dein Profil an – daraus erstellt quaelmich deinen Trainingsplan.
       </p>
       <RouterLink to="/onboarding" class="button">Plan erstellen</RouterLink>
-    </div>
-
-    <LoadingNotice v-else-if="loading" label="Lädt deinen Plan …" />
-
-    <div v-else-if="failed" class="panel empty" role="alert">
-      <p class="error">Der Plan konnte nicht geladen werden.</p>
-      <button type="button" class="button button-ghost" @click="load">Nochmal versuchen</button>
     </div>
 
     <div v-else-if="!plan" class="panel empty">

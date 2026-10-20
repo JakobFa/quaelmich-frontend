@@ -2,14 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
-import {
-  createAthlete,
-  generatePlan,
-  getAthlete,
-  getStoredAthleteId,
-  storeAthleteId,
-  updateAthlete,
-} from '../api'
+import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import { emptyAthlete, levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
 
 const router = useRouter()
@@ -18,7 +11,6 @@ const steps = ['Profil', 'Event', 'Verfügbarkeit']
 const currentStep = ref(0)
 
 const athlete = ref<Athlete>(emptyAthlete())
-const existingId = getStoredAthleteId()
 const saving = ref(false)
 const errorMessage = ref('')
 
@@ -26,12 +18,10 @@ const today = new Date().toISOString().slice(0, 10)
 
 // Wer schon ein Profil hat, sieht seine bisherigen Angaben und kann sie ändern
 onMounted(async () => {
-  if (existingId) {
-    try {
-      athlete.value = await getAthlete(existingId)
-    } catch {
-      // Profil existiert nicht mehr (z. B. Datenbank geleert) → neu anlegen
-    }
+  try {
+    athlete.value = (await getMyAthlete()) ?? emptyAthlete()
+  } catch {
+    // Backend nicht erreichbar – dann mit leerem Formular starten
   }
 })
 
@@ -44,12 +34,8 @@ async function next() {
   saving.value = true
   errorMessage.value = ''
   try {
-    const saved =
-      existingId && athlete.value.id
-        ? await updateAthlete(existingId, athlete.value)
-        : await createAthlete(athlete.value)
-    storeAthleteId(saved.id!)
-    await generatePlan(saved.id!)
+    await saveMyAthlete(athlete.value)
+    await generatePlan()
     router.push('/plan')
   } catch {
     errorMessage.value =

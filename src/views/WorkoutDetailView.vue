@@ -2,7 +2,8 @@
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getAthlete, getStoredAthleteId, getWorkout, workoutFitUrl } from '../api'
+import { getMyAthlete, getWorkout, workoutFitUrl } from '../api'
+import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
@@ -18,9 +19,9 @@ const failed = ref(false)
 onMounted(async () => {
   try {
     workout.value = await getWorkout(Number(route.params.id))
-    const athleteId = getStoredAthleteId()
-    if (athleteId) {
-      ftp.value = (await getAthlete(athleteId)).ftp
+    // Wattzahlen nur mit Login (dann ist die eigene FTP bekannt)
+    if (auth.isLoggedIn.value) {
+      ftp.value = (await getMyAthlete())?.ftp ?? null
     }
   } catch {
     failed.value = true

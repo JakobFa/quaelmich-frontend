@@ -1,3 +1,4 @@
+import { auth, endSession, startSession } from './auth'
 import type { Athlete } from './types/athlete'
 import type { PlannedWorkout, TrainingPlan } from './types/plan'
 import type { Workout } from './types/workout'
@@ -13,16 +14,65 @@ export class ApiError extends Error {
   }
 }
 
-async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  // Content-Type nur mitschicken, wenn es auch einen Body gibt: bei einfachen GETs
-  // spart das die zusätzliche CORS-Vorabfrage (OPTIONS) des Browsers.
-  const headers = options.body ? { 'Content-Type': 'application/json' } : undefined
+/** Wird aufgerufen, wenn das Backend den Login nicht (mehr) akzeptiert – z. B. Token abgelaufen. */
+let onUnauthorized: () => void = () => {}
+
+export function setUnauthorizedHandler(handler: () => void) {
+  onUnauthorized = handler
+}
+
+async function send(path: string, options: RequestInit = {}): Promise<Response> {
+  const headers: Record<string, string> = {}
+  // Content-Type nur mitschicken, wenn es auch einen Body gibt
+  if (options.body) headers['Content-Type'] = 'application/json'
+  if (auth.token.value) headers['Authorization'] = `Bearer ${auth.token.value}`
+
   const response = await fetch(baseUrl + path, { ...options, headers })
+  if (response.status === 401 && auth.token.value) {
+    endSession()
+    onUnauthorized()
+  }
   if (!response.ok) {
     throw new ApiError(response.status, `${options.method ?? 'GET'} ${path} fehlgeschlagen`)
   }
-  return response.json() as Promise<T>
+  return response
 }
+
+async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
+  return (await send(path, options)).json() as Promise<T>
+}
+
+/** Wie request, liefert aber null statt eines Fehlers, wenn es die Ressource (noch) nicht gibt. */
+async function requestOrNull<T>(path: string): Promise<T | null> {
+  try {
+    return await request<T>(path)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+
+// ---------- Login ----------
+
+type AuthResponse = { token: string; email: string }
+
+export async function login(email: string, password: string) {
+  const result = await request<AuthResponse>('/auth/login', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+  startSession(result.token, result.email)
+}
+
+export async function register(email: string, password: string) {
+  const result = await request<AuthResponse>('/auth/register', {
+    method: 'POST',
+    body: JSON.stringify({ email, password }),
+  })
+  startSession(result.token, result.email)
+}
+
+// ---------- Workout-Bibliothek (öffentlich) ----------
 
 export function getWorkouts() {
   return request<Workout[]>('/workouts')
@@ -32,30 +82,26 @@ export function getWorkout(id: number) {
   return request<Workout>(`/workouts/${id}`)
 }
 
-export function getAthlete(id: number) {
-  return request<Athlete>(`/athletes/${id}`)
+export function workoutFitUrl(workoutId: number) {
+  return `${baseUrl}/workouts/${workoutId}/fit`
 }
 
-export function createAthlete(athlete: Athlete) {
-  return request<Athlete>('/athletes', { method: 'POST', body: JSON.stringify(athlete) })
+// ---------- Eigenes Profil und Plan ----------
+
+export function getMyAthlete() {
+  return requestOrNull<Athlete>('/me/athlete')
 }
 
-export function updateAthlete(id: number, athlete: Athlete) {
-  return request<Athlete>(`/athletes/${id}`, { method: 'PUT', body: JSON.stringify(athlete) })
+export function saveMyAthlete(athlete: Athlete) {
+  return request<Athlete>('/me/athlete', { method: 'PUT', body: JSON.stringify(athlete) })
 }
 
-/** Liefert den Plan oder null, wenn für das Profil noch keiner erstellt wurde. */
-export async function getPlan(athleteId: number): Promise<TrainingPlan | null> {
-  try {
-    return await request<TrainingPlan>(`/athletes/${athleteId}/plan`)
-  } catch (error) {
-    if (error instanceof ApiError && error.status === 404) return null
-    throw error
-  }
+export function getPlan() {
+  return requestOrNull<TrainingPlan>('/me/plan')
 }
 
-export function generatePlan(athleteId: number) {
-  return request<TrainingPlan>(`/athletes/${athleteId}/plan`, { method: 'POST' })
+export function generatePlan() {
+  return request<TrainingPlan>('/me/plan', { method: 'POST' })
 }
 
 export function getPlannedWorkout(id: number) {
@@ -69,47 +115,35 @@ export function updateProgress(id: number, completed: boolean, rating: number | 
   })
 }
 
+/**
+ * Lädt die .fit-Datei eines geplanten Workouts herunter. Ein einfacher Link reicht hier nicht,
+ * weil der Download den Login-Token im Header braucht.
+ */
+export async function downloadPlannedWorkoutFit(id: number) {
+  const response = await send(`/planned-workouts/${id}/fit`)
+  const fileName =
+    /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ??
+    'workout.fit'
+  const url = URL.createObjectURL(await response.blob())
+  const link = document.createElement('a')
+  link.href = url
+  link.download = fileName
+  link.click()
+  URL.revokeObjectURL(url)
+}
+
+// ---------- intervals.icu ----------
+
 export type IntervalsSyncResult = { uploaded: number; from: string; to: string }
 
-export async function isIntervalsAvailable(athleteId: number): Promise<boolean> {
+export async function isIntervalsAvailable(): Promise<boolean> {
   try {
-    return (await request<{ available: boolean }>(`/athletes/${athleteId}/intervals`)).available
+    return (await request<{ available: boolean }>('/me/intervals')).available
   } catch {
     return false
   }
 }
 
-export function syncToIntervals(athleteId: number, days = 14) {
-  return request<IntervalsSyncResult>(`/athletes/${athleteId}/intervals/sync?days=${days}`, {
-    method: 'POST',
-  })
-}
-
-/** Download-Adressen für .fit-Dateien – direkt als Link nutzbar, der Browser lädt die Datei herunter */
-export function workoutFitUrl(workoutId: number) {
-  return `${baseUrl}/workouts/${workoutId}/fit`
-}
-
-export function plannedWorkoutFitUrl(plannedWorkoutId: number) {
-  return `${baseUrl}/planned-workouts/${plannedWorkoutId}/fit`
-}
-
-// Ohne Login merkt sich der Browser, welches Profil zu ihm gehört.
-const ATHLETE_ID_KEY = 'quaelmich.athleteId'
-
-export function getStoredAthleteId(): number | null {
-  try {
-    const value = localStorage.getItem(ATHLETE_ID_KEY)
-    return value ? Number(value) : null
-  } catch {
-    return null
-  }
-}
-
-export function storeAthleteId(id: number) {
-  try {
-    localStorage.setItem(ATHLETE_ID_KEY, String(id))
-  } catch {
-    // z. B. im privaten Modus nicht verfügbar – dann gilt das Profil nur für diese Sitzung
-  }
+export function syncToIntervals(days = 14) {
+  return request<IntervalsSyncResult>(`/me/intervals/sync?days=${days}`, { method: 'POST' })
 }
