@@ -65,6 +65,8 @@ import heroUrl from '../assets/hero.jpg'
 .backdrop {
   position: absolute;
   z-index: -1;
+  /* reine Deko: Klicks gehen durch, z. B. auf die Navigation darüber */
+  pointer-events: none;
   top: -140px;
   bottom: -60px;
   right: -12%;
