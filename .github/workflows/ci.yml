@@ -1,0 +1,33 @@
+# Prüft und testet das Frontend – bei jedem Push und jedem Pull Request.
+name: Frontend CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Code auschecken
+        uses: actions/checkout@v4
+
+      - name: Node 26 einrichten (mit npm-Cache)
+        uses: actions/setup-node@v4
+        with:
+          node-version: 26
+          cache: npm
+
+      - name: Abhängigkeiten installieren
+        run: npm ci
+
+      - name: Linter
+        run: npx eslint . && npx oxlint .
+
+      - name: Unit-Tests
+        run: npm run test:unit -- --run
+
+      - name: TypeScript prüfen und bauen
+        run: npm run build
