@@ -21,13 +21,28 @@ export function setUnauthorizedHandler(handler: () => void) {
   onUnauthorized = handler
 }
 
+/** Länger als das Aufwachen des kostenlosen Render-Backends (bis ca. 1 Minute) */
+const TIMEOUT_MS = 90_000
+
+/** status 0 = keine Antwort (Server nicht erreichbar oder Zeitlimit überschritten) */
+export const NO_RESPONSE = 0
+
 async function send(path: string, options: RequestInit = {}): Promise<Response> {
   const headers: Record<string, string> = {}
   // Content-Type nur mitschicken, wenn es auch einen Body gibt
   if (options.body) headers['Content-Type'] = 'application/json'
   if (auth.token.value) headers['Authorization'] = `Bearer ${auth.token.value}`
 
-  const response = await fetch(baseUrl + path, { ...options, headers })
+  let response: Response
+  try {
+    response = await fetch(baseUrl + path, {
+      ...options,
+      headers,
+      signal: AbortSignal.timeout(TIMEOUT_MS),
+    })
+  } catch {
+    throw new ApiError(NO_RESPONSE, `${options.method ?? 'GET'} ${path}: keine Antwort`)
+  }
   if (response.status === 401 && auth.token.value) {
     endSession()
     onUnauthorized()

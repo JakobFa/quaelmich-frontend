@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onUnmounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ApiError, login, register } from '../api'
+import { ApiError, login, NO_RESPONSE, register } from '../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -13,6 +13,11 @@ const password = ref('')
 const submitting = ref(false)
 const errorMessage = ref('')
 
+// Hinweis, falls das kostenlose Backend erst aufwachen muss
+const slow = ref(false)
+let slowTimer: ReturnType<typeof setTimeout> | undefined
+onUnmounted(() => clearTimeout(slowTimer))
+
 const isRegister = computed(() => mode.value === 'register')
 
 function switchMode() {
@@ -21,7 +26,8 @@ function switchMode() {
 }
 
 function messageFor(error: unknown): string {
-  if (!(error instanceof ApiError)) return 'Keine Verbindung zum Server. Bitte versuch es nochmal.'
+  if (!(error instanceof ApiError) || error.status === NO_RESPONSE)
+    return 'Der Server antwortet gerade nicht. Bitte versuch es gleich nochmal.'
   if (error.status === 401) return 'E-Mail oder Passwort stimmt nicht.'
   if (error.status === 409) return 'Mit dieser E-Mail gibt es schon ein Konto – melde dich an.'
   if (error.status === 400)
@@ -32,6 +38,7 @@ function messageFor(error: unknown): string {
 async function submit() {
   submitting.value = true
   errorMessage.value = ''
+  slowTimer = setTimeout(() => (slow.value = true), 3000)
   try {
     if (isRegister.value) {
       await register(email.value, password.value)
@@ -43,6 +50,8 @@ async function submit() {
   } catch (error) {
     errorMessage.value = messageFor(error)
   } finally {
+    clearTimeout(slowTimer)
+    slow.value = false
     submitting.value = false
   }
 }
@@ -72,6 +81,9 @@ async function submit() {
       </label>
 
       <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
+      <p v-if="slow" class="slow" role="status">
+        Das Backend wacht gerade auf – das kann bis zu einer Minute dauern.
+      </p>
 
       <div class="actions">
         <button type="submit" class="button" :disabled="submitting">
@@ -99,6 +111,12 @@ async function submit() {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--color-hot);
+}
+
+.slow {
+  margin: 0 0 16px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 
 .actions {
