@@ -2,7 +2,13 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getAthlete, getPlannedWorkout, getStoredAthleteId, updateProgress } from '../api'
+import {
+  getAthlete,
+  getPlannedWorkout,
+  getStoredAthleteId,
+  updateProgress,
+  plannedWorkoutFitUrl,
+} from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
@@ -148,6 +154,14 @@ function formatDate(iso: string) {
         </fieldset>
 
         <p v-if="saveError" class="error" role="alert">Speichern hat nicht geklappt.</p>
+      </div>
+
+      <div class="download">
+        <a :href="plannedWorkoutFitUrl(planned.id)" class="button" download>.fit herunterladen</a>
+        <p>
+          Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
+          rechnet mit deiner dort eingestellten FTP in Watt um.
+        </p>
       </div>
 
       <div class="panel">
@@ -314,5 +328,21 @@ function formatDate(iso: string) {
 .dot.active:nth-child(n + 8) {
   border-color: var(--color-hot);
   background: var(--color-hot);
+}
+
+.download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-bottom: 16px;
+}
+
+.download p {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
 }
 </style>

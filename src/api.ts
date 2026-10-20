@@ -69,6 +69,15 @@ export function updateProgress(id: number, completed: boolean, rating: number | 
   })
 }
 
+/** Download-Adressen für .fit-Dateien – direkt als Link nutzbar, der Browser lädt die Datei herunter */
+export function workoutFitUrl(workoutId: number) {
+  return `${baseUrl}/workouts/${workoutId}/fit`
+}
+
+export function plannedWorkoutFitUrl(plannedWorkoutId: number) {
+  return `${baseUrl}/planned-workouts/${plannedWorkoutId}/fit`
+}
+
 // Ohne Login merkt sich der Browser, welches Profil zu ihm gehört.
 const ATHLETE_ID_KEY = 'quaelmich.athleteId'
 

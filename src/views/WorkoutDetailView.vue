@@ -2,7 +2,7 @@
 import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getAthlete, getStoredAthleteId, getWorkout } from '../api'
+import { getAthlete, getStoredAthleteId, getWorkout, workoutFitUrl } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
@@ -57,6 +57,14 @@ onMounted(async () => {
       </dl>
 
       <WorkoutProfile :steps="workout.steps" class="profile" />
+
+      <div class="download">
+        <a :href="workoutFitUrl(workout.id)" class="button" download>.fit herunterladen</a>
+        <p>
+          Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
+          rechnet mit deiner dort eingestellten FTP in Watt um.
+        </p>
+      </div>
 
       <div class="panel">
         <h3 class="panel-title">Abschnitte</h3>
@@ -141,6 +149,22 @@ onMounted(async () => {
 
 .hint {
   margin: 12px 0 0;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.download {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 20px;
+  margin-bottom: 16px;
+}
+
+.download p {
+  flex: 1;
+  min-width: 220px;
+  margin: 0;
   font-size: 0.85rem;
   color: var(--color-text-muted);
 }
