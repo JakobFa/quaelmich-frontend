@@ -6,6 +6,7 @@ import {
   connectIntervals,
   disconnectIntervals,
   getIntervalsStatus,
+  setIntervalsAutoSync,
   type IntervalsStatus,
 } from '../api'
 
@@ -60,12 +61,40 @@ async function disconnect() {
   errorMessage.value = ''
   try {
     await disconnectIntervals()
-    status.value = { connected: false, intervalsAthleteId: null, connectedAt: null }
+    status.value = {
+      connected: false,
+      intervalsAthleteId: null,
+      connectedAt: null,
+      autoSync: false,
+      lastSyncedAt: null,
+    }
   } catch {
     errorMessage.value = 'Trennen hat nicht geklappt.'
   } finally {
     busy.value = false
   }
+}
+
+async function toggleAutoSync() {
+  if (!status.value) return
+  busy.value = true
+  errorMessage.value = ''
+  try {
+    status.value = await setIntervalsAutoSync(!status.value.autoSync)
+  } catch {
+    errorMessage.value = 'Einstellung konnte nicht gespeichert werden.'
+  } finally {
+    busy.value = false
+  }
+}
+
+function formatDateTime(iso: string) {
+  return new Date(iso).toLocaleString('de-DE', {
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
 }
 
 function formatDate(iso: string) {
@@ -89,9 +118,24 @@ function formatDate(iso: string) {
         }}</strong>
         <span v-if="status.connectedAt"> seit {{ formatDate(status.connectedAt) }}</span>
       </p>
+      <label class="choice auto-sync">
+        <input
+          type="checkbox"
+          :checked="status.autoSync"
+          :disabled="busy"
+          @change="toggleAutoSync"
+        />
+        <span>
+          Automatisch synchronisieren
+          <small>nach „Plan erstellen“ und jede Nacht für die nächsten 14 Tage</small>
+        </span>
+      </label>
       <p class="hint">
-        Im Plan kannst du jetzt die Workouts der nächsten 14 Tage an intervals.icu senden. Von dort
-        gelangen sie – wenn du es in intervals.icu eingerichtet hast – zu Wahoo oder Garmin.
+        <template v-if="status.lastSyncedAt">
+          Zuletzt gesendet: {{ formatDateTime(status.lastSyncedAt) }} Uhr.
+        </template>
+        Von intervals.icu gelangen die Workouts – wenn du es dort eingerichtet hast – zu Wahoo oder
+        Garmin.
       </p>
       <div class="actions">
         <button type="button" class="button button-ghost" :disabled="busy" @click="editing = true">
@@ -158,6 +202,16 @@ function formatDate(iso: string) {
 
 .hint {
   margin: 0 0 16px;
+  color: var(--color-text-muted);
+}
+
+.auto-sync {
+  margin: 8px 0 12px;
+}
+
+.auto-sync small {
+  display: block;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 

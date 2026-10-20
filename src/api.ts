@@ -153,6 +153,8 @@ export type IntervalsStatus = {
   connected: boolean
   intervalsAthleteId: string | null
   connectedAt: string | null
+  autoSync: boolean
+  lastSyncedAt: string | null
 }
 
 export type IntervalsSyncResult = { uploaded: number; from: string; to: string }
@@ -166,6 +168,13 @@ export function connectIntervals(apiKey: string, athleteId: string) {
   return request<IntervalsStatus>('/me/intervals', {
     method: 'PUT',
     body: JSON.stringify({ apiKey, athleteId }),
+  })
+}
+
+export function setIntervalsAutoSync(autoSync: boolean) {
+  return request<IntervalsStatus>('/me/intervals/settings', {
+    method: 'PUT',
+    body: JSON.stringify({ autoSync }),
   })
 }
 
