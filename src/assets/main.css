@@ -1,0 +1,32 @@
+:root {
+  --color-ink: #141615;
+  --color-panel: #1f2422;
+  --color-panel-raised: #2a312e;
+  --color-lilac: #dcbaf7;
+  --color-lilac-dim: #9d82b8;
+  --color-plum: #561a44;
+  --color-hot: #ff5fb0;
+  --color-text: #f2edf6;
+  --color-text-muted: #98a29e;
+
+  --font-display: 'Archivo', system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+
+  --cut: 18px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: var(--font-display);
+  color: var(--color-text);
+  line-height: 1.45;
+  background-color: var(--color-ink);
+  /* Mesh wie auf den Trikot-Ärmeln */
+  background-image: radial-gradient(rgba(220, 186, 247, 0.07) 1px, transparent 1.4px);
+  background-size: 7px 7px;
+}

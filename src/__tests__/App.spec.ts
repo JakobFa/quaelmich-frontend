@@ -7,6 +7,6 @@ describe('App', () => {
   it('mounts renders properly', () => {
     vi.stubGlobal('fetch', vi.fn(() => Promise.resolve({ json: () => Promise.resolve([]) })))
     const wrapper = mount(App)
-    expect(wrapper.text()).toContain('quaelmich')
+    expect(wrapper.find('img.logo').attributes('alt')).toBe('quaelmich')
   })
 })
