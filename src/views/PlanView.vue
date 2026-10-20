@@ -1,7 +1,13 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { generatePlan, getPlan, getStoredAthleteId } from '../api'
+import {
+  generatePlan,
+  getPlan,
+  getStoredAthleteId,
+  isIntervalsAvailable,
+  syncToIntervals,
+} from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
@@ -13,6 +19,31 @@ const plan = ref<TrainingPlan | null>(null)
 const loading = ref(true)
 const failed = ref(false)
 const generating = ref(false)
+
+// intervals.icu: Button nur zeigen, wenn das Backend den Sync für dieses Profil freigibt
+const intervalsAvailable = ref(false)
+const syncing = ref(false)
+const syncMessage = ref('')
+const syncFailed = ref(false)
+
+async function sync() {
+  if (!athleteId) return
+  syncing.value = true
+  syncMessage.value = ''
+  syncFailed.value = false
+  try {
+    const result = await syncToIntervals(athleteId)
+    syncMessage.value =
+      result.uploaded === 0
+        ? 'In den nächsten 14 Tagen ist nichts geplant.'
+        : `${result.uploaded} Workouts an intervals.icu gesendet (bis ${formatDate(result.to)}).`
+  } catch {
+    syncFailed.value = true
+    syncMessage.value = 'Senden an intervals.icu hat nicht geklappt.'
+  } finally {
+    syncing.value = false
+  }
+}
 
 const today = toIsoDate(new Date())
 const weeks = computed(() => (plan.value ? buildWeeks(plan.value) : []))
@@ -71,7 +102,12 @@ function formatDate(iso: string) {
   })
 }
 
-onMounted(load)
+onMounted(async () => {
+  await load()
+  if (athleteId && plan.value) {
+    intervalsAvailable.value = await isIntervalsAvailable(athleteId)
+  }
+})
 </script>
 
 <template>
@@ -118,6 +154,13 @@ onMounted(load)
           <strong>{{ weeks.length }} Wochen</strong>
           <small>{{ plan.workouts.length }} Workouts</small>
         </div>
+      </div>
+
+      <div v-if="intervalsAvailable" class="sync">
+        <button type="button" class="button button-ghost" :disabled="syncing" @click="sync">
+          {{ syncing ? 'Sendet …' : 'Nächste 14 Tage an intervals.icu senden' }}
+        </button>
+        <p v-if="syncMessage" :class="{ error: syncFailed }" role="status">{{ syncMessage }}</p>
       </div>
 
       <!-- Wochen-Navigation -->
@@ -224,6 +267,25 @@ onMounted(load)
 
 .error {
   margin: 0 0 12px;
+  color: var(--color-hot);
+}
+
+.sync {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 16px;
+  margin: -12px 0 28px;
+}
+
+.sync p {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-lilac);
+}
+
+.sync p.error {
   color: var(--color-hot);
 }
 

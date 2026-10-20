@@ -69,6 +69,22 @@ export function updateProgress(id: number, completed: boolean, rating: number | 
   })
 }
 
+export type IntervalsSyncResult = { uploaded: number; from: string; to: string }
+
+export async function isIntervalsAvailable(athleteId: number): Promise<boolean> {
+  try {
+    return (await request<{ available: boolean }>(`/athletes/${athleteId}/intervals`)).available
+  } catch {
+    return false
+  }
+}
+
+export function syncToIntervals(athleteId: number, days = 14) {
+  return request<IntervalsSyncResult>(`/athletes/${athleteId}/intervals/sync?days=${days}`, {
+    method: 'POST',
+  })
+}
+
 /** Download-Adressen für .fit-Dateien – direkt als Link nutzbar, der Browser lädt die Datei herunter */
 export function workoutFitUrl(workoutId: number) {
   return `${baseUrl}/workouts/${workoutId}/fit`
