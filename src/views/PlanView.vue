@@ -10,6 +10,7 @@ import {
   syncToIntervals,
 } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import AssessmentBadge from '../components/AssessmentBadge.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
 import { phaseLabels, type TrainingPlan } from '../types/plan'
@@ -262,6 +263,9 @@ onMounted(async () => {
                 {{ workoutTypeLabels[planned.workout.type] }}
               </span>
               <h3 class="session-title">{{ planned.workout.title }}</h3>
+              <p v-if="planned.adjustment" class="adjusted">
+                ↻ angepasst – statt {{ planned.adjustment.originalTitle }}
+              </p>
             </div>
             <div class="session-duration">
               <strong>{{ formatDuration(planned.workout.durationInMinutes) }}</strong>
@@ -270,6 +274,11 @@ onMounted(async () => {
                 gefahren {{ formatDuration(planned.actual.durationMinutes)
                 }}<template v-if="planned.actual.tss"> · {{ planned.actual.tss }}</template>
               </span>
+              <AssessmentBadge
+                v-if="planned.actual?.assessment"
+                :assessment="planned.actual.assessment"
+                class="assessment"
+              />
             </div>
             <WorkoutProfile :steps="planned.workout.steps" class="profile" />
           </RouterLink>
@@ -528,6 +537,17 @@ onMounted(async () => {
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
+}
+
+.session-duration .assessment {
+  margin-top: 4px;
+}
+
+.adjusted {
+  margin: -4px 0 8px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-lilac);
 }
 
 .session:hover .session-title {

@@ -2,7 +2,14 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { downloadPlannedWorkoutFit, getMyAthlete, getPlannedWorkout, updateProgress } from '../api'
+import {
+  confirmActivity,
+  downloadPlannedWorkoutFit,
+  getMyAthlete,
+  getPlannedWorkout,
+  updateProgress,
+} from '../api'
+import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
@@ -73,6 +80,19 @@ async function save(completed: boolean, rating: number | null) {
   }
 }
 
+async function confirm(matchesPlan: boolean) {
+  if (!planned.value) return
+  saving.value = true
+  saveError.value = false
+  try {
+    planned.value = await confirmActivity(planned.value.id, matchesPlan)
+  } catch {
+    saveError.value = true
+  } finally {
+    saving.value = false
+  }
+}
+
 function toggleCompleted() {
   if (!planned.value) return
   save(!planned.value.completed, planned.value.rating)
@@ -110,6 +130,11 @@ function formatDate(iso: string) {
       <h2 class="headline">{{ planned.workout.title }}</h2>
       <p class="description">{{ planned.workout.description }}</p>
 
+      <div v-if="planned.adjustment" class="panel adjustment" role="note">
+        <p class="adjustment-title">↻ Statt {{ planned.adjustment.originalTitle }}</p>
+        <p>{{ planned.adjustment.note }}</p>
+      </div>
+
       <dl class="facts">
         <div>
           <dt>Dauer</dt>
@@ -129,7 +154,14 @@ function formatDate(iso: string) {
 
       <!-- Geplant vs. tatsächlich gefahren (aus intervals.icu) -->
       <div v-if="planned.actual" class="panel compare">
-        <h3 class="panel-title">Geplant vs. gefahren</h3>
+        <h3 class="panel-title">
+          Geplant vs. gefahren
+          <AssessmentBadge
+            v-if="planned.actual.assessment"
+            :assessment="planned.actual.assessment"
+            class="assessment"
+          />
+        </h3>
         <table>
           <thead>
             <tr>
@@ -163,6 +195,23 @@ function formatDate(iso: string) {
           </tbody>
         </table>
         <p class="source">Automatisch übernommen aus intervals.icu.</p>
+
+        <div v-if="planned.actual.confirmed == null" class="confirm">
+          <p>War das dieses Training?</p>
+          <button type="button" class="button" :disabled="saving" @click="confirm(true)">
+            Ja, das war's
+          </button>
+          <button type="button" class="button ghost" :disabled="saving" @click="confirm(false)">
+            Nein, anderes Training
+          </button>
+        </div>
+        <p v-else-if="planned.actual.confirmed" class="confirmed">✓ Bestätigt</p>
+        <p v-else class="confirmed">
+          Anderes Training – zählt als Belastung, das Workout bleibt offen.
+          <button type="button" class="link" :disabled="saving" @click="confirm(true)">
+            Doch, war es
+          </button>
+        </p>
       </div>
 
       <!-- Abhaken & bewerten -->
@@ -330,6 +379,71 @@ function formatDate(iso: string) {
   margin: 10px 0 0;
   font-size: 0.8rem;
   color: var(--color-text-muted);
+}
+
+.compare .panel-title {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.confirm {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--color-panel-raised);
+}
+
+.confirm p {
+  flex-basis: 100%;
+  margin: 0;
+  font-weight: 600;
+}
+
+.button.ghost {
+  background: transparent;
+  color: var(--color-text);
+  border: 2px solid var(--color-lilac);
+}
+
+.confirmed {
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.link {
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-lilac);
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+/* ---------- Angepasst ---------- */
+
+.adjustment {
+  border-left-color: var(--color-lilac);
+}
+
+.adjustment p {
+  margin: 0;
+  color: var(--color-text-muted);
+}
+
+.adjustment .adjustment-title {
+  margin-bottom: 4px;
+  font-family: var(--font-mono);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--color-lilac);
 }
 
 /* ---------- Abhaken ---------- */

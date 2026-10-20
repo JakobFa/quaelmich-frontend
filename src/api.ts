@@ -130,6 +130,14 @@ export function updateProgress(id: number, completed: boolean, rating: number | 
   })
 }
 
+/** "War das das geplante Training?" – bei Nein zählt das Workout nicht mehr als erledigt */
+export function confirmActivity(id: number, matchesPlan: boolean) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/activity-confirmation`, {
+    method: 'PUT',
+    body: JSON.stringify({ matchesPlan }),
+  })
+}
+
 /**
  * Lädt die .fit-Datei eines geplanten Workouts herunter. Ein einfacher Link reicht hier nicht,
  * weil der Download den Login-Token im Header braucht.
@@ -182,7 +190,7 @@ export async function disconnectIntervals() {
   await send('/me/intervals', { method: 'DELETE' })
 }
 
-export type ActivityImportResult = { activities: number; matched: number }
+export type ActivityImportResult = { activities: number; matched: number; adjusted: number }
 
 /** Gefahrene Einheiten der letzten 14 Tage aus intervals.icu abholen und dem Plan zuordnen */
 export function importActivities() {
