@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { buildWeeks, formatHours, mondayOf, weekIndexFor } from '../plan/weeks'
+import { buildWeeks, formatDuration, formatHours, mondayOf, weekIndexFor } from '../plan/weeks'
 import type { PlannedWorkout, TrainingPlan } from '../types/plan'
 
 function planned(id: number, date: string, minutes: number, completed = false): PlannedWorkout {
@@ -75,5 +75,7 @@ describe('weeks', () => {
   it('formatiert Minuten als Stunden', () => {
     expect(formatHours(90)).toBe('1:30 h')
     expect(formatHours(180)).toBe('3 h')
+    expect(formatDuration(45)).toBe('45 min')
+    expect(formatDuration(65)).toBe('1:05 h')
   })
 })

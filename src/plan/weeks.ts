@@ -80,3 +80,8 @@ export function formatHours(minutes: number): string {
   const m = minutes % 60
   return m === 0 ? `${h} h` : `${h}:${String(m).padStart(2, '0')} h`
 }
+
+/** Dauer eines Workouts: unter einer Stunde in Minuten, sonst in Stunden */
+export function formatDuration(minutes: number): string {
+  return minutes < 60 ? `${minutes} min` : formatHours(minutes)
+}

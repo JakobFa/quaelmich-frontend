@@ -1,33 +1,71 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
+import { getAthlete, getStoredAthleteId, getWorkout } from '../api'
+import LoadingNotice from '../components/LoadingNotice.vue'
+import WorkoutProfile from '../components/WorkoutProfile.vue'
+import WorkoutSteps from '../components/WorkoutSteps.vue'
+import { formatDuration } from '../plan/weeks'
+import { workoutTypeLabels, type Workout } from '../types/workout'
+
 const route = useRoute()
+const workout = ref<Workout | null>(null)
+const ftp = ref<number | null>(null)
+const loading = ref(true)
+const failed = ref(false)
+
+onMounted(async () => {
+  try {
+    workout.value = await getWorkout(Number(route.params.id))
+    const athleteId = getStoredAthleteId()
+    if (athleteId) {
+      ftp.value = (await getAthlete(athleteId)).ftp
+    }
+  } catch {
+    failed.value = true
+  } finally {
+    loading.value = false
+  }
+})
 </script>
 
 <template>
   <section>
-    <RouterLink to="/plan" class="back">← Zurück zum Plan</RouterLink>
-    <p class="kicker">// Workout {{ route.params.id }}</p>
+    <RouterLink to="/workouts" class="back">← Zurück zur Bibliothek</RouterLink>
 
-    <!-- Platzhalter: später werden hier die Daten des Workouts geladen -->
-    <div class="panel">
-      <h2 class="panel-title">Intervalle</h2>
-      <p class="placeholder">Aufbau des Workouts (Aufwärmen, Intervalle, Ausfahren) folgt.</p>
+    <LoadingNotice v-if="loading" label="Lädt das Workout …" />
+
+    <div v-else-if="failed || !workout" class="panel" role="alert">
+      <p class="error">Dieses Workout gibt es nicht.</p>
     </div>
 
-    <div class="panel">
-      <h2 class="panel-title">Erledigt?</h2>
-      <label class="choice">
-        <input type="checkbox" />
-        <span>Workout abgehakt</span>
-      </label>
-      <label class="field">
-        <span>Wie anstrengend war es? (1–10)</span>
-        <input type="range" min="1" max="10" />
-      </label>
-    </div>
+    <template v-else>
+      <p class="type">{{ workoutTypeLabels[workout.type] }}</p>
+      <h2 class="headline">{{ workout.title }}</h2>
+      <p class="description">{{ workout.description }}</p>
 
-    <button type="button" class="button" disabled>.fit herunterladen</button>
+      <dl class="facts">
+        <div>
+          <dt>Dauer</dt>
+          <dd>{{ formatDuration(workout.durationInMinutes) }}</dd>
+        </div>
+        <div>
+          <dt>TSS</dt>
+          <dd>{{ workout.tss }}</dd>
+        </div>
+      </dl>
+
+      <WorkoutProfile :steps="workout.steps" class="profile" />
+
+      <div class="panel">
+        <h3 class="panel-title">Abschnitte</h3>
+        <WorkoutSteps :steps="workout.steps" :ftp="ftp" />
+        <p v-if="!ftp" class="hint">
+          Mit einem Profil siehst du hier zusätzlich deine Zielwattzahlen.
+        </p>
+      </div>
+    </template>
   </section>
 </template>
 
@@ -45,12 +83,65 @@ const route = useRoute()
   color: var(--color-lilac);
 }
 
-.panel {
-  margin-bottom: 16px;
+.type {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-lilac);
 }
 
-.placeholder {
+.headline {
+  margin: 2px 0 8px;
+  font-size: clamp(1.8rem, 6vw, 2.6rem);
+  font-weight: 900;
+  font-style: italic;
+  font-stretch: 85%;
+  text-transform: uppercase;
+  line-height: 1;
+}
+
+.description {
+  max-width: 60ch;
+  margin: 0 0 16px;
+  color: var(--color-text-muted);
+}
+
+.facts {
+  display: flex;
+  gap: 32px;
+  margin: 0 0 16px;
+}
+
+.facts dt {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.facts dd {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
+}
+
+.profile {
+  height: 96px;
+  margin-bottom: 24px;
+}
+
+.error {
   margin: 0;
+  color: var(--color-hot);
+}
+
+.hint {
+  margin: 12px 0 0;
+  font-size: 0.85rem;
   color: var(--color-text-muted);
 }
 </style>

@@ -47,7 +47,7 @@ describe('WorkoutList', () => {
     expect(fetchMock).toHaveBeenCalledWith(expect.stringMatching(/\/workouts$/), expect.anything())
     expect(wrapper.findAll('.workouts li')).toHaveLength(1)
     expect(wrapper.text()).toContain('Sweet Spot 3 × 12')
-    expect(wrapper.text()).toContain('71 min')
+    expect(wrapper.text()).toContain('1:11 h')
     expect(wrapper.findComponent(RouterLinkStub).props('to')).toBe('/workouts/5')
   })
 

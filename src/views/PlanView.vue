@@ -4,7 +4,7 @@ import { computed, onMounted, ref } from 'vue'
 import { generatePlan, getPlan, getStoredAthleteId } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
-import { buildWeeks, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
+import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
 import { phaseLabels, type TrainingPlan } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
@@ -189,17 +189,23 @@ onMounted(load)
           <RouterLink
             v-for="planned in day.workouts"
             :key="planned.id"
-            :to="`/workouts/${planned.workout.id}`"
+            :to="`/plan/${planned.id}`"
             class="session"
             :class="{ completed: planned.completed }"
           >
-            <div class="session-head">
-              <span class="type">{{ workoutTypeLabels[planned.workout.type] }}</span>
-              <span class="meta">
-                {{ planned.workout.durationInMinutes }} min · TSS {{ planned.workout.tss }}
+            <div class="session-main">
+              <span class="type">
+                <span v-if="planned.completed" class="done-badge">
+                  ✓ erledigt<template v-if="planned.rating"> · {{ planned.rating }}/10</template>
+                </span>
+                {{ workoutTypeLabels[planned.workout.type] }}
               </span>
+              <h3 class="session-title">{{ planned.workout.title }}</h3>
             </div>
-            <h3 class="session-title">{{ planned.workout.title }}</h3>
+            <div class="session-duration">
+              <strong>{{ formatDuration(planned.workout.durationInMinutes) }}</strong>
+              <span>TSS {{ planned.workout.tss }}</span>
+            </div>
             <WorkoutProfile :steps="planned.workout.steps" class="profile" />
           </RouterLink>
 
@@ -402,37 +408,60 @@ onMounted(load)
 }
 
 .session {
-  display: block;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0 16px;
+  align-items: start;
   color: inherit;
   text-decoration: none;
+}
+
+.session .profile {
+  grid-column: 1 / -1;
+}
+
+.session-duration {
+  text-align: right;
+  font-family: var(--font-mono);
+}
+
+.session-duration strong {
+  display: block;
+  font-size: 1.35rem;
+  line-height: 1.1;
+  color: var(--color-text);
+}
+
+.session-duration span {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
 }
 
 .session:hover .session-title {
   color: var(--color-lilac);
 }
 
-.session.completed {
-  opacity: 0.55;
+.session.completed .session-title,
+.session.completed .profile {
+  opacity: 0.45;
 }
 
-.session-head {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 4px 12px;
-  font-family: var(--font-mono);
-  font-size: 0.7rem;
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+.done-badge {
+  margin-right: 8px;
+  padding: 1px 6px;
+  color: var(--color-ink);
+  background: var(--color-hot);
 }
 
 .type {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
   color: var(--color-lilac);
-}
-
-.meta {
-  color: var(--color-text-muted);
 }
 
 .session-title {

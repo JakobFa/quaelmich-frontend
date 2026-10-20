@@ -1,5 +1,5 @@
 import type { Athlete } from './types/athlete'
-import type { TrainingPlan } from './types/plan'
+import type { PlannedWorkout, TrainingPlan } from './types/plan'
 import type { Workout } from './types/workout'
 
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
@@ -28,6 +28,10 @@ export function getWorkouts() {
   return request<Workout[]>('/workouts')
 }
 
+export function getWorkout(id: number) {
+  return request<Workout>(`/workouts/${id}`)
+}
+
 export function getAthlete(id: number) {
   return request<Athlete>(`/athletes/${id}`)
 }
@@ -52,6 +56,17 @@ export async function getPlan(athleteId: number): Promise<TrainingPlan | null> {
 
 export function generatePlan(athleteId: number) {
   return request<TrainingPlan>(`/athletes/${athleteId}/plan`, { method: 'POST' })
+}
+
+export function getPlannedWorkout(id: number) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}`)
+}
+
+export function updateProgress(id: number, completed: boolean, rating: number | null) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/progress`, {
+    method: 'PUT',
+    body: JSON.stringify({ completed, rating }),
+  })
 }
 
 // Ohne Login merkt sich der Browser, welches Profil zu ihm gehört.

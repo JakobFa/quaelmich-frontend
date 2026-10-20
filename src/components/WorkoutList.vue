@@ -4,6 +4,7 @@ import { onMounted, ref } from 'vue'
 import { getWorkouts } from '../api'
 import LoadingNotice from './LoadingNotice.vue'
 import WorkoutProfile from './WorkoutProfile.vue'
+import { formatDuration } from '../plan/weeks'
 import { workoutTypeLabels, type Workout } from '../types/workout'
 
 const workouts = ref<Workout[]>([])
@@ -56,7 +57,7 @@ onMounted(loadWorkouts)
             <dl class="stats">
               <div class="stat">
                 <dt>Dauer</dt>
-                <dd>{{ workout.durationInMinutes }} min</dd>
+                <dd>{{ formatDuration(workout.durationInMinutes) }}</dd>
               </div>
               <div class="stat">
                 <dt>TSS</dt>
