@@ -10,6 +10,13 @@ export const phaseLabels: Record<Phase, string> = {
   RECOVERY: 'Erholung',
 }
 
+/** Tatsächlich gefahrene Werte aus intervals.icu (z. B. vom Wahoo oder Garmin) */
+export type ActualRide = {
+  durationMinutes: number | null
+  distanceKm: number | null
+  tss: number | null
+}
+
 export type PlannedWorkout = {
   id: number
   date: string
@@ -17,6 +24,7 @@ export type PlannedWorkout = {
   completed: boolean
   rating: number | null
   workout: Workout
+  actual: ActualRide | null
 }
 
 export type TrainingPlan = {

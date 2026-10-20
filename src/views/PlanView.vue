@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { generatePlan, getIntervalsStatus, getMyAthlete, getPlan, syncToIntervals } from '../api'
+import {
+  generatePlan,
+  getIntervalsStatus,
+  getMyAthlete,
+  getPlan,
+  importActivities,
+  syncToIntervals,
+} from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
@@ -92,6 +99,20 @@ function formatDate(iso: string) {
   })
 }
 
+/** Im Hintergrund gefahrene Einheiten abholen; wurde etwas zugeordnet, den Plan neu laden */
+async function importRides() {
+  try {
+    const result = await importActivities()
+    if (result.matched > 0) {
+      const index = weekIndex.value
+      plan.value = await getPlan()
+      weekIndex.value = index
+    }
+  } catch {
+    // nicht schlimm – dann bleibt der Plan, wie er ist
+  }
+}
+
 onMounted(async () => {
   await load()
   if (plan.value) {
@@ -99,6 +120,9 @@ onMounted(async () => {
       intervalsAvailable.value = (await getIntervalsStatus()).connected
     } catch {
       intervalsAvailable.value = false
+    }
+    if (intervalsAvailable.value) {
+      importRides()
     }
   }
 })
@@ -242,6 +266,10 @@ onMounted(async () => {
             <div class="session-duration">
               <strong>{{ formatDuration(planned.workout.durationInMinutes) }}</strong>
               <span>TSS {{ planned.workout.tss }}</span>
+              <span v-if="planned.actual?.durationMinutes" class="actual">
+                gefahren {{ formatDuration(planned.actual.durationMinutes)
+                }}<template v-if="planned.actual.tss"> · {{ planned.actual.tss }}</template>
+              </span>
             </div>
             <WorkoutProfile :steps="planned.workout.steps" class="profile" />
           </RouterLink>
@@ -486,6 +514,13 @@ onMounted(async () => {
   font-size: 1.35rem;
   line-height: 1.1;
   color: var(--color-text);
+}
+
+.session-duration .actual {
+  display: block;
+  margin-top: 2px;
+  color: var(--color-hot);
+  font-weight: 600;
 }
 
 .session-duration span {

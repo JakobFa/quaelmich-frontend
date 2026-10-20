@@ -127,6 +127,44 @@ function formatDate(iso: string) {
 
       <WorkoutProfile :steps="planned.workout.steps" class="profile" />
 
+      <!-- Geplant vs. tatsächlich gefahren (aus intervals.icu) -->
+      <div v-if="planned.actual" class="panel compare">
+        <h3 class="panel-title">Geplant vs. gefahren</h3>
+        <table>
+          <thead>
+            <tr>
+              <th scope="col"></th>
+              <th scope="col">Geplant</th>
+              <th scope="col">Gefahren</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <th scope="row">Dauer</th>
+              <td>{{ formatDuration(planned.workout.durationInMinutes) }}</td>
+              <td>
+                {{
+                  planned.actual.durationMinutes
+                    ? formatDuration(planned.actual.durationMinutes)
+                    : '–'
+                }}
+              </td>
+            </tr>
+            <tr>
+              <th scope="row">TSS</th>
+              <td>{{ planned.workout.tss }}</td>
+              <td>{{ planned.actual.tss ?? '–' }}</td>
+            </tr>
+            <tr v-if="planned.actual.distanceKm">
+              <th scope="row">Distanz</th>
+              <td>–</td>
+              <td>{{ planned.actual.distanceKm.toLocaleString('de-DE') }} km</td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="source">Automatisch übernommen aus intervals.icu.</p>
+      </div>
+
       <!-- Abhaken & bewerten -->
       <div class="panel progress" :class="{ done: planned.completed }">
         <button
@@ -254,6 +292,44 @@ function formatDate(iso: string) {
 .error {
   margin: 12px 0 0;
   color: var(--color-hot);
+}
+
+/* ---------- Geplant vs. gefahren ---------- */
+
+.compare table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+}
+
+.compare th,
+.compare td {
+  padding: 6px 8px;
+  text-align: left;
+  border-bottom: 1px solid var(--color-panel-raised);
+}
+
+.compare thead th {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.compare tbody th {
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.compare td:last-child {
+  font-weight: 600;
+  color: var(--color-hot);
+}
+
+.compare .source {
+  margin: 10px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 
 /* ---------- Abhaken ---------- */

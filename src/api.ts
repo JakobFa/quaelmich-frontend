@@ -182,6 +182,13 @@ export async function disconnectIntervals() {
   await send('/me/intervals', { method: 'DELETE' })
 }
 
+export type ActivityImportResult = { activities: number; matched: number }
+
+/** Gefahrene Einheiten der letzten 14 Tage aus intervals.icu abholen und dem Plan zuordnen */
+export function importActivities() {
+  return request<ActivityImportResult>('/me/intervals/import', { method: 'POST' })
+}
+
 export function syncToIntervals(days = 14) {
   return request<IntervalsSyncResult>(`/me/intervals/sync?days=${days}`, { method: 'POST' })
 }

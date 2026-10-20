@@ -10,6 +10,7 @@ function planned(id: number, date: string, minutes: number, completed = false): 
     phase: 'BASE',
     completed,
     rating: null,
+    actual: null,
     workout: {
       id: 2,
       title: 'Grundlage',
