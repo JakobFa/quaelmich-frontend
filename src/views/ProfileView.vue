@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { getAthlete, getStoredAthleteId } from '../api'
+import LoadingNotice from '../components/LoadingNotice.vue'
 import { levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
 
 const athlete = ref<Athlete | null>(null)
@@ -48,7 +49,7 @@ function formatNumber(hours: number) {
   <section>
     <p class="kicker">// Profil</p>
 
-    <p v-if="loading" class="hint">Lädt …</p>
+    <LoadingNotice v-if="loading" label="Lädt dein Profil …" />
 
     <div v-else-if="!athlete" class="panel">
       <h2 class="panel-title">Noch kein Profil</h2>

@@ -2,15 +2,24 @@
 import { onMounted, ref } from 'vue'
 
 import { getWorkouts } from '../api'
+import LoadingNotice from './LoadingNotice.vue'
 import WorkoutProfile from './WorkoutProfile.vue'
 import { workoutTypeLabels, type Workout } from '../types/workout'
 
 const workouts = ref<Workout[]>([])
+const loading = ref(true)
+const failed = ref(false)
 
 function loadWorkouts() {
+  loading.value = true
+  failed.value = false
   getWorkouts()
     .then((result) => (workouts.value = result))
-    .catch((error) => console.log('error', error))
+    .catch((error) => {
+      console.log('error', error)
+      failed.value = true
+    })
+    .finally(() => (loading.value = false))
 }
 
 function twoDigits(n: number) {
@@ -26,7 +35,16 @@ onMounted(loadWorkouts)
       Workouts <span class="count">// {{ twoDigits(workouts.length) }}</span>
     </h2>
 
-    <ul class="workouts">
+    <LoadingNotice v-if="loading" label="Lädt Workouts …" />
+
+    <div v-else-if="failed" class="failed" role="alert">
+      <p>Die Workouts konnten nicht geladen werden.</p>
+      <button type="button" class="button button-ghost" @click="loadWorkouts">
+        Nochmal versuchen
+      </button>
+    </div>
+
+    <ul v-else class="workouts">
       <li v-for="(workout, index) in workouts" :key="workout.id">
         <RouterLink :to="`/workouts/${workout.id}`" class="card">
           <span class="number">{{ twoDigits(index + 1) }}</span>
@@ -67,6 +85,11 @@ onMounted(loadWorkouts)
 
 .count {
   color: var(--color-text-muted);
+}
+
+.failed p {
+  margin: 0 0 12px;
+  color: var(--color-hot);
 }
 
 .workouts {

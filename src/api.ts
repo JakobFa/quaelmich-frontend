@@ -4,10 +4,10 @@ import type { Workout } from './types/workout'
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
-  const response = await fetch(baseUrl + path, {
-    ...options,
-    headers: { 'Content-Type': 'application/json', ...options.headers },
-  })
+  // Content-Type nur mitschicken, wenn es auch einen Body gibt: bei einfachen GETs
+  // spart das die zusätzliche CORS-Vorabfrage (OPTIONS) des Browsers.
+  const headers = options.body ? { 'Content-Type': 'application/json' } : undefined
+  const response = await fetch(baseUrl + path, { ...options, headers })
   if (!response.ok) {
     throw new Error(`${options.method ?? 'GET'} ${path} fehlgeschlagen (${response.status})`)
   }
