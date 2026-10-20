@@ -13,6 +13,7 @@ import logoUrl from './assets/logo.png'
     <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— quäl dich.</span></p>
     <nav class="nav">
       <RouterLink to="/plan">Plan</RouterLink>
+      <RouterLink to="/workouts">Workouts</RouterLink>
       <RouterLink to="/profil">Profil</RouterLink>
     </nav>
   </header>

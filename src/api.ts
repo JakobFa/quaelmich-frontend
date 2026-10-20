@@ -1,7 +1,17 @@
 import type { Athlete } from './types/athlete'
+import type { TrainingPlan } from './types/plan'
 import type { Workout } from './types/workout'
 
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
+
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    message: string,
+  ) {
+    super(`${message} (${status})`)
+  }
+}
 
 async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   // Content-Type nur mitschicken, wenn es auch einen Body gibt: bei einfachen GETs
@@ -9,7 +19,7 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = options.body ? { 'Content-Type': 'application/json' } : undefined
   const response = await fetch(baseUrl + path, { ...options, headers })
   if (!response.ok) {
-    throw new Error(`${options.method ?? 'GET'} ${path} fehlgeschlagen (${response.status})`)
+    throw new ApiError(response.status, `${options.method ?? 'GET'} ${path} fehlgeschlagen`)
   }
   return response.json() as Promise<T>
 }
@@ -28,6 +38,20 @@ export function createAthlete(athlete: Athlete) {
 
 export function updateAthlete(id: number, athlete: Athlete) {
   return request<Athlete>(`/athletes/${id}`, { method: 'PUT', body: JSON.stringify(athlete) })
+}
+
+/** Liefert den Plan oder null, wenn für das Profil noch keiner erstellt wurde. */
+export async function getPlan(athleteId: number): Promise<TrainingPlan | null> {
+  try {
+    return await request<TrainingPlan>(`/athletes/${athleteId}/plan`)
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) return null
+    throw error
+  }
+}
+
+export function generatePlan(athleteId: number) {
+  return request<TrainingPlan>(`/athletes/${athleteId}/plan`, { method: 'POST' })
 }
 
 // Ohne Login merkt sich der Browser, welches Profil zu ihm gehört.

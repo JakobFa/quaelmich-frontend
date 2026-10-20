@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 
 import {
   createAthlete,
+  generatePlan,
   getAthlete,
   getStoredAthleteId,
   storeAthleteId,
@@ -48,7 +49,8 @@ async function next() {
         ? await updateAthlete(existingId, athlete.value)
         : await createAthlete(athlete.value)
     storeAthleteId(saved.id!)
-    router.push('/profil')
+    await generatePlan(saved.id!)
+    router.push('/plan')
   } catch {
     errorMessage.value =
       'Speichern hat nicht geklappt. Bitte prüfe deine Angaben und versuch es nochmal.'
@@ -180,7 +182,13 @@ function back() {
           Zurück
         </button>
         <button type="submit" class="button" :disabled="saving">
-          {{ currentStep < steps.length - 1 ? 'Weiter' : saving ? 'Speichert …' : 'Speichern' }}
+          {{
+            currentStep < steps.length - 1
+              ? 'Weiter'
+              : saving
+                ? 'Plan wird erstellt …'
+                : 'Plan erstellen'
+          }}
         </button>
       </div>
     </form>
