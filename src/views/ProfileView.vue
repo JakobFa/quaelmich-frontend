@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { getMyAthlete } from '../api'
+import IntervalsConnection from '../components/IntervalsConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import { levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
 
@@ -111,10 +112,23 @@ function formatNumber(hours: number) {
 
       <RouterLink to="/onboarding" class="button">Angaben ändern</RouterLink>
     </template>
+
+    <h2 class="section-label">// Verbindungen</h2>
+    <IntervalsConnection />
   </section>
 </template>
 
 <style scoped>
+.section-label {
+  margin: 40px 0 12px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-lilac);
+}
+
 .panel {
   margin-bottom: 16px;
 }

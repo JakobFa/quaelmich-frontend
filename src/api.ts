@@ -149,14 +149,28 @@ export async function downloadPlannedWorkoutFit(id: number) {
 
 // ---------- intervals.icu ----------
 
+export type IntervalsStatus = {
+  connected: boolean
+  intervalsAthleteId: string | null
+  connectedAt: string | null
+}
+
 export type IntervalsSyncResult = { uploaded: number; from: string; to: string }
 
-export async function isIntervalsAvailable(): Promise<boolean> {
-  try {
-    return (await request<{ available: boolean }>('/me/intervals')).available
-  } catch {
-    return false
-  }
+export function getIntervalsStatus() {
+  return request<IntervalsStatus>('/me/intervals')
+}
+
+/** Prüft den Schlüssel bei intervals.icu und speichert ihn verschlüsselt (422 = abgelehnt). */
+export function connectIntervals(apiKey: string, athleteId: string) {
+  return request<IntervalsStatus>('/me/intervals', {
+    method: 'PUT',
+    body: JSON.stringify({ apiKey, athleteId }),
+  })
+}
+
+export async function disconnectIntervals() {
+  await send('/me/intervals', { method: 'DELETE' })
 }
 
 export function syncToIntervals(days = 14) {

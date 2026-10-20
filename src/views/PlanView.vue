@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { generatePlan, getMyAthlete, getPlan, isIntervalsAvailable, syncToIntervals } from '../api'
+import { generatePlan, getIntervalsStatus, getMyAthlete, getPlan, syncToIntervals } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
@@ -14,7 +14,7 @@ const loading = ref(true)
 const failed = ref(false)
 const generating = ref(false)
 
-// intervals.icu: Button nur zeigen, wenn das Backend den Sync für diesen Nutzer freigibt
+// intervals.icu: Button nur zeigen, wenn der Nutzer sein Konto verbunden hat
 const intervalsAvailable = ref(false)
 const syncing = ref(false)
 const syncMessage = ref('')
@@ -95,7 +95,11 @@ function formatDate(iso: string) {
 onMounted(async () => {
   await load()
   if (plan.value) {
-    intervalsAvailable.value = await isIntervalsAvailable()
+    try {
+      intervalsAvailable.value = (await getIntervalsStatus()).connected
+    } catch {
+      intervalsAvailable.value = false
+    }
   }
 })
 </script>
