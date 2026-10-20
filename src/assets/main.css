@@ -22,6 +22,7 @@
 body {
   margin: 0;
   min-height: 100vh;
+  overflow-x: clip;
   font-family: var(--font-display);
   color: var(--color-text);
   line-height: 1.45;
@@ -29,4 +30,141 @@ body {
   /* Mesh wie auf den Trikot-Ärmeln */
   background-image: radial-gradient(rgba(220, 186, 247, 0.07) 1px, transparent 1.4px);
   background-size: 7px 7px;
+}
+
+/* ---------- gemeinsame Bausteine ---------- */
+
+.kicker {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-lilac);
+}
+
+.label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.panel {
+  padding: 20px;
+  background: var(--color-panel);
+  border-left: 5px solid var(--color-lilac);
+  clip-path: polygon(0 0, calc(100% - var(--cut)) 0, 100% var(--cut), 100% 100%, 0 100%);
+}
+
+.panel-title {
+  margin: 0 0 16px;
+  font-size: 1.3rem;
+  font-weight: 900;
+  font-style: italic;
+  font-stretch: 85%;
+  text-transform: uppercase;
+}
+
+.button {
+  display: inline-block;
+  padding: 12px 22px;
+  border: 2px solid var(--color-lilac);
+  background: var(--color-lilac);
+  color: var(--color-plum);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 900;
+  font-style: italic;
+  text-transform: uppercase;
+  text-decoration: none;
+  cursor: pointer;
+  clip-path: polygon(0 0, calc(100% - 10px) 0, 100% 10px, 100% 100%, 0 100%);
+}
+
+.button:hover {
+  background: var(--color-hot);
+  border-color: var(--color-hot);
+}
+
+.button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.button-ghost {
+  background: transparent;
+  color: var(--color-lilac);
+}
+
+.button-ghost:hover {
+  background: transparent;
+  border-color: var(--color-hot);
+  color: var(--color-hot);
+}
+
+/* Formularfelder */
+.field {
+  display: block;
+  margin: 0 0 16px;
+  padding: 0;
+  border: 0;
+}
+
+.field > span,
+.field > legend {
+  display: block;
+  margin-bottom: 6px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+input[type='text'],
+input[type='number'],
+input[type='date'] {
+  width: 100%;
+  padding: 10px 12px;
+  border: 2px solid var(--color-panel-raised);
+  background: var(--color-ink);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color-scheme: dark;
+}
+
+input:focus-visible {
+  outline: none;
+  border-color: var(--color-lilac);
+}
+
+input[type='range'] {
+  width: 100%;
+  accent-color: var(--color-lilac);
+}
+
+/* Auswahl-Kacheln für Radio-Buttons und Checkboxen */
+.choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: var(--color-ink);
+  border: 2px solid var(--color-panel-raised);
+  cursor: pointer;
+}
+
+.choice:has(input:checked) {
+  border-color: var(--color-lilac);
+  color: var(--color-lilac);
+}
+
+.choice input {
+  accent-color: var(--color-lilac);
 }

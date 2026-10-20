@@ -1,20 +1,15 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-type Workout = {
-  title: string
-  durationInMinutes: number
-  intensity: number
-}
+import { getWorkouts } from '../api'
+import WorkoutProfile from './WorkoutProfile.vue'
+import { workoutTypeLabels, type Workout } from '../types/workout'
 
 const workouts = ref<Workout[]>([])
 
 function loadWorkouts() {
-  const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
-  const endpoint = baseUrl + '/workouts'
-  fetch(endpoint)
-    .then((response) => response.json())
-    .then((result: Workout[]) => (workouts.value = result))
+  getWorkouts()
+    .then((result) => (workouts.value = result))
     .catch((error) => console.log('error', error))
 }
 
@@ -32,28 +27,28 @@ onMounted(loadWorkouts)
     </h2>
 
     <ul class="workouts">
-      <li v-for="(workout, index) in workouts" :key="workout.title" class="card">
-        <span class="number">{{ twoDigits(index + 1) }}</span>
+      <li v-for="(workout, index) in workouts" :key="workout.id">
+        <RouterLink :to="`/workouts/${workout.id}`" class="card">
+          <span class="number">{{ twoDigits(index + 1) }}</span>
 
-        <div class="body">
-          <h3 class="title">{{ workout.title }}</h3>
+          <div class="body">
+            <p class="type">{{ workoutTypeLabels[workout.type] }}</p>
+            <h3 class="title">{{ workout.title }}</h3>
 
-          <dl class="stats">
-            <div class="stat">
-              <dt>Dauer</dt>
-              <dd>{{ workout.durationInMinutes }} min</dd>
-            </div>
-            <div class="stat stat-intensity">
-              <dt>Intensität</dt>
-              <dd>
-                <span class="bar" :class="{ 'bar-hot': workout.intensity > 75 }">
-                  <span class="bar-fill" :style="{ width: workout.intensity + '%' }"></span>
-                </span>
-                <span class="value">{{ workout.intensity }}</span>
-              </dd>
-            </div>
-          </dl>
-        </div>
+            <dl class="stats">
+              <div class="stat">
+                <dt>Dauer</dt>
+                <dd>{{ workout.durationInMinutes }} min</dd>
+              </div>
+              <div class="stat">
+                <dt>TSS</dt>
+                <dd>{{ workout.tss }}</dd>
+              </div>
+            </dl>
+
+            <WorkoutProfile :steps="workout.steps" class="profile" />
+          </div>
+        </RouterLink>
       </li>
     </ul>
   </section>
@@ -84,6 +79,8 @@ onMounted(loadWorkouts)
 
 /* Karte mit abgeschnittener Ecke statt runder Kanten */
 .card {
+  color: inherit;
+  text-decoration: none;
   display: flex;
   gap: 16px;
   align-items: flex-start;
@@ -149,35 +146,17 @@ onMounted(loadWorkouts)
   font-weight: 600;
 }
 
-.stat-intensity {
-  flex: 1;
-  min-width: 180px;
+.type {
+  margin: 0 0 2px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-lilac);
 }
 
-/* Balken mit Schraffur, wird ab 75 pink-heiß */
-.bar {
-  flex: 1;
-  height: 10px;
-  background: var(--color-ink);
-  --bar-color: var(--color-lilac);
-}
-
-.bar-hot {
-  --bar-color: var(--color-hot);
-}
-
-.bar-fill {
-  display: block;
-  height: 100%;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--bar-color) 0 4px,
-    color-mix(in srgb, var(--bar-color) 55%, transparent) 4px 7px
-  );
-}
-
-.value {
-  min-width: 2ch;
-  text-align: right;
+.profile {
+  margin-top: 14px;
 }
 </style>

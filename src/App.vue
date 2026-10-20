@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import WorkoutList from './components/WorkoutList.vue'
 import logoUrl from './assets/logo.png'
 </script>
 
@@ -8,14 +7,18 @@ import logoUrl from './assets/logo.png'
     <div class="stage">
       <div class="band" aria-hidden="true"></div>
       <h1 class="logo-heading">
-        <img :src="logoUrl" alt="quaelmich" class="logo" />
+        <RouterLink to="/"><img :src="logoUrl" alt="quaelmich" class="logo" /></RouterLink>
       </h1>
     </div>
     <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— quäl dich.</span></p>
+    <nav class="nav">
+      <RouterLink to="/plan">Plan</RouterLink>
+      <RouterLink to="/profil">Profil</RouterLink>
+    </nav>
   </header>
 
   <main class="content">
-    <WorkoutList />
+    <RouterView />
   </main>
 </template>
 
@@ -50,6 +53,7 @@ import logoUrl from './assets/logo.png'
   inset: 0;
   background-image: radial-gradient(var(--color-lilac) 1.1px, transparent 1.5px);
   background-size: 6px 6px;
+  -webkit-mask-image: linear-gradient(90deg, transparent 55%, black 100%);
   mask-image: linear-gradient(90deg, transparent 55%, black 100%);
   opacity: 0.35;
 }
@@ -82,6 +86,36 @@ import logoUrl from './assets/logo.png'
 
 .claim-accent {
   color: var(--color-lilac);
+}
+
+.nav {
+  display: flex;
+  gap: 24px;
+  max-width: 800px;
+  margin: 20px auto 0;
+  padding: 0 16px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.nav a {
+  padding-bottom: 4px;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  border-bottom: 3px solid transparent;
+}
+
+.nav a:hover {
+  color: var(--color-text);
+}
+
+/* aktive Seite markiert der Router automatisch mit dieser Klasse */
+.nav a.router-link-active {
+  color: var(--color-lilac);
+  border-bottom-color: var(--color-lilac);
 }
 
 .content {
