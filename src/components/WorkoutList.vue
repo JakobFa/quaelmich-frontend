@@ -1,15 +1,24 @@
 <script setup lang="ts">
+import { onMounted, ref } from 'vue'
+
 type Workout = {
   title: string
   durationInMinutes: number
   intensity: number
 }
 
-const workouts: Workout[] = [
-  { title: 'Grundlagenrunde', durationInMinutes: 90, intensity: 40 },
-  { title: 'Intervalle', durationInMinutes: 60, intensity: 85 },
-  { title: 'Regeneration', durationInMinutes: 45, intensity: 20 },
-]
+const workouts = ref<Workout[]>([])
+
+function loadWorkouts() {
+  const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
+  const endpoint = baseUrl + '/workouts'
+  fetch(endpoint)
+    .then((response) => response.json())
+    .then((result: Workout[]) => (workouts.value = result))
+    .catch((error) => console.log('error', error))
+}
+
+onMounted(loadWorkouts)
 </script>
 
 <template>
