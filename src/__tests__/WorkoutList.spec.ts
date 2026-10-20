@@ -51,6 +51,27 @@ describe('WorkoutList', () => {
     expect(wrapper.findComponent(RouterLinkStub).props('to')).toBe('/workouts/5')
   })
 
+  it('filtert nach Trainingsart', async () => {
+    const vo2: Workout = { ...sweetSpot, id: 8, title: 'VO2max 5 × 4', type: 'VO2MAX' }
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<() => Promise<unknown>>(() =>
+        Promise.resolve({ ok: true, json: () => Promise.resolve([sweetSpot, vo2]) }),
+      ),
+    )
+
+    const wrapper = mountList()
+    await flushPromises()
+    expect(wrapper.findAll('.workouts li')).toHaveLength(2)
+
+    const vo2Filter = wrapper.findAll('button.filter').find((b) => b.text() === 'VO2max')!
+    await vo2Filter.trigger('click')
+
+    expect(wrapper.findAll('.workouts li')).toHaveLength(1)
+    expect(wrapper.text()).toContain('VO2max 5 × 4')
+    expect(wrapper.text()).not.toContain('Sweet Spot 3 × 12')
+  })
+
   it('zeigt eine Fehlermeldung, wenn das Backend nicht antwortet', async () => {
     vi.stubGlobal(
       'fetch',

@@ -1,13 +1,21 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 
 import { getWorkouts } from '../api'
 import LoadingNotice from './LoadingNotice.vue'
 import WorkoutProfile from './WorkoutProfile.vue'
 import { formatDuration } from '../plan/weeks'
-import { workoutTypeLabels, type Workout } from '../types/workout'
+import { workoutTypeLabels, type Workout, type WorkoutType } from '../types/workout'
 
 const workouts = ref<Workout[]>([])
+const selectedType = ref<WorkoutType | null>(null)
+
+// Nur Trainingsarten anbieten, die es in der Liste auch gibt (in Bibliotheks-Reihenfolge)
+const availableTypes = computed(() => [...new Set(workouts.value.map((w) => w.type))])
+
+const visibleWorkouts = computed(() =>
+  selectedType.value ? workouts.value.filter((w) => w.type === selectedType.value) : workouts.value,
+)
 const loading = ref(true)
 const failed = ref(false)
 
@@ -33,7 +41,7 @@ onMounted(loadWorkouts)
 <template>
   <section>
     <h2 class="section-label">
-      Workouts <span class="count">// {{ twoDigits(workouts.length) }}</span>
+      Workouts <span class="count">// {{ twoDigits(visibleWorkouts.length) }}</span>
     </h2>
 
     <LoadingNotice v-if="loading" label="Lädt Workouts …" />
@@ -45,31 +53,59 @@ onMounted(loadWorkouts)
       </button>
     </div>
 
-    <ul v-else class="workouts">
-      <li v-for="(workout, index) in workouts" :key="workout.id">
-        <RouterLink :to="`/workouts/${workout.id}`" class="card">
-          <span class="number">{{ twoDigits(index + 1) }}</span>
+    <template v-else>
+      <div
+        v-if="availableTypes.length > 1"
+        class="filters"
+        role="group"
+        aria-label="Nach Trainingsart filtern"
+      >
+        <button
+          type="button"
+          class="filter"
+          :aria-pressed="selectedType === null"
+          @click="selectedType = null"
+        >
+          Alle
+        </button>
+        <button
+          v-for="type in availableTypes"
+          :key="type"
+          type="button"
+          class="filter"
+          :aria-pressed="selectedType === type"
+          @click="selectedType = type"
+        >
+          {{ workoutTypeLabels[type] }}
+        </button>
+      </div>
 
-          <div class="body">
-            <p class="type">{{ workoutTypeLabels[workout.type] }}</p>
-            <h3 class="title">{{ workout.title }}</h3>
+      <ul class="workouts">
+        <li v-for="(workout, index) in visibleWorkouts" :key="workout.id">
+          <RouterLink :to="`/workouts/${workout.id}`" class="card">
+            <span class="number">{{ twoDigits(index + 1) }}</span>
 
-            <dl class="stats">
-              <div class="stat">
-                <dt>Dauer</dt>
-                <dd>{{ formatDuration(workout.durationInMinutes) }}</dd>
-              </div>
-              <div class="stat">
-                <dt>TSS</dt>
-                <dd>{{ workout.tss }}</dd>
-              </div>
-            </dl>
+            <div class="body">
+              <p class="type">{{ workoutTypeLabels[workout.type] }}</p>
+              <h3 class="title">{{ workout.title }}</h3>
 
-            <WorkoutProfile :steps="workout.steps" class="profile" />
-          </div>
-        </RouterLink>
-      </li>
-    </ul>
+              <dl class="stats">
+                <div class="stat">
+                  <dt>Dauer</dt>
+                  <dd>{{ formatDuration(workout.durationInMinutes) }}</dd>
+                </div>
+                <div class="stat">
+                  <dt>TSS</dt>
+                  <dd>{{ workout.tss }}</dd>
+                </div>
+              </dl>
+
+              <WorkoutProfile :steps="workout.steps" class="profile" />
+            </div>
+          </RouterLink>
+        </li>
+      </ul>
+    </template>
   </section>
 </template>
 
@@ -91,6 +127,37 @@ onMounted(loadWorkouts)
 .failed p {
   margin: 0 0 12px;
   color: var(--color-hot);
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0 0 18px;
+}
+
+.filter {
+  padding: 6px 12px;
+  border: 2px solid var(--color-panel-raised);
+  background: var(--color-panel);
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
+}
+
+.filter:hover {
+  border-color: var(--color-lilac-dim);
+  color: var(--color-text);
+}
+
+.filter[aria-pressed='true'] {
+  border-color: var(--color-lilac);
+  background: var(--color-lilac);
+  color: var(--color-plum);
 }
 
 .workouts {
