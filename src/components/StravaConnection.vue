@@ -46,6 +46,18 @@ const fieldLabels: Record<Field, { label: string; unit: string }> = {
   maxHeartRate: { label: 'Maximalpuls', unit: 'bpm' },
 }
 
+/** Strava-Zonen, wenn sie sich von den eigenen unterscheiden */
+const zoneDifference = computed(() => {
+  const strava = suggestion.value?.heartRateZoneStarts
+  if (!props.athlete || !suggestion.value?.profileAccess || !strava) return null
+  const own = props.athlete.heartRateZoneStarts ?? []
+  // Standardzonen aus dem Maximalpuls muss niemand übernehmen – die rechnet quaelmich selbst
+  if (!suggestion.value.customZones) return null
+  return strava.join() === own.join() ? null : { current: own, strava }
+})
+
+const hasChanges = computed(() => differences.value.length > 0 || zoneDifference.value !== null)
+
 /** Nur Werte, die es bei Strava gibt und die sich vom eigenen Profil unterscheiden */
 const differences = computed(() => {
   const athlete = props.athlete
@@ -74,7 +86,10 @@ async function applySuggestion() {
   busy.value = true
   errorMessage.value = ''
   try {
-    const changes = Object.fromEntries(differences.value.map((d) => [d.field, d.strava]))
+    const changes: Partial<Athlete> = Object.fromEntries(
+      differences.value.map((d) => [d.field, d.strava]),
+    )
+    if (zoneDifference.value) changes.heartRateZoneStarts = zoneDifference.value.strava
     emit('athlete-updated', await saveMyAthlete({ ...props.athlete, ...changes }))
     applied.value = true
   } catch {
@@ -121,7 +136,7 @@ async function disconnect() {
           Neu verbinden
         </button>
       </div>
-      <div v-else-if="differences.length > 0" class="suggestion">
+      <div v-else-if="hasChanges" class="suggestion">
         <p class="suggestion-title">Von Strava übernehmen?</p>
         <table>
           <thead>
@@ -136,6 +151,13 @@ async function disconnect() {
               <th scope="row">{{ d.label }}</th>
               <td>{{ formatValue(d.current, d.unit) }}</td>
               <td class="strava-value">{{ formatValue(d.strava, d.unit) }}</td>
+            </tr>
+            <tr v-if="zoneDifference">
+              <th scope="row">Pulszonen (Z2–Z5 ab)</th>
+              <td>
+                {{ zoneDifference.current.length ? zoneDifference.current.join(' / ') : '–' }}
+              </td>
+              <td class="strava-value">{{ zoneDifference.strava.join(' / ') }}</td>
             </tr>
           </tbody>
         </table>

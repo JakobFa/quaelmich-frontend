@@ -232,6 +232,10 @@ export type StravaProfileSuggestion = {
   /** aus den Strava-Pulszonen zurückgerechnet oder höchster Puls der letzten 90 Tage */
   maxHeartRate: number | null
   maxHeartRateSource: 'ZONES' | 'ACTIVITIES' | null
+  /** Beginn von Zone 2–5 laut Strava */
+  heartRateZoneStarts?: number[] | null
+  /** eigene Zonen bei Strava eingetragen (sonst Standardzonen aus dem Maximalpuls) */
+  customZones?: boolean
 }
 
 export function getStravaProfile() {

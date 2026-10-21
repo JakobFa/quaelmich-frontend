@@ -1,7 +1,20 @@
 <script setup lang="ts">
+import { formatRange, targetForStep, type HeartRateZones } from '../plan/heartRate'
 import type { StepKind, WorkoutStep } from '../types/workout'
 
-const props = defineProps<{ steps: WorkoutStep[]; ftp?: number | null }>()
+/** heartRate gesetzt → Training nach Puls: Zone und bpm statt % FTP und Watt */
+const props = defineProps<{
+  steps: WorkoutStep[]
+  ftp?: number | null
+  heartRate?: HeartRateZones | null
+}>()
+
+function heartRateCells(step: WorkoutStep) {
+  const range = targetForStep(props.heartRate!, step)
+  return range
+    ? { zone: `Z${range.zone}`, bpm: formatRange(range) }
+    : { zone: 'Z5', bpm: 'Vollgas' }
+}
 
 const kindLabels: Record<StepKind, string> = {
   WARMUP: 'Aufwärmen',
@@ -42,8 +55,14 @@ function formatWatts(step: WorkoutStep) {
         <th scope="col">#</th>
         <th scope="col">Abschnitt</th>
         <th scope="col">Dauer</th>
-        <th scope="col">% FTP</th>
-        <th v-if="ftp" scope="col">Watt</th>
+        <template v-if="heartRate">
+          <th scope="col">Zone</th>
+          <th scope="col">Puls</th>
+        </template>
+        <template v-else>
+          <th scope="col">% FTP</th>
+          <th v-if="ftp" scope="col">Watt</th>
+        </template>
       </tr>
     </thead>
     <tbody>
@@ -55,8 +74,14 @@ function formatWatts(step: WorkoutStep) {
         <td class="index">{{ index + 1 }}</td>
         <td>{{ kindLabels[step.kind] }}</td>
         <td>{{ formatDuration(step.durationSeconds) }}</td>
-        <td>{{ formatPercent(step) }}</td>
-        <td v-if="ftp" class="watts">{{ formatWatts(step) }}</td>
+        <template v-if="heartRate">
+          <td>{{ heartRateCells(step).zone }}</td>
+          <td class="watts">{{ heartRateCells(step).bpm }}</td>
+        </template>
+        <template v-else>
+          <td>{{ formatPercent(step) }}</td>
+          <td v-if="ftp" class="watts">{{ formatWatts(step) }}</td>
+        </template>
       </tr>
     </tbody>
   </table>
@@ -88,6 +113,11 @@ td {
 
 .index {
   color: var(--color-text-muted);
+}
+
+td:nth-child(3),
+.watts {
+  white-space: nowrap;
 }
 
 .watts {

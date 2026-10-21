@@ -5,9 +5,11 @@ import { getMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import { formatRange, heartRateZonesOf, rangeFor } from '../plan/heartRate'
 import {
   effectiveThresholdHeartRate,
   levelLabels,
+  trainingModeLabels,
   weekdayLabels,
   type Athlete,
 } from '../types/athlete'
@@ -23,6 +25,8 @@ onMounted(async () => {
   }
   loading.value = false
 })
+
+const heartRateZones = computed(() => heartRateZonesOf(athlete.value))
 
 const totalHours = computed(() =>
   athlete.value ? Object.values(athlete.value.availability).reduce((sum, h) => sum + h, 0) : 0,
@@ -66,6 +70,10 @@ function formatNumber(hours: number) {
         <h2 class="panel-title">Du</h2>
         <dl class="facts">
           <div>
+            <dt>Training nach</dt>
+            <dd>{{ trainingModeLabels[athlete.trainingMode ?? 'POWER'] }}</dd>
+          </div>
+          <div v-if="athlete.ftp">
             <dt>FTP</dt>
             <dd>{{ athlete.ftp }} W</dd>
           </div>
@@ -84,7 +92,7 @@ function formatNumber(hours: number) {
             <dt>Gewicht</dt>
             <dd>{{ formatNumber(athlete.weightKg ?? 0) }} kg</dd>
           </div>
-          <div>
+          <div v-if="athlete.ftp">
             <dt>W/kg</dt>
             <dd>{{ wattsPerKg }}</dd>
           </div>
@@ -93,6 +101,21 @@ function formatNumber(hours: number) {
             <dd>{{ athlete.level ? levelLabels[athlete.level] : '–' }}</dd>
           </div>
         </dl>
+      </div>
+
+      <div v-if="heartRateZones" class="panel">
+        <h2 class="panel-title">
+          Pulszonen
+          <small class="zones-source">{{
+            athlete.heartRateZoneStarts?.length ? 'eigene' : 'aus dem Maximalpuls'
+          }}</small>
+        </h2>
+        <ol class="zones">
+          <li v-for="zone in 5" :key="zone" :class="`z${zone}`">
+            <span class="zone-name">Z{{ zone }}</span>
+            <span class="zone-range">{{ formatRange(rangeFor(heartRateZones, zone)) }}</span>
+          </li>
+        </ol>
       </div>
 
       <div class="panel">
@@ -208,6 +231,49 @@ function formatNumber(hours: number) {
 
 .hours {
   font-family: var(--font-mono);
+  font-weight: 600;
+}
+.zones-source {
+  margin-left: 8px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-style: normal;
+  font-weight: 400;
+  text-transform: none;
+  color: var(--color-text-muted);
+}
+
+.zones {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(76px, 1fr));
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+}
+
+.zones li {
+  display: grid;
+  gap: 2px;
+  padding: 8px 6px;
+  border-top: 4px solid var(--color-lilac);
+  background: var(--color-ink);
+}
+
+.zones .z4,
+.zones .z5 {
+  border-top-color: var(--color-hot);
+}
+
+.zone-name {
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.zone-range {
+  white-space: nowrap;
+  font-size: 0.8rem;
   font-weight: 600;
 }
 </style>

@@ -22,6 +22,14 @@ export const weekdayLabels: Record<Weekday, string> = {
 
 export type WeeklyAvailability = Record<Weekday, number>
 
+/** Training nach Watt (mit Wattmesser) oder nach Puls (ohne) */
+export type TrainingMode = 'POWER' | 'HEART_RATE'
+
+export const trainingModeLabels: Record<TrainingMode, string> = {
+  POWER: 'Watt',
+  HEART_RATE: 'Puls',
+}
+
 export type TargetEvent = {
   id?: number
   name: string
@@ -32,7 +40,11 @@ export type TargetEvent = {
 
 export type Athlete = {
   id?: number
+  /** im Puls-Modus optional */
   ftp: number | null
+  trainingMode?: TrainingMode | null
+  /** Beginn von Zone 2–5 in bpm, optional – sonst aus dem Maximalpuls berechnet */
+  heartRateZoneStarts?: number[] | null
   /** Maximalpuls, optional – Grundlage für den Puls-TSS bei Fahrten ohne Wattmesser */
   maxHeartRate?: number | null
   /** Schwellenpuls (LTHR), optional – nur wenn aus einem Test bekannt, sonst 90 % vom Maximalpuls */
@@ -46,6 +58,8 @@ export type Athlete = {
 export function emptyAthlete(): Athlete {
   return {
     ftp: null,
+    trainingMode: 'POWER',
+    heartRateZoneStarts: null,
     maxHeartRate: null,
     thresholdHeartRate: null,
     weightKg: null,
@@ -67,4 +81,8 @@ export function emptyAthlete(): Athlete {
 export function effectiveThresholdHeartRate(athlete: Athlete): number | null {
   if (athlete.thresholdHeartRate) return athlete.thresholdHeartRate
   return athlete.maxHeartRate ? Math.round(athlete.maxHeartRate * 0.9) : null
+}
+
+export function isHeartRateMode(athlete: Athlete | null): boolean {
+  return athlete?.trainingMode === 'HEART_RATE'
 }

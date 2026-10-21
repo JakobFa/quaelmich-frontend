@@ -1,9 +1,16 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
-import { emptyAthlete, levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
+import { heartRateZonesOf } from '../plan/heartRate'
+import {
+  emptyAthlete,
+  levelLabels,
+  trainingModeLabels,
+  weekdayLabels,
+  type Athlete,
+} from '../types/athlete'
 
 const router = useRouter()
 
@@ -16,16 +23,40 @@ const errorMessage = ref('')
 
 const today = new Date().toISOString().slice(0, 10)
 
+/** Eigene Pulszonen: Beginn von Zone 2–5, alle vier oder keine */
+const zoneInputs = ref<(number | '' | null)[]>([null, null, null, null])
+const heartRateMode = computed(() => athlete.value.trainingMode === 'HEART_RATE')
+const filledZones = computed(() => zoneInputs.value.filter((v) => typeof v === 'number'))
+/** Platzhalter: aus dem Maximalpuls berechnete Zonen */
+const zonePlaceholders = computed(
+  () =>
+    heartRateZonesOf({ ...athlete.value, heartRateZoneStarts: null })?.zoneStarts ?? [
+      123, 153, 168, 183,
+    ],
+)
+
 // Wer schon ein Profil hat, sieht seine bisherigen Angaben und kann sie ändern
 onMounted(async () => {
   try {
     athlete.value = (await getMyAthlete()) ?? emptyAthlete()
+    athlete.value.trainingMode ??= 'POWER'
+    const own = athlete.value.heartRateZoneStarts
+    if (own?.length === 4) zoneInputs.value = [...own]
   } catch {
     // Backend nicht erreichbar – dann mit leerem Formular starten
   }
 })
 
 async function next() {
+  if (currentStep.value === 0) {
+    if (filledZones.value.length !== 0 && filledZones.value.length !== 4) {
+      errorMessage.value = 'Pulszonen: bitte alle vier Werte eintragen oder alle leer lassen.'
+      return
+    }
+    errorMessage.value = ''
+    athlete.value.heartRateZoneStarts =
+      filledZones.value.length === 4 ? (filledZones.value as number[]) : null
+  }
   if (currentStep.value < steps.length - 1) {
     currentStep.value++
     return
@@ -68,25 +99,43 @@ function back() {
       <!-- Schritt 1: Profil -->
       <template v-if="currentStep === 0">
         <h2 class="panel-title">Wer bist du?</h2>
+        <fieldset class="field">
+          <legend>Training nach</legend>
+          <div class="choices">
+            <label v-for="(label, mode) in trainingModeLabels" :key="mode" class="choice">
+              <input
+                v-model="athlete.trainingMode"
+                type="radio"
+                name="trainingMode"
+                :value="mode"
+              />
+              <span>
+                {{ label }}
+                <small>{{ mode === 'POWER' ? 'mit Wattmesser' : 'ohne Wattmesser' }}</small>
+              </span>
+            </label>
+          </div>
+        </fieldset>
         <label class="field">
-          <span>FTP (Watt)</span>
+          <span>FTP (Watt){{ heartRateMode ? ' – optional' : '' }}</span>
           <input
             v-model.number="athlete.ftp"
             type="number"
             min="50"
             max="600"
             placeholder="z. B. 230"
-            required
+            :required="!heartRateMode"
           />
         </label>
         <label class="field">
-          <span>Maximalpuls (optional)</span>
+          <span>Maximalpuls{{ heartRateMode ? '' : ' (optional)' }}</span>
           <input
             v-model.number="athlete.maxHeartRate"
             type="number"
             min="120"
             max="230"
             placeholder="z. B. 189"
+            :required="heartRateMode && filledZones.length !== 4"
           />
           <small class="field-hint">
             Damit schätzt quaelmich den TSS für Fahrten ohne Wattmesser (z. B. mit der Apple Watch).
@@ -111,6 +160,26 @@ function back() {
             Maximalpuls.
           </small>
         </label>
+        <fieldset class="field">
+          <legend>Eigene Pulszonen (optional)</legend>
+          <div class="zone-inputs">
+            <label v-for="(_, index) in zoneInputs" :key="index">
+              <small>Z{{ index + 2 }} ab</small>
+              <input
+                v-model.number="zoneInputs[index]"
+                type="number"
+                min="60"
+                max="230"
+                :placeholder="String(zonePlaceholders[index])"
+                :aria-label="`Beginn Zone ${index + 2}`"
+              />
+            </label>
+          </div>
+          <small class="field-hint">
+            Beginn von Zone 2 bis 5 in bpm, z. B. aus Strava oder Garmin. Leer = aus dem Maximalpuls
+            berechnet (wie Strava: 65/81/89/97 %).
+          </small>
+        </fieldset>
         <label class="field">
           <span>Gewicht (kg)</span>
           <input
@@ -300,6 +369,35 @@ function back() {
   display: block;
   margin-top: 4px;
   font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+.zone-inputs {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.zone-inputs label {
+  display: grid;
+  gap: 2px;
+}
+
+.zone-inputs small {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.zone-inputs input {
+  width: 100%;
+  min-width: 0;
+  padding-inline: 4px;
+  text-align: center;
+}
+
+.choice small {
+  display: block;
+  font-size: 0.75rem;
   color: var(--color-text-muted);
 }
 </style>

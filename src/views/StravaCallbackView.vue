@@ -22,7 +22,8 @@ onMounted(async () => {
     return
   }
   if (!expectedState || param('state') !== expectedState) {
-    errorMessage.value = 'Die Anmeldung bei Strava ist abgelaufen. Bitte starte sie nochmal im Profil.'
+    errorMessage.value =
+      'Die Anmeldung bei Strava ist abgelaufen. Bitte starte sie nochmal im Profil.'
     return
   }
   if (!param('scope').includes('activity:read')) {

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { getMyAthlete, getWorkout, workoutFitUrl } from '../api'
@@ -8,11 +8,17 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
+import { heartRateZonesOf } from '../plan/heartRate'
+import { isHeartRateMode, type Athlete } from '../types/athlete'
 import { workoutTypeLabels, type Workout } from '../types/workout'
 
 const route = useRoute()
 const workout = ref<Workout | null>(null)
-const ftp = ref<number | null>(null)
+const athlete = ref<Athlete | null>(null)
+const ftp = computed(() => athlete.value?.ftp ?? null)
+const heartRate = computed(() =>
+  isHeartRateMode(athlete.value) ? heartRateZonesOf(athlete.value) : null,
+)
 const loading = ref(true)
 const failed = ref(false)
 
@@ -21,7 +27,7 @@ onMounted(async () => {
     workout.value = await getWorkout(Number(route.params.id))
     // Wattzahlen nur mit Login (dann ist die eigene FTP bekannt)
     if (auth.isLoggedIn.value) {
-      ftp.value = (await getMyAthlete())?.ftp ?? null
+      athlete.value = await getMyAthlete()
     }
   } catch {
     failed.value = true
@@ -64,13 +70,16 @@ onMounted(async () => {
         <p>
           Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
           rechnet mit deiner dort eingestellten FTP in Watt um.
+          <template v-if="heartRate">
+            Mit Pulszielen bekommst du die Workouts aus deinem Plan.
+          </template>
         </p>
       </div>
 
       <div class="panel">
         <h3 class="panel-title">Abschnitte</h3>
-        <WorkoutSteps :steps="workout.steps" :ftp="ftp" />
-        <p v-if="!ftp" class="hint">
+        <WorkoutSteps :steps="workout.steps" :ftp="ftp" :heart-rate="heartRate" />
+        <p v-if="!ftp && !heartRate" class="hint">
           Mit einem Profil siehst du hier zusätzlich deine Zielwattzahlen.
         </p>
       </div>

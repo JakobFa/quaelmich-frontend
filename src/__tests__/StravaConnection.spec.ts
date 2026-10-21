@@ -88,6 +88,26 @@ describe('StravaConnection', () => {
     expect(wrapper.text()).toContain('Maximalpuls kennt Strava nicht')
   })
 
+  it('bietet eigene Strava-Pulszonen zum Übernehmen an', async () => {
+    const athlete = { ...emptyAthlete(), ftp: 250, maxHeartRate: 189 }
+    backend(
+      { ...base, available: true, connected: true },
+      {
+        profileAccess: true,
+        ftp: 250,
+        weightKg: null,
+        maxHeartRate: 189,
+        maxHeartRateSource: 'ACTIVITIES',
+        heartRateZoneStarts: [120, 150, 165, 178],
+        customZones: true,
+      },
+    )
+    const wrapper = mount(StravaConnection, { props: { athlete } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('120 / 150 / 165 / 178')
+  })
+
   it('bittet ohne Profil-Erlaubnis um neues Verbinden', async () => {
     backend(
       { ...base, available: true, connected: true },

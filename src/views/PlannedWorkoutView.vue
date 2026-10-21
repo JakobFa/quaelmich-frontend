@@ -14,12 +14,19 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
+import { heartRateZonesOf } from '../plan/heartRate'
+import { isHeartRateMode, type Athlete } from '../types/athlete'
 import { phaseLabels, type PlannedWorkout } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
 const route = useRoute()
 const planned = ref<PlannedWorkout | null>(null)
-const ftp = ref<number | null>(null)
+const athlete = ref<Athlete | null>(null)
+const ftp = computed(() => athlete.value?.ftp ?? null)
+/** Im Puls-Modus Pulsbereiche, sonst null (= nach Watt) */
+const heartRate = computed(() =>
+  isHeartRateMode(athlete.value) ? heartRateZonesOf(athlete.value) : null,
+)
 const loading = ref(true)
 const failed = ref(false)
 const saving = ref(false)
@@ -59,7 +66,7 @@ const ratingHint = computed(() => {
 onMounted(async () => {
   try {
     planned.value = await getPlannedWorkout(Number(route.params.id))
-    ftp.value = (await getMyAthlete())?.ftp ?? null
+    athlete.value = await getMyAthlete()
   } catch {
     failed.value = true
   } finally {
@@ -144,7 +151,11 @@ function formatDate(iso: string) {
           <dt>TSS</dt>
           <dd>{{ planned.workout.tss }}</dd>
         </div>
-        <div v-if="ftp">
+        <div v-if="heartRate">
+          <dt>Max-Puls</dt>
+          <dd>{{ heartRate.maxHeartRate }} bpm</dd>
+        </div>
+        <div v-else-if="ftp">
           <dt>Deine FTP</dt>
           <dd>{{ ftp }} W</dd>
         </div>
@@ -268,7 +279,11 @@ function formatDate(iso: string) {
           {{ downloading ? 'Lädt …' : '.fit herunterladen' }}
         </button>
         <p v-if="downloadError" class="error" role="alert">Download hat nicht geklappt.</p>
-        <p>
+        <p v-if="heartRate">
+          Für Garmin, Wahoo &amp; Co. – mit Pulsbereichen in bpm. Kurze, harte Abschnitte haben kein
+          Pulsziel: Dafür reagiert der Puls zu langsam, fahr sie nach Gefühl.
+        </p>
+        <p v-else>
           Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
           rechnet mit deiner dort eingestellten FTP in Watt um.
         </p>
@@ -276,7 +291,7 @@ function formatDate(iso: string) {
 
       <div class="panel">
         <h3 class="panel-title">Abschnitte</h3>
-        <WorkoutSteps :steps="planned.workout.steps" :ftp="ftp" />
+        <WorkoutSteps :steps="planned.workout.steps" :ftp="ftp" :heart-rate="heartRate" />
       </div>
     </template>
   </section>
