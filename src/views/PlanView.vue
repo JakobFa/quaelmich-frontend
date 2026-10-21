@@ -14,7 +14,7 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
-import { eventFocusLabels, phaseLabels, type TrainingPlan } from '../types/plan'
+import { eventFocusLabels, phaseLabels, sportLabels, type TrainingPlan } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
@@ -283,7 +283,7 @@ onMounted(async () => {
 
           <div v-for="ride in day.extraRides" :key="`extra-${ride.id}`" class="extra">
             <div>
-              <span class="type">+ Zusatzfahrt</span>
+              <span class="type">+ {{ sportLabels[ride.sport ?? 'RIDE'] }}</span>
               <p class="extra-values">
                 <template v-if="ride.durationMinutes">{{
                   formatDuration(ride.durationMinutes)
@@ -292,7 +292,8 @@ onMounted(async () => {
                   · {{ ride.distanceKm.toLocaleString('de-DE') }} km</template
                 >
                 <template v-if="ride.tss">
-                  · {{ ride.tssFromHeartRate ? '≈' : '' }}{{ ride.tss }} TSS</template
+                  · {{ ride.tssFromHeartRate || ride.tssFromDuration ? '≈' : ''
+                  }}{{ ride.tss }} TSS</template
                 >
               </p>
             </div>

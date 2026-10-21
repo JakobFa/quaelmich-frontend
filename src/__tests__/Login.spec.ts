@@ -20,8 +20,14 @@ async function mountLogin(path = '/login') {
   return mount(LoginView, { global: { plugins: [router] } })
 }
 
-async function fillAndSubmit(wrapper: Awaited<ReturnType<typeof mountLogin>>) {
-  await wrapper.find('input[type=email]').setValue('lina@example.com')
+async function fillAndSubmit(
+  wrapper: Awaited<ReturnType<typeof mountLogin>>,
+  repeat = 'lina@example.com',
+) {
+  const emailFields = wrapper.findAll('input[type=email]')
+  await emailFields[0]!.setValue('lina@example.com')
+  // bei der Registrierung gibt es ein zweites Feld zum Wiederholen
+  if (emailFields[1]) await emailFields[1].setValue(repeat)
   await wrapper.find('input[type=password]').setValue('geheim1234')
   await wrapper.find('form').trigger('submit')
   await flushPromises()
@@ -85,5 +91,30 @@ describe('Routen-Schutz', () => {
     await router.push('/workouts')
 
     expect(router.currentRoute.value.name).toBe('workouts')
+  })
+
+  it('verlangt bei der Registrierung die E-Mail zweimal und stoppt bei Tippfehlern', async () => {
+    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
+    const wrapper = await mountLogin('/login?mode=register')
+
+    await fillAndSubmit(wrapper, 'lina@exmaple.com')
+
+    expect(wrapper.text()).toContain('stimmen nicht überein')
+    expect(fetch).not.toHaveBeenCalled()
+    expect(auth.isLoggedIn.value).toBe(false)
+  })
+
+  it('akzeptiert die Wiederholung auch mit anderer Groß-/Kleinschreibung', async () => {
+    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
+    const wrapper = await mountLogin('/login?mode=register')
+
+    await fillAndSubmit(wrapper, 'Lina@Example.com')
+
+    expect(auth.isLoggedIn.value).toBe(true)
+  })
+
+  it('fragt beim Anmelden nur einmal nach der E-Mail', async () => {
+    const wrapper = await mountLogin()
+    expect(wrapper.findAll('input[type=email]')).toHaveLength(1)
   })
 })

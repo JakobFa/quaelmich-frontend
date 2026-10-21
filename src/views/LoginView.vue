@@ -9,6 +9,8 @@ const router = useRouter()
 
 const mode = ref<'login' | 'register'>(route.query.mode === 'register' ? 'register' : 'login')
 const email = ref('')
+/** nur bei der Registrierung: E-Mail ein zweites Mal, damit Tippfehler auffallen */
+const emailRepeat = ref('')
 const password = ref('')
 const submitting = ref(false)
 const errorMessage = ref('')
@@ -19,6 +21,15 @@ let slowTimer: ReturnType<typeof setTimeout> | undefined
 onUnmounted(() => clearTimeout(slowTimer))
 
 const isRegister = computed(() => mode.value === 'register')
+
+/** Groß-/Kleinschreibung zählt bei E-Mail-Adressen nicht */
+const emailsMatch = computed(
+  () => email.value.trim().toLowerCase() === emailRepeat.value.trim().toLowerCase(),
+)
+/** Hinweis erst zeigen, wenn im zweiten Feld schon etwas steht */
+const showMismatch = computed(
+  () => isRegister.value && emailRepeat.value.length > 0 && !emailsMatch.value,
+)
 
 function switchMode() {
   mode.value = isRegister.value ? 'login' : 'register'
@@ -36,6 +47,10 @@ function messageFor(error: unknown): string {
 }
 
 async function submit() {
+  if (isRegister.value && !emailsMatch.value) {
+    errorMessage.value = 'Die beiden E-Mail-Adressen stimmen nicht überein.'
+    return
+  }
   submitting.value = true
   errorMessage.value = ''
   slowTimer = setTimeout(() => (slow.value = true), 3000)
@@ -67,6 +82,20 @@ async function submit() {
       <label class="field">
         <span>E-Mail</span>
         <input v-model.trim="email" type="email" autocomplete="email" required />
+      </label>
+
+      <label v-if="isRegister" class="field">
+        <span>E-Mail wiederholen</span>
+        <input
+          v-model.trim="emailRepeat"
+          type="email"
+          autocomplete="off"
+          :aria-invalid="showMismatch"
+          required
+        />
+        <small v-if="showMismatch" class="mismatch" role="status">
+          Stimmt noch nicht mit der ersten Adresse überein.
+        </small>
       </label>
 
       <label class="field">
@@ -110,6 +139,14 @@ async function submit() {
   margin: 0 0 16px;
   font-family: var(--font-mono);
   font-size: 0.85rem;
+  color: var(--color-hot);
+}
+
+.mismatch {
+  display: block;
+  margin-top: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
   color: var(--color-hot);
 }
 

@@ -64,6 +64,20 @@ export type AdjustOptions = {
 }
 
 /** Fahrt ohne geplantes Workout, z. B. am Ruhetag; assessment null = lockere Runde (unter 50 TSS) */
+/** Sportart einer gemachten Einheit – nur Radfahrten haken geplante Workouts ab */
+export type Sport = 'RIDE' | 'RUN' | 'SWIM' | 'WALK' | 'HIKE' | 'STRENGTH' | 'OTHER'
+
+export const sportLabels: Record<Sport, string> = {
+  RIDE: '🚴 Zusatzfahrt',
+  RUN: '🏃 Laufen',
+  SWIM: '🏊 Schwimmen',
+  WALK: '🚶 Gehen',
+  HIKE: '🥾 Wandern',
+  STRENGTH: '🏋️ Kraft',
+  OTHER: '⚡ Sonstiges',
+}
+
+/** Einheit ohne geplantes Workout: Zusatzfahrt oder andere Sportart, zählt als Belastung */
 export type ExtraRide = {
   id: number
   date: string
@@ -73,6 +87,10 @@ export type ExtraRide = {
   assessment: Assessment | null
   stravaUrl?: string | null
   tssFromHeartRate?: boolean
+  /** TSS nur grob aus Dauer und Sportart geschätzt */
+  tssFromDuration?: boolean
+  /** fehlt bei älteren Einträgen → Radfahrt */
+  sport?: Sport
 }
 
 /** Wie quaelmich das Event einschätzt – bestimmt die Auswahl der Workouts */
