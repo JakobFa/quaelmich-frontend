@@ -33,7 +33,9 @@ export type TargetEvent = {
 export type Athlete = {
   id?: number
   ftp: number | null
-  /** Schwellenpuls (LTHR), optional – für den Puls-TSS bei Fahrten ohne Wattmesser */
+  /** Maximalpuls, optional – Grundlage für den Puls-TSS bei Fahrten ohne Wattmesser */
+  maxHeartRate?: number | null
+  /** Schwellenpuls (LTHR), optional – nur wenn aus einem Test bekannt, sonst 90 % vom Maximalpuls */
   thresholdHeartRate?: number | null
   weightKg: number | null
   level: Level | null
@@ -44,6 +46,7 @@ export type Athlete = {
 export function emptyAthlete(): Athlete {
   return {
     ftp: null,
+    maxHeartRate: null,
     thresholdHeartRate: null,
     weightKg: null,
     level: null,
@@ -58,4 +61,10 @@ export function emptyAthlete(): Athlete {
       sunday: 0,
     },
   }
+}
+
+/** Eingetragener Schwellenpuls, sonst 90 % vom Maximalpuls (wie im Backend) */
+export function effectiveThresholdHeartRate(athlete: Athlete): number | null {
+  if (athlete.thresholdHeartRate) return athlete.thresholdHeartRate
+  return athlete.maxHeartRate ? Math.round(athlete.maxHeartRate * 0.9) : null
 }

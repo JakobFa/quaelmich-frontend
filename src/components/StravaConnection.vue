@@ -38,12 +38,12 @@ onMounted(async () => {
   }
 })
 
-type Field = 'ftp' | 'weightKg' | 'thresholdHeartRate'
+type Field = 'ftp' | 'weightKg' | 'maxHeartRate'
 
 const fieldLabels: Record<Field, { label: string; unit: string }> = {
   ftp: { label: 'FTP', unit: 'W' },
   weightKg: { label: 'Gewicht', unit: 'kg' },
-  thresholdHeartRate: { label: 'Schwellenpuls (ca.)', unit: 'bpm' },
+  maxHeartRate: { label: 'Maximalpuls', unit: 'bpm' },
 }
 
 /** Nur Werte, die es bei Strava gibt und die sich vom eigenen Profil unterscheiden */
@@ -139,17 +139,15 @@ async function disconnect() {
             </tr>
           </tbody>
         </table>
-        <p v-if="differences.some((d) => d.field === 'thresholdHeartRate')" class="hint small">
-          <template v-if="suggestion?.thresholdSource === 'ACTIVITIES'">
-            Geschätzt aus deinem höchsten Puls der letzten 90 Tage ({{
-              suggestion.maxHeartRateObserved
-            }}
-            bpm) – davon ca. 90 %.
-          </template>
-          <template v-else>
-            Geschätzt aus deinen Strava-Pulszonen (Beginn von Zone 4 „Schwelle“).
-          </template>
-          Genauer ist ein eigener Test.
+        <p
+          v-if="
+            differences.some((d) => d.field === 'maxHeartRate') &&
+            suggestion?.maxHeartRateSource === 'ACTIVITIES'
+          "
+          class="hint small"
+        >
+          Höchster Puls deiner Strava-Aktivitäten der letzten 90 Tage – dein echter Maximalpuls kann
+          etwas höher liegen.
         </p>
         <button type="button" class="button" :disabled="busy" @click="applySuggestion">
           Übernehmen
@@ -161,8 +159,8 @@ async function disconnect() {
       </p>
       <p v-else-if="suggestion?.profileAccess && athlete" class="hint">
         ✓ Dein Profil passt zu Strava.
-        <template v-if="suggestion.thresholdHeartRate == null">
-          Einen Schwellenpuls kennt Strava nicht – trag ihn unter „Angaben ändern“ selbst ein.
+        <template v-if="suggestion.maxHeartRate == null">
+          Einen Maximalpuls kennt Strava nicht – trag ihn unter „Angaben ändern“ selbst ein.
         </template>
       </p>
 
@@ -179,7 +177,7 @@ async function disconnect() {
     <template v-else-if="status">
       <p class="hint">
         Übernimmt gefahrene Einheiten direkt von Strava, z. B. von der Apple Watch oder der
-        Strava-App – und auf Wunsch FTP, Gewicht und Schwellenpuls. Noch im Test: höchstens 10
+        Strava-App – und auf Wunsch FTP, Gewicht und Maximalpuls. Noch im Test: höchstens 10
         Personen können sich verbinden.
       </p>
       <button type="button" class="strava-button" @click="connect">Connect with Strava</button>

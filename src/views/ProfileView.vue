@@ -5,7 +5,12 @@ import { getMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
-import { levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
+import {
+  effectiveThresholdHeartRate,
+  levelLabels,
+  weekdayLabels,
+  type Athlete,
+} from '../types/athlete'
 
 const athlete = ref<Athlete | null>(null)
 const loading = ref(true)
@@ -64,9 +69,16 @@ function formatNumber(hours: number) {
             <dt>FTP</dt>
             <dd>{{ athlete.ftp }} W</dd>
           </div>
-          <div v-if="athlete.thresholdHeartRate">
+          <div v-if="athlete.maxHeartRate">
+            <dt>Max-Puls</dt>
+            <dd>{{ athlete.maxHeartRate }} bpm</dd>
+          </div>
+          <div v-if="effectiveThresholdHeartRate(athlete)">
             <dt>Schwellenpuls</dt>
-            <dd>{{ athlete.thresholdHeartRate }} bpm</dd>
+            <dd>
+              {{ athlete.thresholdHeartRate ? '' : '≈'
+              }}{{ effectiveThresholdHeartRate(athlete) }} bpm
+            </dd>
           </div>
           <div>
             <dt>Gewicht</dt>

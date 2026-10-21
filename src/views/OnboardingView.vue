@@ -80,17 +80,35 @@ function back() {
           />
         </label>
         <label class="field">
+          <span>Maximalpuls (optional)</span>
+          <input
+            v-model.number="athlete.maxHeartRate"
+            type="number"
+            min="120"
+            max="230"
+            placeholder="z. B. 189"
+          />
+          <small class="field-hint">
+            Damit schätzt quaelmich den TSS für Fahrten ohne Wattmesser (z. B. mit der Apple Watch).
+            Steht auch bei Strava unter „Meine Leistungen“.
+          </small>
+        </label>
+        <label class="field">
           <span>Schwellenpuls (optional)</span>
           <input
             v-model.number="athlete.thresholdHeartRate"
             type="number"
             min="100"
             max="220"
-            placeholder="z. B. 170"
+            :placeholder="
+              athlete.maxHeartRate
+                ? `sonst ≈ ${Math.round(athlete.maxHeartRate * 0.9)}`
+                : 'z. B. 170'
+            "
           />
           <small class="field-hint">
-            Puls, den du etwa eine Stunde hart halten kannst – grob 90 % deines Maximalpulses. Damit
-            schätzt quaelmich den TSS für Fahrten ohne Wattmesser (z. B. mit der Apple Watch).
+            Nur eintragen, wenn du ihn aus einem Test kennst – sonst nimmt quaelmich 90 % vom
+            Maximalpuls.
           </small>
         </label>
         <label class="field">
