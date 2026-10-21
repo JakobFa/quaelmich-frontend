@@ -49,6 +49,18 @@ export type PlannedWorkout = {
   workout: Workout
   actual: ActualRide | null
   adjustment: Adjustment | null
+  /** welche Anpassungen gerade möglich sind (leichter, härter, kürzer, länger, zurück zum Original) */
+  options?: AdjustOptions
+}
+
+export type AdjustDirection = 'EASIER' | 'HARDER' | 'SHORTER' | 'LONGER'
+
+export type AdjustOptions = {
+  easier: boolean
+  harder: boolean
+  shorter: boolean
+  longer: boolean
+  reset: boolean
 }
 
 /** Fahrt ohne geplantes Workout, z. B. am Ruhetag; assessment null = lockere Runde (unter 50 TSS) */

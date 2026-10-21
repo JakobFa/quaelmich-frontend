@@ -1,6 +1,6 @@
 import { auth, endSession, startSession } from './auth'
 import type { Athlete } from './types/athlete'
-import type { PlannedWorkout, TrainingPlan } from './types/plan'
+import type { PlannedWorkout, TrainingPlan, AdjustDirection } from './types/plan'
 import type { Workout } from './types/workout'
 
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
@@ -151,6 +151,19 @@ export function updateProgress(id: number, completed: boolean, rating: number | 
     method: 'PUT',
     body: JSON.stringify({ completed, rating }),
   })
+}
+
+/** Workout für heute anpassen: leichter, härter, kürzer oder länger (409 = geht gerade nicht) */
+export function adjustPlannedWorkout(id: number, direction: AdjustDirection) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, {
+    method: 'PUT',
+    body: JSON.stringify({ direction }),
+  })
+}
+
+/** Zurück zum ursprünglich geplanten Workout */
+export function resetPlannedWorkout(id: number) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, { method: 'DELETE' })
 }
 
 /** "War das das geplante Training?" – bei Nein zählt das Workout nicht mehr als erledigt */

@@ -3,10 +3,13 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import {
+  ApiError,
+  adjustPlannedWorkout,
   confirmActivity,
   downloadPlannedWorkoutFit,
   getMyAthlete,
   getPlannedWorkout,
+  resetPlannedWorkout,
   updateProgress,
 } from '../api'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
@@ -16,7 +19,12 @@ import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
 import { heartRateZonesOf } from '../plan/heartRate'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
-import { phaseLabels, type PlannedWorkout } from '../types/plan'
+import {
+  phaseLabels,
+  type AdjustDirection,
+  type AdjustOptions,
+  type PlannedWorkout,
+} from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
 const route = useRoute()
@@ -87,6 +95,37 @@ async function save(completed: boolean, rating: number | null) {
   }
 }
 
+// ---------- Workout für heute anpassen ----------
+
+const adjustButtons: { direction: AdjustDirection; label: string; option: keyof AdjustOptions }[] =
+  [
+    { direction: 'EASIER', label: '▼ Leichter', option: 'easier' },
+    { direction: 'HARDER', label: '▲ Härter', option: 'harder' },
+    { direction: 'SHORTER', label: '− Kürzer', option: 'shorter' },
+    { direction: 'LONGER', label: '+ Länger', option: 'longer' },
+  ]
+const adjusting = ref(false)
+const adjustError = ref('')
+
+async function adjust(direction: AdjustDirection | 'RESET') {
+  if (!planned.value) return
+  adjusting.value = true
+  adjustError.value = ''
+  try {
+    planned.value =
+      direction === 'RESET'
+        ? await resetPlannedWorkout(planned.value.id)
+        : await adjustPlannedWorkout(planned.value.id, direction)
+  } catch (error) {
+    adjustError.value =
+      error instanceof ApiError && error.status === 409
+        ? 'Das geht bei diesem Workout gerade nicht.'
+        : 'Anpassen hat nicht geklappt. Bitte versuch es nochmal.'
+  } finally {
+    adjusting.value = false
+  }
+}
+
 async function confirm(matchesPlan: boolean) {
   if (!planned.value) return
   saving.value = true
@@ -136,6 +175,33 @@ function formatDate(iso: string) {
       <p class="type">{{ workoutTypeLabels[planned.workout.type] }}</p>
       <h2 class="headline">{{ planned.workout.title }}</h2>
       <p class="description">{{ planned.workout.description }}</p>
+
+      <!-- Für heute anpassen -->
+      <div v-if="planned.options && !planned.completed" class="panel customize">
+        <p class="customize-title">Heute lieber anders?</p>
+        <div class="customize-buttons">
+          <button
+            v-for="button in adjustButtons"
+            :key="button.direction"
+            type="button"
+            class="button button-ghost"
+            :disabled="adjusting || !planned.options[button.option]"
+            @click="adjust(button.direction)"
+          >
+            {{ button.label }}
+          </button>
+        </div>
+        <button
+          v-if="planned.options.reset"
+          type="button"
+          class="link"
+          :disabled="adjusting"
+          @click="adjust('RESET')"
+        >
+          ↺ Original wiederherstellen
+        </button>
+        <p v-if="adjustError" class="error" role="alert">{{ adjustError }}</p>
+      </div>
 
       <div v-if="planned.adjustment" class="panel adjustment" role="note">
         <p class="adjustment-title">↻ Statt {{ planned.adjustment.originalTitle }}</p>
@@ -464,6 +530,38 @@ function formatDate(iso: string) {
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* ---------- Für heute anpassen ---------- */
+
+.customize-title {
+  margin: 0 0 10px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+}
+
+.customize-buttons {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+@media (min-width: 640px) {
+  .customize-buttons {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+.customize-buttons .button {
+  padding: 10px 6px;
+  font-size: 0.9rem;
+}
+
+.customize .link {
+  margin-top: 12px;
 }
 
 /* ---------- Angepasst ---------- */
