@@ -123,11 +123,10 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
 }
 
 .headline {
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   margin: 0 0 14px;
   font-size: clamp(1.05rem, 4vw, 1.35rem);
-  font-style: italic;
-  font-weight: 900;
-  font-stretch: 85%;
   text-transform: uppercase;
   line-height: 1.15;
 }

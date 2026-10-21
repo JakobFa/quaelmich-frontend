@@ -92,7 +92,7 @@ function formatWatts(step: WorkoutStep) {
   width: 100%;
   border-collapse: collapse;
   font-family: var(--font-mono);
-  font-size: 0.85rem;
+  font-size: 0.8rem;
 }
 
 th {
@@ -116,6 +116,7 @@ td {
 }
 
 td:nth-child(3),
+td:nth-child(4),
 .watts {
   white-space: nowrap;
 }

@@ -112,11 +112,10 @@ onMounted(async () => {
 }
 
 .headline {
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   margin: 2px 0 8px;
   font-size: clamp(1.8rem, 6vw, 2.6rem);
-  font-weight: 900;
-  font-style: italic;
-  font-stretch: 85%;
   text-transform: uppercase;
   line-height: 1;
 }

@@ -202,11 +202,10 @@ onMounted(loadWorkouts)
 }
 
 .title {
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   margin: 0 0 10px;
   font-size: 1.45rem;
-  font-weight: 900;
-  font-style: italic;
-  font-stretch: 80%;
   text-transform: uppercase;
   letter-spacing: -0.01em;
   line-height: 1.05;

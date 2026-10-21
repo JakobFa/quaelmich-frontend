@@ -383,11 +383,10 @@ onMounted(async () => {
 }
 
 .week-title h2 {
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   margin: 0;
   font-size: 1.8rem;
-  font-weight: 900;
-  font-style: italic;
-  font-stretch: 85%;
   text-transform: uppercase;
   line-height: 1;
 }
@@ -522,8 +521,8 @@ onMounted(async () => {
 }
 
 .event {
-  font-weight: 900;
-  font-style: italic;
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   text-transform: uppercase;
   color: var(--color-hot);
 }
@@ -633,11 +632,10 @@ onMounted(async () => {
 }
 
 .session-title {
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   margin: 2px 0 8px;
   font-size: 1.15rem;
-  font-weight: 900;
-  font-style: italic;
-  font-stretch: 85%;
   text-transform: uppercase;
   line-height: 1.1;
 }

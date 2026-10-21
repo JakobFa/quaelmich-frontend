@@ -39,11 +39,10 @@ import heroUrl from '../assets/hero.jpg'
 }
 
 .headline {
+  font-family: var(--font-heading);
+  font-weight: 400; /* Saira Stencil gibt es nur in einer Stärke */
   margin: 8px 0 12px;
   font-size: clamp(1.8rem, 5vw, 2.6rem);
-  font-weight: 900;
-  font-style: italic;
-  font-stretch: 85%;
   text-transform: uppercase;
   line-height: 1;
 }
