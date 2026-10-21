@@ -1,6 +1,6 @@
 import { auth, endSession, startSession } from './auth'
 import type { Athlete } from './types/athlete'
-import type { PlannedWorkout, TrainingPlan, AdjustDirection } from './types/plan'
+import type { PlannedWorkout, TrainingPlan, AdjustDirection, ExtraRide } from './types/plan'
 import type { Workout } from './types/workout'
 
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
@@ -177,6 +177,19 @@ export function adjustPlannedWorkout(id: number, direction: AdjustDirection) {
 /** Zurück zum ursprünglich geplanten Workout */
 export function resetPlannedWorkout(id: number) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, { method: 'DELETE' })
+}
+
+/** Fahrten des Tages, die man diesem Workout selbst zuordnen kann */
+export function getCandidateRides(id: number) {
+  return request<ExtraRide[]>(`/planned-workouts/${id}/candidate-rides`)
+}
+
+/** "Diese Fahrt war das Training": hakt das Workout ab und übernimmt die Werte der Fahrt */
+export function assignRide(id: number, extraRideId: number) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/activity`, {
+    method: 'PUT',
+    body: JSON.stringify({ extraRideId }),
+  })
 }
 
 /** "War das das geplante Training?" – bei Nein zählt das Workout nicht mehr als erledigt */

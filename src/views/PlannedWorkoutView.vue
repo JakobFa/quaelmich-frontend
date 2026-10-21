@@ -5,7 +5,9 @@ import { useRoute } from 'vue-router'
 import {
   ApiError,
   adjustPlannedWorkout,
+  assignRide,
   confirmActivity,
+  getCandidateRides,
   downloadPlannedWorkoutFit,
   getMyAthlete,
   getPlannedWorkout,
@@ -23,6 +25,7 @@ import {
   phaseLabels,
   type AdjustDirection,
   type AdjustOptions,
+  type ExtraRide,
   type PlannedWorkout,
 } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
@@ -75,12 +78,52 @@ onMounted(async () => {
   try {
     planned.value = await getPlannedWorkout(Number(route.params.id))
     athlete.value = await getMyAthlete()
+    loadCandidates()
   } catch {
     failed.value = true
   } finally {
     loading.value = false
   }
 })
+
+// ---------- Fahrt selbst zuordnen ----------
+
+/** Fahrten des Tages, die nicht automatisch zugeordnet wurden */
+const candidates = ref<ExtraRide[]>([])
+
+async function loadCandidates() {
+  if (!planned.value || planned.value.actual) {
+    candidates.value = []
+    return
+  }
+  try {
+    candidates.value = await getCandidateRides(planned.value.id)
+  } catch {
+    candidates.value = [] // ohne Vorschläge geht es auch
+  }
+}
+
+async function assign(ride: ExtraRide) {
+  if (!planned.value) return
+  saving.value = true
+  saveError.value = false
+  try {
+    planned.value = await assignRide(planned.value.id, ride.id)
+    candidates.value = []
+  } catch {
+    saveError.value = true
+  } finally {
+    saving.value = false
+  }
+}
+
+function describeRide(ride: ExtraRide) {
+  const parts = [ride.durationMinutes ? formatDuration(ride.durationMinutes) : null]
+  if (ride.distanceKm) parts.push(`${ride.distanceKm.toLocaleString('de-DE')} km`)
+  if (ride.tss)
+    parts.push(`${ride.tssFromHeartRate || ride.tssFromDuration ? '≈' : ''}${ride.tss} TSS`)
+  return parts.filter(Boolean).join(' · ')
+}
 
 async function save(completed: boolean, rating: number | null) {
   if (!planned.value) return
@@ -229,6 +272,34 @@ function formatDate(iso: string) {
 
       <WorkoutProfile :steps="planned.workout.steps" class="profile" />
 
+      <!-- Fahrt des Tages selbst zuordnen, wenn sie nicht automatisch erkannt wurde -->
+      <div v-if="!planned.actual && candidates.length > 0" class="panel assign">
+        <p class="assign-title">Welche Fahrt war dieses Training?</p>
+        <p class="hint">
+          <template v-if="candidates.length === 1">
+            An diesem Tag gibt es eine Fahrt, die quaelmich nicht automatisch zugeordnet hat – sie
+            passt nicht sicher genug zum Plan.
+          </template>
+          <template v-else>
+            An diesem Tag gibt es {{ candidates.length }} Fahrten, die quaelmich nicht automatisch
+            zugeordnet hat – sie passen nicht sicher genug zum Plan.
+          </template>
+        </p>
+        <ul class="assign-list">
+          <li v-for="ride in candidates" :key="ride.id">
+            <span>{{ describeRide(ride) }}</span>
+            <button
+              type="button"
+              class="button button-ghost"
+              :disabled="saving"
+              @click="assign(ride)"
+            >
+              Das war's
+            </button>
+          </li>
+        </ul>
+      </div>
+
       <!-- Geplant vs. tatsächlich gefahren (aus intervals.icu) -->
       <div v-if="planned.actual" class="panel compare">
         <h3 class="panel-title">
@@ -279,12 +350,12 @@ function formatDate(iso: string) {
         </table>
         <p class="source">
           <template v-if="planned.actual.stravaUrl">
-            Automatisch übernommen aus Strava ·
+            Übernommen aus Strava ·
             <a :href="planned.actual.stravaUrl" target="_blank" rel="noopener" class="strava-link">
               View on Strava
             </a>
           </template>
-          <template v-else>Automatisch übernommen aus intervals.icu.</template>
+          <template v-else>Übernommen aus intervals.icu.</template>
         </p>
 
         <div v-if="planned.actual.confirmed == null" class="confirm">
@@ -530,6 +601,39 @@ function formatDate(iso: string) {
   font: inherit;
   text-decoration: underline;
   cursor: pointer;
+}
+
+/* ---------- Fahrt zuordnen ---------- */
+
+.assign-title {
+  margin: 0 0 6px;
+  font-weight: 700;
+}
+
+.assign .hint {
+  margin: 0 0 12px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.assign-list {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.assign-list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+  padding: 8px 10px;
+  border: 2px dashed var(--color-hot);
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 /* ---------- Für heute anpassen ---------- */
