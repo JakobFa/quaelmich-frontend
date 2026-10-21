@@ -3,11 +3,9 @@ import { computed, onMounted, ref } from 'vue'
 
 import {
   generatePlan,
-  getIntervalsStatus,
   getMyAthlete,
   getPlan,
   importActivities,
-  syncToIntervals,
   getProgress,
   type Progress,
 } from '../api'
@@ -34,30 +32,6 @@ async function loadProgress() {
 const loading = ref(true)
 const failed = ref(false)
 const generating = ref(false)
-
-// intervals.icu: Button nur zeigen, wenn der Nutzer sein Konto verbunden hat
-const intervalsAvailable = ref(false)
-const syncing = ref(false)
-const syncMessage = ref('')
-const syncFailed = ref(false)
-
-async function sync() {
-  syncing.value = true
-  syncMessage.value = ''
-  syncFailed.value = false
-  try {
-    const result = await syncToIntervals()
-    syncMessage.value =
-      result.uploaded === 0
-        ? 'In den nächsten 14 Tagen ist nichts geplant.'
-        : `${result.uploaded} Workouts an intervals.icu gesendet (bis ${formatDate(result.to)}).`
-  } catch {
-    syncFailed.value = true
-    syncMessage.value = 'Senden an intervals.icu hat nicht geklappt.'
-  } finally {
-    syncing.value = false
-  }
-}
 
 const today = toIsoDate(new Date())
 const weeks = computed(() => (plan.value ? buildWeeks(plan.value) : []))
@@ -133,11 +107,6 @@ async function importRides() {
 onMounted(async () => {
   await load()
   if (plan.value) {
-    try {
-      intervalsAvailable.value = (await getIntervalsStatus()).connected
-    } catch {
-      intervalsAvailable.value = false
-    }
     // Fahrten aus intervals.icu und/oder Strava – ohne Verbindung antwortet das Backend mit 409
     importRides()
   }
@@ -189,13 +158,6 @@ onMounted(async () => {
           <strong>{{ weeks.length }} Wochen</strong>
           <small>{{ plan.workouts.length }} Workouts</small>
         </div>
-      </div>
-
-      <div v-if="intervalsAvailable" class="sync">
-        <button type="button" class="button button-ghost" :disabled="syncing" @click="sync">
-          {{ syncing ? 'Sendet …' : 'Nächste 14 Tage an intervals.icu senden' }}
-        </button>
-        <p v-if="syncMessage" :class="{ error: syncFailed }" role="status">{{ syncMessage }}</p>
       </div>
 
       <!-- Wochen-Navigation -->
@@ -349,25 +311,6 @@ onMounted(async () => {
 
 .error {
   margin: 0 0 12px;
-  color: var(--color-hot);
-}
-
-.sync {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 8px 16px;
-  margin: -12px 0 28px;
-}
-
-.sync p {
-  margin: 0;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  color: var(--color-lilac);
-}
-
-.sync p.error {
   color: var(--color-hot);
 }
 

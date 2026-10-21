@@ -69,4 +69,16 @@ describe('IntervalsConnection', () => {
 
     expect(wrapper.text()).toContain('abgelehnt')
   })
+
+  it('bietet "Jetzt senden" nur ohne Auto-Sync an', async () => {
+    backend({ status: 200, body: { ...connected, autoSync: true } })
+    const withAutoSync = mount(IntervalsConnection)
+    await flushPromises()
+    expect(withAutoSync.text()).not.toContain('jetzt senden')
+
+    backend({ status: 200, body: { ...connected, autoSync: false } })
+    const withoutAutoSync = mount(IntervalsConnection)
+    await flushPromises()
+    expect(withoutAutoSync.text()).toContain('Nächste 14 Tage jetzt senden')
+  })
 })

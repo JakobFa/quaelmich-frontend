@@ -7,6 +7,7 @@ import {
   disconnectIntervals,
   getIntervalsStatus,
   setIntervalsAutoSync,
+  syncToIntervals,
   type IntervalsStatus,
 } from '../api'
 
@@ -75,6 +76,27 @@ async function disconnect() {
   }
 }
 
+const syncMessage = ref('')
+
+/** Nur nötig, wenn Auto-Sync aus ist – sonst sendet quaelmich von selbst */
+async function sendNow() {
+  busy.value = true
+  errorMessage.value = ''
+  syncMessage.value = ''
+  try {
+    const result = await syncToIntervals()
+    syncMessage.value =
+      result.uploaded === 0
+        ? 'In den nächsten 14 Tagen ist nichts geplant.'
+        : `${result.uploaded} Workouts gesendet.`
+    status.value = await getIntervalsStatus()
+  } catch {
+    errorMessage.value = 'Senden an intervals.icu hat nicht geklappt.'
+  } finally {
+    busy.value = false
+  }
+}
+
 async function toggleAutoSync() {
   if (!status.value) return
   busy.value = true
@@ -137,7 +159,17 @@ function formatDate(iso: string) {
         Von intervals.icu gelangen die Workouts – wenn du es dort eingerichtet hast – zu Wahoo oder
         Garmin.
       </p>
+      <p v-if="syncMessage" class="hint" role="status">{{ syncMessage }}</p>
       <div class="actions">
+        <button
+          v-if="!status.autoSync"
+          type="button"
+          class="button button-ghost"
+          :disabled="busy"
+          @click="sendNow"
+        >
+          Nächste 14 Tage jetzt senden
+        </button>
         <button type="button" class="button button-ghost" :disabled="busy" @click="editing = true">
           Schlüssel ändern
         </button>
