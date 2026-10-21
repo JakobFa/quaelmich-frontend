@@ -12,6 +12,9 @@ const email = ref('')
 /** nur bei der Registrierung: E-Mail ein zweites Mal, damit Tippfehler auffallen */
 const emailRepeat = ref('')
 const password = ref('')
+/** nur bei der Registrierung – solange es kein "Passwort vergessen" gibt, wäre ein Tippfehler fatal */
+const passwordRepeat = ref('')
+const showPassword = ref(false)
 const submitting = ref(false)
 const errorMessage = ref('')
 
@@ -26,6 +29,11 @@ const isRegister = computed(() => mode.value === 'register')
 const emailsMatch = computed(
   () => email.value.trim().toLowerCase() === emailRepeat.value.trim().toLowerCase(),
 )
+const passwordsMatch = computed(() => password.value === passwordRepeat.value)
+const showPasswordMismatch = computed(
+  () => isRegister.value && passwordRepeat.value.length > 0 && !passwordsMatch.value,
+)
+
 /** Hinweis erst zeigen, wenn im zweiten Feld schon etwas steht */
 const showMismatch = computed(
   () => isRegister.value && emailRepeat.value.length > 0 && !emailsMatch.value,
@@ -49,6 +57,10 @@ function messageFor(error: unknown): string {
 async function submit() {
   if (isRegister.value && !emailsMatch.value) {
     errorMessage.value = 'Die beiden E-Mail-Adressen stimmen nicht überein.'
+    return
+  }
+  if (isRegister.value && !passwordsMatch.value) {
+    errorMessage.value = 'Die beiden Passwörter stimmen nicht überein.'
     return
   }
   submitting.value = true
@@ -100,13 +112,38 @@ async function submit() {
 
       <label class="field">
         <span>Passwort{{ isRegister ? ' (mind. 8 Zeichen)' : '' }}</span>
+        <span class="password-row">
+          <input
+            v-model="password"
+            :type="showPassword ? 'text' : 'password'"
+            :autocomplete="isRegister ? 'new-password' : 'current-password'"
+            :minlength="isRegister ? 8 : undefined"
+            required
+          />
+          <button
+            type="button"
+            class="toggle"
+            :aria-pressed="showPassword"
+            :aria-label="showPassword ? 'Passwort verbergen' : 'Passwort anzeigen'"
+            @click="showPassword = !showPassword"
+          >
+            {{ showPassword ? 'verbergen' : 'anzeigen' }}
+          </button>
+        </span>
+      </label>
+
+      <label v-if="isRegister" class="field">
+        <span>Passwort wiederholen</span>
         <input
-          v-model="password"
-          type="password"
-          :autocomplete="isRegister ? 'new-password' : 'current-password'"
-          :minlength="isRegister ? 8 : undefined"
+          v-model="passwordRepeat"
+          :type="showPassword ? 'text' : 'password'"
+          autocomplete="new-password"
+          :aria-invalid="showPasswordMismatch"
           required
         />
+        <small v-if="showPasswordMismatch" class="mismatch" role="status">
+          Stimmt noch nicht mit dem ersten Passwort überein.
+        </small>
       </label>
 
       <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
@@ -140,6 +177,31 @@ async function submit() {
   font-family: var(--font-mono);
   font-size: 0.85rem;
   color: var(--color-hot);
+}
+
+.password-row {
+  position: relative;
+  display: block;
+}
+
+.password-row input {
+  padding-right: 96px;
+}
+
+.toggle {
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  padding: 4px 6px;
+  border: 0;
+  background: none;
+  color: var(--color-lilac);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  cursor: pointer;
 }
 
 .mismatch {

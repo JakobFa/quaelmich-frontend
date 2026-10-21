@@ -20,15 +20,19 @@ async function mountLogin(path = '/login') {
   return mount(LoginView, { global: { plugins: [router] } })
 }
 
+/** Füllt das Formular aus; bei der Registrierung auch die Wiederholungsfelder */
 async function fillAndSubmit(
   wrapper: Awaited<ReturnType<typeof mountLogin>>,
-  repeat = 'lina@example.com',
+  { emailRepeat = 'lina@example.com', passwordRepeat = 'geheim1234' } = {},
 ) {
   const emailFields = wrapper.findAll('input[type=email]')
   await emailFields[0]!.setValue('lina@example.com')
-  // bei der Registrierung gibt es ein zweites Feld zum Wiederholen
-  if (emailFields[1]) await emailFields[1].setValue(repeat)
-  await wrapper.find('input[type=password]').setValue('geheim1234')
+  if (emailFields[1]) await emailFields[1].setValue(emailRepeat)
+
+  const passwordFields = wrapper.findAll('input[type=password]')
+  await passwordFields[0]!.setValue('geheim1234')
+  if (passwordFields[1]) await passwordFields[1].setValue(passwordRepeat)
+
   await wrapper.find('form').trigger('submit')
   await flushPromises()
 }
@@ -58,13 +62,63 @@ describe('Login', () => {
     expect(wrapper.text()).toContain('E-Mail oder Passwort stimmt nicht')
   })
 
-  it('weist bei der Registrierung auf ein bestehendes Konto hin', async () => {
+  it('fragt beim Anmelden nur einmal nach E-Mail und Passwort', async () => {
+    const wrapper = await mountLogin()
+
+    expect(wrapper.findAll('input[type=email]')).toHaveLength(1)
+    expect(wrapper.findAll('input[type=password]')).toHaveLength(1)
+  })
+
+  it('kann das Passwort anzeigen', async () => {
+    const wrapper = await mountLogin()
+
+    await wrapper.find('.toggle').trigger('click')
+
+    expect(wrapper.find('.password-row input').attributes('type')).toBe('text')
+  })
+})
+
+describe('Registrierung', () => {
+  beforeEach(() => endSession())
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('weist auf ein bestehendes Konto hin', async () => {
     respondWith(409)
     const wrapper = await mountLogin('/login?mode=register')
 
     await fillAndSubmit(wrapper)
 
     expect(wrapper.text()).toContain('gibt es schon ein Konto')
+  })
+
+  it('stoppt bei einem Tippfehler in der E-Mail', async () => {
+    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
+    const wrapper = await mountLogin('/login?mode=register')
+
+    await fillAndSubmit(wrapper, { emailRepeat: 'lina@exmaple.com' })
+
+    expect(wrapper.text()).toContain('E-Mail-Adressen stimmen nicht überein')
+    expect(fetch).not.toHaveBeenCalled()
+    expect(auth.isLoggedIn.value).toBe(false)
+  })
+
+  it('akzeptiert die E-Mail-Wiederholung mit anderer Groß-/Kleinschreibung', async () => {
+    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
+    const wrapper = await mountLogin('/login?mode=register')
+
+    await fillAndSubmit(wrapper, { emailRepeat: 'Lina@Example.com' })
+
+    expect(auth.isLoggedIn.value).toBe(true)
+  })
+
+  it('stoppt bei unterschiedlichen Passwörtern', async () => {
+    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
+    const wrapper = await mountLogin('/login?mode=register')
+
+    await fillAndSubmit(wrapper, { passwordRepeat: 'geheim1243' })
+
+    expect(wrapper.text()).toContain('Passwörter stimmen nicht überein')
+    expect(fetch).not.toHaveBeenCalled()
   })
 })
 
@@ -91,30 +145,5 @@ describe('Routen-Schutz', () => {
     await router.push('/workouts')
 
     expect(router.currentRoute.value.name).toBe('workouts')
-  })
-
-  it('verlangt bei der Registrierung die E-Mail zweimal und stoppt bei Tippfehlern', async () => {
-    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
-    const wrapper = await mountLogin('/login?mode=register')
-
-    await fillAndSubmit(wrapper, 'lina@exmaple.com')
-
-    expect(wrapper.text()).toContain('stimmen nicht überein')
-    expect(fetch).not.toHaveBeenCalled()
-    expect(auth.isLoggedIn.value).toBe(false)
-  })
-
-  it('akzeptiert die Wiederholung auch mit anderer Groß-/Kleinschreibung', async () => {
-    respondWith(201, { token: 'abc.def.ghi', email: 'lina@example.com' })
-    const wrapper = await mountLogin('/login?mode=register')
-
-    await fillAndSubmit(wrapper, 'Lina@Example.com')
-
-    expect(auth.isLoggedIn.value).toBe(true)
-  })
-
-  it('fragt beim Anmelden nur einmal nach der E-Mail', async () => {
-    const wrapper = await mountLogin()
-    expect(wrapper.findAll('input[type=email]')).toHaveLength(1)
   })
 })
