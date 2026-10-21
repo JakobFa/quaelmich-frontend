@@ -6,6 +6,7 @@ import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import { heartRateZonesOf } from '../plan/heartRate'
 import {
   emptyAthlete,
+  eventTypeLabels,
   levelLabels,
   trainingModeLabels,
   weekdayLabels,
@@ -44,6 +45,7 @@ onMounted(async () => {
     hadProfile.value = existing !== null
     athlete.value = existing ?? emptyAthlete()
     athlete.value.trainingMode ??= 'POWER'
+    athlete.value.event.type ??= null
     const own = athlete.value.heartRateZoneStarts
     if (own?.length === 4) zoneInputs.value = [...own]
   } catch {
@@ -222,6 +224,19 @@ function back() {
         <label class="field">
           <span>Datum</span>
           <input v-model="athlete.event.date" type="date" :min="today" required />
+        </label>
+        <label class="field">
+          <span>Art des Events (optional)</span>
+          <select v-model="athlete.event.type">
+            <option :value="null">weiß nicht / egal</option>
+            <option v-for="(label, type) in eventTypeLabels" :key="type" :value="type">
+              {{ label }}
+            </option>
+          </select>
+          <small class="field-hint">
+            Bestimmt den Schwerpunkt: ein Kriterium braucht Antritte, ein Bergmarathon lange
+            Schwellenintervalle. Ohne Angabe schätzt quaelmich das aus Distanz und Höhenmetern.
+          </small>
         </label>
         <div class="field-row">
           <label class="field">

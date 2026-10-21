@@ -8,6 +8,7 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import { formatRange, heartRateZonesOf, rangeFor } from '../plan/heartRate'
 import {
   effectiveThresholdHeartRate,
+  eventTypeLabels,
   levelLabels,
   trainingModeLabels,
   weekdayLabels,
@@ -161,6 +162,10 @@ function formatNumber(hours: number) {
           <div>
             <dt>Strecke</dt>
             <dd>{{ athlete.event.distanceKm }} km · {{ athlete.event.elevationMeters }} Hm</dd>
+          </div>
+          <div v-if="athlete.event.type">
+            <dt>Art</dt>
+            <dd>{{ eventTypeLabels[athlete.event.type] }}</dd>
           </div>
         </dl>
       </div>

@@ -14,7 +14,7 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
-import { phaseLabels, type TrainingPlan } from '../types/plan'
+import { eventFocusLabels, phaseLabels, type TrainingPlan } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
@@ -34,6 +34,10 @@ const failed = ref(false)
 const generating = ref(false)
 
 const today = toIsoDate(new Date())
+
+function roundToQuarterHour(minutes: number) {
+  return Math.round(minutes / 15) * 15
+}
 const weeks = computed(() => (plan.value ? buildWeeks(plan.value) : []))
 const weekIndex = ref(0)
 const week = computed(() => weeks.value[weekIndex.value])
@@ -143,6 +147,12 @@ onMounted(async () => {
     <template v-else-if="week">
       <!-- Überblick: Level, Fortschritt, Tage bis zum Event -->
       <ProgressHeader v-if="progress" :progress="progress" />
+      <p v-if="plan.eventProfile" class="focus-note">
+        <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
+        · geschätzte Dauer ca.
+        {{ formatHours(roundToQuarterHour(plan.eventProfile.estimatedMinutes)) }}
+        <span>{{ eventFocusLabels[plan.eventProfile.focus].hint }}</span>
+      </p>
       <div v-else class="panel summary">
         <div>
           <span class="label">Event</span>
@@ -312,6 +322,22 @@ onMounted(async () => {
 .error {
   margin: 0 0 12px;
   color: var(--color-hot);
+}
+
+.focus-note {
+  margin: -16px 0 24px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
+.focus-note strong {
+  color: var(--color-lilac);
+}
+
+.focus-note span {
+  display: block;
+  margin-top: 2px;
 }
 
 .summary {
