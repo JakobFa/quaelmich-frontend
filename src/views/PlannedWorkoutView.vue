@@ -175,6 +175,8 @@ async function confirm(matchesPlan: boolean) {
   saveError.value = false
   try {
     planned.value = await confirmActivity(planned.value.id, matchesPlan)
+    // "Nein": die Fahrt ist jetzt eine Zusatzfahrt – und lässt sich unten bei Bedarf doch zuordnen
+    if (!matchesPlan) loadCandidates()
   } catch {
     saveError.value = true
   } finally {
@@ -368,12 +370,6 @@ function formatDate(iso: string) {
           </button>
         </div>
         <p v-else-if="planned.actual.confirmed" class="confirmed">✓ Bestätigt</p>
-        <p v-else class="confirmed">
-          Anderes Training – zählt als Belastung, das Workout bleibt offen.
-          <button type="button" class="link" :disabled="saving" @click="confirm(true)">
-            Doch, war es
-          </button>
-        </p>
       </div>
 
       <!-- Abhaken & bewerten -->
