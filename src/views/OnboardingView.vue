@@ -24,6 +24,8 @@ const errorMessage = ref('')
 const today = new Date().toISOString().slice(0, 10)
 
 /** Eigene Pulszonen: Beginn von Zone 2–5, alle vier oder keine */
+/** Gibt es schon ein Profil? Dann wird der vorhandene Plan angepasst statt neu erstellt */
+const hadProfile = ref(false)
 const zoneInputs = ref<(number | '' | null)[]>([null, null, null, null])
 const heartRateMode = computed(() => athlete.value.trainingMode === 'HEART_RATE')
 const filledZones = computed(() => zoneInputs.value.filter((v) => typeof v === 'number'))
@@ -38,7 +40,9 @@ const zonePlaceholders = computed(
 // Wer schon ein Profil hat, sieht seine bisherigen Angaben und kann sie ändern
 onMounted(async () => {
   try {
-    athlete.value = (await getMyAthlete()) ?? emptyAthlete()
+    const existing = await getMyAthlete()
+    hadProfile.value = existing !== null
+    athlete.value = existing ?? emptyAthlete()
     athlete.value.trainingMode ??= 'POWER'
     const own = athlete.value.heartRateZoneStarts
     if (own?.length === 4) zoneInputs.value = [...own]
@@ -83,7 +87,7 @@ function back() {
 
 <template>
   <section>
-    <p class="kicker">// Plan erstellen</p>
+    <p class="kicker">// {{ hadProfile ? 'Angaben ändern' : 'Plan erstellen' }}</p>
 
     <ol class="stepper">
       <li
@@ -273,8 +277,10 @@ function back() {
             currentStep < steps.length - 1
               ? 'Weiter'
               : saving
-                ? 'Plan wird erstellt …'
-                : 'Plan erstellen'
+                ? 'Moment …'
+                : hadProfile
+                  ? 'Speichern & Plan anpassen'
+                  : 'Plan erstellen'
           }}
         </button>
       </div>

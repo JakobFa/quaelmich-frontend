@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
 
-import { getMyAthlete } from '../api'
+import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -12,6 +12,7 @@ import {
   trainingModeLabels,
   weekdayLabels,
   type Athlete,
+  type WeeklyAvailability,
 } from '../types/athlete'
 
 const athlete = ref<Athlete | null>(null)
@@ -27,6 +28,34 @@ onMounted(async () => {
 })
 
 const heartRateZones = computed(() => heartRateZonesOf(athlete.value))
+
+// Verfügbarkeit direkt hier ändern: Der Plan wird ab heute angepasst, Vergangenes bleibt
+const availabilityDraft = ref<WeeklyAvailability | null>(null)
+const availabilitySaving = ref(false)
+const availabilityMessage = ref('')
+const availabilityError = ref(false)
+
+function editAvailability() {
+  if (!athlete.value) return
+  availabilityDraft.value = { ...athlete.value.availability }
+  availabilityMessage.value = ''
+}
+
+async function saveAvailability() {
+  if (!athlete.value || !availabilityDraft.value) return
+  availabilitySaving.value = true
+  availabilityError.value = false
+  try {
+    athlete.value = await saveMyAthlete({ ...athlete.value, availability: availabilityDraft.value })
+    await generatePlan()
+    availabilityDraft.value = null
+    availabilityMessage.value = '✓ Plan ab heute angepasst – Erledigtes bleibt erhalten.'
+  } catch {
+    availabilityError.value = true
+  } finally {
+    availabilitySaving.value = false
+  }
+}
 
 const totalHours = computed(() =>
   athlete.value ? Object.values(athlete.value.availability).reduce((sum, h) => sum + h, 0) : 0,
@@ -138,16 +167,65 @@ function formatNumber(hours: number) {
 
       <div class="panel">
         <h2 class="panel-title">Verfügbarkeit · {{ formatNumber(totalHours) }} h / Woche</h2>
-        <ul class="week">
-          <li
-            v-for="(label, day) in weekdayLabels"
-            :key="day"
-            :class="{ off: athlete.availability[day] === 0 }"
+
+        <form v-if="availabilityDraft" @submit.prevent="saveAvailability">
+          <ul class="week">
+            <li v-for="(label, day) in weekdayLabels" :key="day">
+              <label class="day" :for="`availability-${day}`">{{ label }}</label>
+              <input
+                :id="`availability-${day}`"
+                v-model.number="availabilityDraft[day]"
+                class="hours-input"
+                type="number"
+                min="0"
+                max="12"
+                step="0.5"
+                required
+              />
+            </li>
+          </ul>
+          <p class="hint">
+            Stunden pro Tag. Der Plan wird ab heute angepasst – erledigte Workouts, Bewertungen und
+            gefahrene Einheiten bleiben.
+          </p>
+          <p v-if="availabilityError" class="error" role="alert">
+            Speichern hat nicht geklappt. Bitte versuch es nochmal.
+          </p>
+          <div class="availability-actions">
+            <button type="submit" class="button" :disabled="availabilitySaving">
+              {{ availabilitySaving ? 'Passe Plan an …' : 'Speichern & Plan anpassen' }}
+            </button>
+            <button
+              type="button"
+              class="button button-ghost"
+              :disabled="availabilitySaving"
+              @click="availabilityDraft = null"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </form>
+
+        <template v-else>
+          <ul class="week">
+            <li
+              v-for="(label, day) in weekdayLabels"
+              :key="day"
+              :class="{ off: athlete.availability[day] === 0 }"
+            >
+              <span class="day">{{ label }}</span>
+              <span class="hours">{{ formatNumber(athlete.availability[day]) }} h</span>
+            </li>
+          </ul>
+          <p v-if="availabilityMessage" class="hint" role="status">{{ availabilityMessage }}</p>
+          <button
+            type="button"
+            class="button button-ghost edit-availability"
+            @click="editAvailability"
           >
-            <span class="day">{{ label }}</span>
-            <span class="hours">{{ formatNumber(athlete.availability[day]) }} h</span>
-          </li>
-        </ul>
+            Verfügbarkeit ändern
+          </button>
+        </template>
       </div>
 
       <RouterLink to="/onboarding" class="button">Angaben ändern</RouterLink>
@@ -275,5 +353,50 @@ function formatNumber(hours: number) {
   white-space: nowrap;
   font-size: 0.8rem;
   font-weight: 600;
+}
+.hours-input {
+  width: 100%;
+  min-width: 0;
+  margin-top: 4px;
+  padding: 6px 0;
+  border-width: 2px;
+  font-size: 0.8rem;
+  letter-spacing: 0;
+  text-align: center;
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+/* Pfeil-Knöpfe ausblenden – in den schmalen Tagesfeldern verdecken sie sonst die Zahl */
+.hours-input::-webkit-inner-spin-button,
+.hours-input::-webkit-outer-spin-button {
+  margin: 0;
+  -webkit-appearance: none;
+}
+
+form .week {
+  gap: 3px;
+}
+
+form .week li {
+  padding-inline: 1px;
+}
+
+.week label.day {
+  display: block;
+}
+
+.availability-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.edit-availability {
+  margin-top: 12px;
+}
+
+.error {
+  color: var(--color-hot);
 }
 </style>
