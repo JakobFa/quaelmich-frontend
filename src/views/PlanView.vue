@@ -271,7 +271,10 @@ onMounted(async () => {
               <span>TSS {{ planned.workout.tss }}</span>
               <span v-if="planned.actual?.durationMinutes" class="actual">
                 gefahren {{ formatDuration(planned.actual.durationMinutes)
-                }}<template v-if="planned.actual.tss"> · {{ planned.actual.tss }}</template>
+                }}<template v-if="planned.actual.tss">
+                  · {{ planned.actual.tssFromHeartRate ? '≈' : ''
+                  }}{{ planned.actual.tss }}</template
+                >
               </span>
               <AssessmentBadge
                 v-if="planned.actual?.assessment"
@@ -286,9 +289,15 @@ onMounted(async () => {
             <div>
               <span class="type">+ Zusatzfahrt</span>
               <p class="extra-values">
-                <template v-if="ride.durationMinutes">{{ formatDuration(ride.durationMinutes) }}</template>
-                <template v-if="ride.distanceKm"> · {{ ride.distanceKm.toLocaleString('de-DE') }} km</template>
-                <template v-if="ride.tss"> · {{ ride.tss }} TSS</template>
+                <template v-if="ride.durationMinutes">{{
+                  formatDuration(ride.durationMinutes)
+                }}</template>
+                <template v-if="ride.distanceKm">
+                  · {{ ride.distanceKm.toLocaleString('de-DE') }} km</template
+                >
+                <template v-if="ride.tss">
+                  · {{ ride.tssFromHeartRate ? '≈' : '' }}{{ ride.tss }} TSS</template
+                >
               </p>
             </div>
             <AssessmentBadge v-if="ride.assessment" :assessment="ride.assessment" />

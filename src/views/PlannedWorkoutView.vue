@@ -185,7 +185,13 @@ function formatDate(iso: string) {
             <tr>
               <th scope="row">TSS</th>
               <td>{{ planned.workout.tss }}</td>
-              <td>{{ planned.actual.tss ?? '–' }}</td>
+              <td>
+                <template v-if="planned.actual.tss">
+                  {{ planned.actual.tssFromHeartRate ? '≈' : '' }}{{ planned.actual.tss }}
+                  <small v-if="planned.actual.tssFromHeartRate" class="estimated">(Puls)</small>
+                </template>
+                <template v-else>–</template>
+              </td>
             </tr>
             <tr v-if="planned.actual.distanceKm">
               <th scope="row">Distanz</th>
@@ -394,6 +400,11 @@ function formatDate(iso: string) {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
+}
+
+.estimated {
+  font-weight: 400;
+  color: var(--color-text-muted);
 }
 
 .strava-link {

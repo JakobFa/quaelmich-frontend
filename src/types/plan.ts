@@ -30,6 +30,8 @@ export type ActualRide = {
   confirmed: boolean | null
   /** Link "View on Strava", nur bei Fahrten aus Strava */
   stravaUrl?: string | null
+  /** TSS nur aus dem Puls geschätzt (ohne Wattmesser) */
+  tssFromHeartRate?: boolean
 }
 
 /** Gesetzt, wenn quaelmich das Workout wegen einer härteren Einheit leichter gemacht hat */
@@ -58,6 +60,7 @@ export type ExtraRide = {
   tss: number | null
   assessment: Assessment | null
   stravaUrl?: string | null
+  tssFromHeartRate?: boolean
 }
 
 export type TrainingPlan = {

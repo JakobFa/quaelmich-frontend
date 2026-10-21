@@ -64,6 +64,10 @@ function formatNumber(hours: number) {
             <dt>FTP</dt>
             <dd>{{ athlete.ftp }} W</dd>
           </div>
+          <div v-if="athlete.thresholdHeartRate">
+            <dt>Schwellenpuls</dt>
+            <dd>{{ athlete.thresholdHeartRate }} bpm</dd>
+          </div>
           <div>
             <dt>Gewicht</dt>
             <dd>{{ formatNumber(athlete.weightKg ?? 0) }} kg</dd>

@@ -33,6 +33,8 @@ export type TargetEvent = {
 export type Athlete = {
   id?: number
   ftp: number | null
+  /** Schwellenpuls (LTHR), optional – für den Puls-TSS bei Fahrten ohne Wattmesser */
+  thresholdHeartRate?: number | null
   weightKg: number | null
   level: Level | null
   event: TargetEvent
@@ -42,6 +44,7 @@ export type Athlete = {
 export function emptyAthlete(): Athlete {
   return {
     ftp: null,
+    thresholdHeartRate: null,
     weightKg: null,
     level: null,
     event: { name: '', date: '', distanceKm: null, elevationMeters: null },

@@ -80,6 +80,20 @@ function back() {
           />
         </label>
         <label class="field">
+          <span>Schwellenpuls (optional)</span>
+          <input
+            v-model.number="athlete.thresholdHeartRate"
+            type="number"
+            min="100"
+            max="220"
+            placeholder="z. B. 170"
+          />
+          <small class="field-hint">
+            Puls, den du etwa eine Stunde hart halten kannst – grob 90 % deines Maximalpulses. Damit
+            schätzt quaelmich den TSS für Fahrten ohne Wattmesser (z. B. mit der Apple Watch).
+          </small>
+        </label>
+        <label class="field">
           <span>Gewicht (kg)</span>
           <input
             v-model.number="athlete.weightKg"
@@ -263,5 +277,11 @@ function back() {
     font-size: 0.7rem;
     padding: 8px;
   }
+}
+.field-hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 </style>
