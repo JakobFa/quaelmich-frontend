@@ -146,7 +146,14 @@ onMounted(async () => {
 
     <template v-else-if="week">
       <!-- Überblick: Level, Fortschritt, Tage bis zum Event -->
-      <ProgressHeader v-if="progress" :progress="progress" />
+      <ProgressHeader
+        v-if="progress"
+        :progress="progress"
+        :weeks="weeks"
+        :today="today"
+        :selected-week="weekIndex"
+        @select-week="weekIndex = $event"
+      />
       <p v-if="plan.eventProfile" class="focus-note">
         <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
         · geschätzte Dauer ca.

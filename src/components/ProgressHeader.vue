@@ -2,14 +2,43 @@
 import { computed } from 'vue'
 
 import type { Progress } from '../api'
+import { mondayOf, type PlanWeek } from '../plan/weeks'
+import { phaseLabels, type Phase } from '../types/plan'
 
-const props = defineProps<{ progress: Progress }>()
+const props = defineProps<{
+  progress: Progress
+  weeks: PlanWeek[]
+  /** heute als "YYYY-MM-DD" */
+  today: string
+  /** aktuell angezeigte Woche (wird hervorgehoben) */
+  selectedWeek: number
+}>()
 
-/** Anteil am Weg zum nächsten Level in Prozent */
-const levelPercent = computed(() => {
-  const { xp, level, nextLevel } = props.progress
-  if (!nextLevel) return 100
-  return Math.round(((xp - level.fromXp) / (nextLevel.fromXp - level.fromXp)) * 100)
+const emit = defineEmits<{ 'select-week': [index: number] }>()
+
+const DAY_MS = 24 * 60 * 60 * 1000
+
+/** Wochen ohne Workouts (z. B. ganz am Ende) bekommen die Phase der Woche davor */
+const segments = computed(() => {
+  let last: Phase = 'BASE'
+  return props.weeks.map((week, index) => {
+    last = week.phase ?? (index === props.weeks.length - 1 ? 'TAPER' : last)
+    return { index, phase: last, monday: week.monday }
+  })
+})
+
+/** Wie viel der Plan-Zeit schon vorbei ist, in Prozent */
+const elapsedPercent = computed(() => {
+  if (props.weeks.length === 0) return 0
+  const start = new Date(props.weeks[0]!.monday).getTime()
+  const total = props.weeks.length * 7 * DAY_MS
+  const elapsed = new Date(props.today).getTime() - start + DAY_MS // heute zählt mit
+  return Math.round(Math.min(1, Math.max(0, elapsed / total)) * 100)
+})
+
+const currentWeek = computed(() => {
+  const index = props.weeks.findIndex((week) => week.monday === mondayOf(props.today))
+  return index >= 0 ? index : null
 })
 
 const completionPercent = computed(() => {
@@ -17,68 +46,74 @@ const completionPercent = computed(() => {
   return plan && plan.due > 0 ? Math.round((plan.completed / plan.due) * 100) : null
 })
 
-function formatNumber(value: number) {
-  return value.toLocaleString('de-DE')
-}
+/** Legende: die vorkommenden Phasen in Reihenfolge */
+const legend = computed(() => [...new Set(segments.value.map((segment) => segment.phase))])
 </script>
 
 <template>
   <div class="panel progress-head">
-    <div class="level">
-      <div class="badge" aria-hidden="true">
-        <span>LVL</span>
-        <strong>{{ progress.level.number }}</strong>
-      </div>
-      <div class="level-main">
-        <p class="level-name">
-          <span class="sr-only">Level {{ progress.level.number }}:</span>
-          {{ progress.level.name }}
-        </p>
-        <div
-          class="xp-bar"
-          role="progressbar"
-          :aria-valuenow="levelPercent"
-          aria-valuemin="0"
-          aria-valuemax="100"
-          :aria-label="`Fortschritt zum nächsten Level: ${levelPercent} %`"
-        >
-          <span :style="{ width: `${levelPercent}%` }"></span>
-        </div>
-        <p class="xp-text">
-          {{ formatNumber(progress.xp) }} XP
-          <template v-if="progress.nextLevel">
-            · noch {{ formatNumber(progress.nextLevel.fromXp - progress.xp) }} bis „{{
-              progress.nextLevel.name
-            }}“
-          </template>
-        </p>
-      </div>
+    <p class="headline">
+      <template v-if="currentWeek !== null">
+        Woche <strong>{{ currentWeek + 1 }}</strong> von {{ weeks.length }}
+      </template>
+      <template v-else>{{ weeks.length }} Wochen</template>
+      <span v-if="progress.plan" class="countdown">
+        · noch <strong>{{ progress.plan.daysToEvent }}</strong> Tage bis
+        {{ progress.plan.eventName }}
+      </span>
+    </p>
+
+    <!-- Gesamtfortschritt vom Planstart bis zum Event, ein Abschnitt pro Woche -->
+    <div
+      class="track"
+      role="progressbar"
+      :aria-valuenow="elapsedPercent"
+      aria-valuemin="0"
+      aria-valuemax="100"
+      :aria-label="`Plan zu ${elapsedPercent} % geschafft`"
+    >
+      <button
+        v-for="segment in segments"
+        :key="segment.monday"
+        type="button"
+        class="segment"
+        :class="[
+          segment.phase.toLowerCase(),
+          {
+            selected: segment.index === selectedWeek,
+            past: currentWeek !== null && segment.index <= currentWeek,
+          },
+        ]"
+        :aria-label="`Woche ${segment.index + 1}: ${phaseLabels[segment.phase]}`"
+        @click="emit('select-week', segment.index)"
+      ></button>
+      <span class="now" :style="{ left: `${elapsedPercent}%` }" aria-hidden="true"></span>
+      <span class="today" :style="{ left: `${elapsedPercent}%` }" aria-hidden="true">heute</span>
     </div>
 
+    <ul class="legend">
+      <li v-for="phase in legend" :key="phase" :class="phase.toLowerCase()">
+        {{ phaseLabels[phase] }}
+      </li>
+    </ul>
+
     <dl class="stats">
-      <div v-if="progress.plan">
-        <dt>Woche</dt>
-        <dd>
-          {{ progress.plan.week }}<small>/{{ progress.plan.totalWeeks }}</small>
-        </dd>
+      <div>
+        <dt>Geschafft</dt>
+        <dd>{{ elapsedPercent }}<small>%</small></dd>
       </div>
       <div v-if="completionPercent !== null">
-        <dt>Erledigt</dt>
-        <dd>{{ completionPercent }}<small>%</small></dd>
-      </div>
-      <div v-if="progress.plan">
-        <dt>Bis {{ progress.plan.eventName }}</dt>
-        <dd>{{ progress.plan.daysToEvent }}<small> Tage</small></dd>
+        <dt>Workouts erledigt</dt>
+        <dd>
+          {{ completionPercent
+          }}<small>% ({{ progress.plan!.completed }}/{{ progress.plan!.due }})</small>
+        </dd>
       </div>
       <div v-if="progress.streakWeeks > 0" class="streak">
         <dt>Serie</dt>
         <dd>🔥 {{ progress.streakWeeks }}<small> Wo.</small></dd>
       </div>
     </dl>
-    <p class="hint">
-      XP = gefahrene Trainingslast (TSS), auch Pendel- und Zusatzfahrten. Serie = Wochen in Folge
-      mit mindestens 80 % erledigten Workouts.
-    </p>
   </div>
 </template>
 
@@ -87,86 +122,152 @@ function formatNumber(value: number) {
   margin: 12px 0 28px;
 }
 
-.level {
-  display: flex;
-  align-items: center;
-  gap: 16px;
-}
-
-/* schräger Aufnäher wie auf der Kutte */
-.badge {
-  display: grid;
-  flex: none;
-  place-items: center;
-  width: 72px;
-  height: 72px;
-  transform: rotate(-6deg);
-  background: var(--color-hot);
-  color: var(--color-ink);
-  box-shadow: 4px 4px 0 var(--color-lilac);
-  font-family: var(--font-mono);
-  line-height: 1;
-}
-
-.badge span {
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.15em;
-}
-
-.badge strong {
-  font-family: var(--font-display);
-  font-size: 2.2rem;
-  font-style: italic;
-  font-weight: 900;
-}
-
-.level-main {
-  flex: 1;
-  min-width: 0;
-}
-
-.level-name {
-  margin: 0 0 6px;
-  font-size: clamp(1.1rem, 4vw, 1.5rem);
+.headline {
+  margin: 0 0 14px;
+  font-size: clamp(1.05rem, 4vw, 1.35rem);
   font-style: italic;
   font-weight: 900;
   font-stretch: 85%;
   text-transform: uppercase;
-  line-height: 1.05;
-  overflow-wrap: anywhere;
+  line-height: 1.15;
 }
 
-.xp-bar {
-  height: 12px;
-  background: var(--color-ink);
-  border: 2px solid var(--color-panel-raised);
+.headline strong {
+  color: var(--color-hot);
 }
 
-/* Warnband-Streifen */
-.xp-bar span {
-  display: block;
-  height: 100%;
-  background: repeating-linear-gradient(
-    -45deg,
-    var(--color-hot) 0 8px,
-    var(--color-lilac) 8px 16px
-  );
-  transition: width 0.6s ease-out;
-}
-
-.xp-text {
-  margin: 6px 0 0;
-  font-family: var(--font-mono);
-  font-size: 0.75rem;
+.countdown {
   color: var(--color-text-muted);
 }
+
+/* ---------- Balken ---------- */
+
+.track {
+  position: relative;
+  display: flex;
+  gap: 2px;
+  height: 22px;
+  margin-bottom: 26px;
+}
+
+.segment {
+  flex: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0.5;
+  cursor: pointer;
+}
+
+.segment.selected {
+  outline: 2px solid var(--color-text);
+  outline-offset: 1px;
+}
+
+.segment:focus-visible {
+  outline: 2px solid var(--color-lilac);
+  outline-offset: 2px;
+}
+
+/* Phasen-Farben */
+.base {
+  background: var(--color-lilac);
+}
+
+.build {
+  background: #e88ad0;
+}
+
+.peak {
+  background: var(--color-hot);
+}
+
+.taper {
+  background: #f6c1df;
+}
+
+.recovery {
+  background: var(--color-text-muted);
+}
+
+/* vergangene Wochen voll farbig, kommende blass */
+.segment.past {
+  opacity: 1;
+}
+
+/* Linie bei "heute" */
+.now {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  width: 3px;
+  transform: translateX(-50%);
+  background: var(--color-text);
+  pointer-events: none;
+}
+
+.today {
+  position: absolute;
+  top: 100%;
+  margin-top: 4px;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text);
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--color-text-muted);
+}
+
+.legend li {
+  background: none;
+}
+
+.legend li::before {
+  content: '';
+  display: inline-block;
+  width: 10px;
+  height: 10px;
+  margin-right: 6px;
+  vertical-align: -1px;
+}
+
+.legend .base::before {
+  background: var(--color-lilac);
+}
+.legend .build::before {
+  background: #e88ad0;
+}
+.legend .peak::before {
+  background: var(--color-hot);
+}
+.legend .taper::before {
+  background: #f6c1df;
+}
+.legend .recovery::before {
+  background: var(--color-text-muted);
+}
+
+/* ---------- Zahlen ---------- */
 
 .stats {
   display: flex;
   flex-wrap: wrap;
   gap: 12px 32px;
-  margin: 20px 0 0;
+  margin: 18px 0 0;
 }
 
 .stats dt {
@@ -193,25 +294,5 @@ function formatNumber(value: number) {
 
 .streak dd {
   color: var(--color-hot);
-}
-
-.hint {
-  margin: 16px 0 0;
-  font-size: 0.75rem;
-  color: var(--color-text-muted);
-}
-
-.sr-only {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip: rect(0 0 0 0);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .xp-bar span {
-    transition: none;
-  }
 }
 </style>
