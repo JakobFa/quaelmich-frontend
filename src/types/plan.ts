@@ -28,6 +28,8 @@ export type ActualRide = {
   assessment: Assessment
   /** null = noch nicht bestätigt, true = war das geplante Training, false = anderes Training */
   confirmed: boolean | null
+  /** Link "View on Strava", nur bei Fahrten aus Strava */
+  stravaUrl?: string | null
 }
 
 /** Gesetzt, wenn quaelmich das Workout wegen einer härteren Einheit leichter gemacht hat */
@@ -55,6 +57,7 @@ export type ExtraRide = {
   distanceKm: number | null
   tss: number | null
   assessment: Assessment | null
+  stravaUrl?: string | null
 }
 
 export type TrainingPlan = {

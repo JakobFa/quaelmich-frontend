@@ -9,6 +9,7 @@ import PlannedWorkoutView from '../views/PlannedWorkoutView.vue'
 import WorkoutDetailView from '../views/WorkoutDetailView.vue'
 import WorkoutLibraryView from '../views/WorkoutLibraryView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import StravaCallbackView from '../views/StravaCallbackView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -31,6 +32,12 @@ const router = createRouter({
     { path: '/workouts', name: 'workouts', component: WorkoutLibraryView },
     { path: '/workouts/:id', name: 'workout', component: WorkoutDetailView },
     { path: '/profil', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
+    {
+      path: '/strava/callback',
+      name: 'strava-callback',
+      component: StravaCallbackView,
+      meta: { requiresAuth: true },
+    },
   ],
 })
 

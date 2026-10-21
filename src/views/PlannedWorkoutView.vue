@@ -194,7 +194,15 @@ function formatDate(iso: string) {
             </tr>
           </tbody>
         </table>
-        <p class="source">Automatisch übernommen aus intervals.icu.</p>
+        <p class="source">
+          <template v-if="planned.actual.stravaUrl">
+            Automatisch übernommen aus Strava ·
+            <a :href="planned.actual.stravaUrl" target="_blank" rel="noopener" class="strava-link">
+              View on Strava
+            </a>
+          </template>
+          <template v-else>Automatisch übernommen aus intervals.icu.</template>
+        </p>
 
         <div v-if="planned.actual.confirmed == null" class="confirm">
           <p>War das dieses Training?</p>
@@ -386,6 +394,11 @@ function formatDate(iso: string) {
   flex-wrap: wrap;
   align-items: center;
   gap: 8px 12px;
+}
+
+.strava-link {
+  font-weight: 700;
+  color: #fc5200;
 }
 
 .confirm {

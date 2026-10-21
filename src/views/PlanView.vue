@@ -122,9 +122,8 @@ onMounted(async () => {
     } catch {
       intervalsAvailable.value = false
     }
-    if (intervalsAvailable.value) {
-      importRides()
-    }
+    // Fahrten aus intervals.icu und/oder Strava – ohne Verbindung antwortet das Backend mit 409
+    importRides()
   }
 })
 </script>
@@ -293,6 +292,15 @@ onMounted(async () => {
               </p>
             </div>
             <AssessmentBadge v-if="ride.assessment" :assessment="ride.assessment" />
+            <a
+              v-if="ride.stravaUrl"
+              :href="ride.stravaUrl"
+              target="_blank"
+              rel="noopener"
+              class="strava-link"
+            >
+              View on Strava
+            </a>
           </div>
 
           <p
@@ -573,6 +581,14 @@ onMounted(async () => {
 
 .extra .type {
   color: var(--color-hot);
+}
+
+.strava-link {
+  flex-basis: 100%;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #fc5200;
 }
 
 .extra-values {

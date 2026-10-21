@@ -197,9 +197,31 @@ export type ActivityImportResult = {
   adjusted: number
 }
 
-/** Gefahrene Einheiten der letzten 14 Tage aus intervals.icu abholen und dem Plan zuordnen */
+/** Gefahrene Einheiten der letzten 14 Tage aus intervals.icu und Strava abholen und dem Plan zuordnen */
 export function importActivities() {
-  return request<ActivityImportResult>('/me/intervals/import', { method: 'POST' })
+  return request<ActivityImportResult>('/me/activities/import', { method: 'POST' })
+}
+
+export type StravaStatus = {
+  /** Ist Strava auf dem Server eingerichtet? */
+  available: boolean
+  clientId: string | null
+  connected: boolean
+  athleteName: string | null
+  connectedAt: string | null
+}
+
+export function getStravaStatus() {
+  return request<StravaStatus>('/me/strava')
+}
+
+/** Code aus dem Rücksprung von Strava ans Backend geben */
+export function connectStrava(code: string) {
+  return request<StravaStatus>('/me/strava', { method: 'POST', body: JSON.stringify({ code }) })
+}
+
+export async function disconnectStrava() {
+  await send('/me/strava', { method: 'DELETE' })
 }
 
 export function syncToIntervals(days = 14) {

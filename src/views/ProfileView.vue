@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { getMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
+import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import { levelLabels, weekdayLabels, type Athlete } from '../types/athlete'
 
@@ -115,6 +116,7 @@ function formatNumber(hours: number) {
 
     <h2 class="section-label">// Verbindungen</h2>
     <IntervalsConnection />
+    <StravaConnection />
   </section>
 </template>
 
