@@ -14,12 +14,14 @@ function logout() {
 
 <template>
   <header class="masthead">
-    <div class="stage">
+    <!-- Der ganze Logo-Bereich ist der Link zur Startseite: das gedrehte Bild selbst hätte
+         eine schräge Klickfläche mit durchsichtigen Rändern -->
+    <RouterLink to="/" class="stage" aria-label="quaelmich – zur Startseite">
       <div class="band" aria-hidden="true"></div>
       <h1 class="logo-heading">
-        <RouterLink to="/"><img :src="logoUrl" alt="quaelmich" class="logo" /></RouterLink>
+        <img :src="logoUrl" alt="quaelmich" class="logo" />
       </h1>
-    </div>
+    </RouterLink>
     <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— quäl dich.</span></p>
     <nav class="nav">
       <template v-if="auth.isLoggedIn.value">
@@ -51,6 +53,9 @@ function logout() {
 
 .stage {
   position: relative;
+  display: block;
+  color: inherit;
+  text-decoration: none;
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 16px;
