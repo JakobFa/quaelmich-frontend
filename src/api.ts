@@ -87,6 +87,19 @@ export async function register(email: string, password: string) {
   startSession(result.token, result.email)
 }
 
+/** "Passwort vergessen": verschickt einen Link, falls es das Konto gibt (Antwort ist immer gleich) */
+export async function requestPasswordReset(email: string) {
+  await send('/auth/password-reset', { method: 'POST', body: JSON.stringify({ email }) })
+}
+
+/** Neues Passwort mit dem Link aus der Mail setzen (400 = Link ungültig oder abgelaufen) */
+export async function confirmPasswordReset(token: string, password: string) {
+  await send('/auth/password-reset/confirm', {
+    method: 'POST',
+    body: JSON.stringify({ token, password }),
+  })
+}
+
 // ---------- Workout-Bibliothek (öffentlich) ----------
 
 export function getWorkouts() {

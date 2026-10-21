@@ -2,7 +2,9 @@ import { createRouter, createWebHistory } from 'vue-router'
 
 import { auth } from '../auth'
 import HomeView from '../views/HomeView.vue'
+import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import LoginView from '../views/LoginView.vue'
+import ResetPasswordView from '../views/ResetPasswordView.vue'
 import OnboardingView from '../views/OnboardingView.vue'
 import PlanView from '../views/PlanView.vue'
 import PlannedWorkoutView from '../views/PlannedWorkoutView.vue'
@@ -16,6 +18,8 @@ const router = createRouter({
   routes: [
     { path: '/', name: 'home', component: HomeView },
     { path: '/login', name: 'login', component: LoginView },
+    { path: '/passwort-vergessen', name: 'forgot-password', component: ForgotPasswordView },
+    { path: '/passwort-zuruecksetzen', name: 'reset-password', component: ResetPasswordView },
     {
       path: '/onboarding',
       name: 'onboarding',

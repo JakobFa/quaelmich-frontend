@@ -48,6 +48,7 @@ function messageFor(error: unknown): string {
   if (!(error instanceof ApiError) || error.status === NO_RESPONSE)
     return 'Der Server antwortet gerade nicht. Bitte versuch es gleich nochmal.'
   if (error.status === 401) return 'E-Mail oder Passwort stimmt nicht.'
+  if (error.status === 429) return 'Zu viele Versuche – bitte warte ein paar Minuten.'
   if (error.status === 409) return 'Mit dieser E-Mail gibt es schon ein Konto – melde dich an.'
   if (error.status === 400)
     return 'Bitte gib eine gültige E-Mail und ein Passwort mit mindestens 8 Zeichen ein.'
@@ -158,6 +159,13 @@ async function submit() {
         <button type="button" class="link" @click="switchMode">
           {{ isRegister ? 'Schon ein Konto? Anmelden' : 'Noch kein Konto? Registrieren' }}
         </button>
+        <RouterLink
+          v-if="!isRegister"
+          :to="{ name: 'forgot-password', query: email ? { email } : {} }"
+          class="link"
+        >
+          Passwort vergessen?
+        </RouterLink>
       </div>
     </form>
   </section>
