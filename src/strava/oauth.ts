@@ -4,8 +4,11 @@
  */
 const STATE_KEY = 'quaelmich.strava.state'
 
-/** activity:read_all, damit auch private Fahrten (z. B. Pendeln) ankommen */
-export const STRAVA_SCOPE = 'activity:read_all'
+/**
+ * activity:read_all, damit auch private Fahrten (z. B. Pendeln) ankommen;
+ * profile:read_all für FTP, Gewicht und Pulszonen
+ */
+export const STRAVA_SCOPE = 'activity:read_all,profile:read_all'
 
 export function stravaAuthorizeUrl(clientId: string, origin: string, state: string): string {
   const params = new URLSearchParams({

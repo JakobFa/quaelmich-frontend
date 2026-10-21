@@ -31,7 +31,7 @@ onMounted(async () => {
     return
   }
   try {
-    await connectStrava(param('code'))
+    await connectStrava(param('code'), param('scope'))
     router.replace({ name: 'profile' })
   } catch (error) {
     errorMessage.value =

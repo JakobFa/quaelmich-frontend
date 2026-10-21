@@ -3,12 +3,16 @@ import { flushPromises, mount } from '@vue/test-utils'
 
 import StravaConnection from '../components/StravaConnection.vue'
 import { stravaAuthorizeUrl } from '../strava/oauth'
+import { emptyAthlete } from '../types/athlete'
 
-function backend(body: unknown) {
-  vi.stubGlobal(
-    'fetch',
-    vi.fn(() => Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) })),
-  )
+/** Antwortet der Reihe nach mit den angegebenen Bodies */
+function backend(...bodies: unknown[]) {
+  const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>(() => {
+    const body = bodies.shift() ?? {}
+    return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) })
+  })
+  vi.stubGlobal('fetch', fetchMock)
+  return fetchMock
 }
 
 const base = { clientId: '12345', athleteName: null, connectedAt: null }
@@ -42,13 +46,47 @@ describe('StravaConnection', () => {
     expect(wrapper.find('.strava-button').exists()).toBe(false)
   })
 
+  it('schlägt Werte aus Strava vor, die vom Profil abweichen, und übernimmt sie', async () => {
+    const athlete = { ...emptyAthlete(), ftp: 250, weightKg: 72, thresholdHeartRate: null }
+    const fetchMock = backend(
+      { ...base, available: true, connected: true },
+      { profileAccess: true, ftp: 250, weightKg: 71.5, thresholdHeartRate: 172 },
+      { ...athlete, weightKg: 71.5, thresholdHeartRate: 172 },
+    )
+    const wrapper = mount(StravaConnection, { props: { athlete } })
+    await flushPromises()
+
+    const rows = wrapper.findAll('tbody tr').map((row) => row.text())
+    expect(rows).toHaveLength(2) // FTP ist gleich und wird nicht angeboten
+    expect(rows[0]).toContain('71,5 kg')
+    expect(rows[1]).toContain('172 bpm')
+
+    await wrapper.find('.suggestion .button').trigger('click')
+    await flushPromises()
+
+    const saved = JSON.parse(String(fetchMock.mock.calls[2]![1]!.body))
+    expect(saved).toMatchObject({ ftp: 250, weightKg: 71.5, thresholdHeartRate: 172 })
+    expect(wrapper.emitted('athlete-updated')).toHaveLength(1)
+  })
+
+  it('bittet ohne Profil-Erlaubnis um neues Verbinden', async () => {
+    backend(
+      { ...base, available: true, connected: true },
+      { profileAccess: false, ftp: null, weightKg: null, thresholdHeartRate: null },
+    )
+    const wrapper = mount(StravaConnection, { props: { athlete: emptyAthlete() } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Neu verbinden')
+  })
+
   it('leitet mit Rücksprung-Adresse und Leserecht zu Strava weiter', () => {
     const url = new URL(stravaAuthorizeUrl('12345', 'https://quaelmich.test', 'zufall'))
 
     expect(url.origin + url.pathname).toBe('https://www.strava.com/oauth/authorize')
     expect(url.searchParams.get('client_id')).toBe('12345')
     expect(url.searchParams.get('redirect_uri')).toBe('https://quaelmich.test/strava/callback')
-    expect(url.searchParams.get('scope')).toBe('activity:read_all')
+    expect(url.searchParams.get('scope')).toBe('activity:read_all,profile:read_all')
     expect(url.searchParams.get('state')).toBe('zufall')
   })
 })

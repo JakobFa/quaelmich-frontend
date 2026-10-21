@@ -120,7 +120,7 @@ function formatNumber(hours: number) {
 
     <h2 class="section-label">// Verbindungen</h2>
     <IntervalsConnection />
-    <StravaConnection />
+    <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
   </section>
 </template>
 

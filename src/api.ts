@@ -216,8 +216,25 @@ export function getStravaStatus() {
 }
 
 /** Code aus dem Rücksprung von Strava ans Backend geben */
-export function connectStrava(code: string) {
-  return request<StravaStatus>('/me/strava', { method: 'POST', body: JSON.stringify({ code }) })
+export function connectStrava(code: string, scope: string) {
+  return request<StravaStatus>('/me/strava', {
+    method: 'POST',
+    body: JSON.stringify({ code, scope }),
+  })
+}
+
+/** Werte aus dem Strava-Profil; null = dort nicht eingetragen */
+export type StravaProfileSuggestion = {
+  /** false = ohne Erlaubnis fürs Profil verbunden → neu verbinden */
+  profileAccess: boolean
+  ftp: number | null
+  weightKg: number | null
+  /** geschätzt aus den Strava-Pulszonen */
+  thresholdHeartRate: number | null
+}
+
+export function getStravaProfile() {
+  return request<StravaProfileSuggestion>('/me/strava/profile')
 }
 
 export async function disconnectStrava() {
