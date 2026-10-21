@@ -229,8 +229,10 @@ export type StravaProfileSuggestion = {
   profileAccess: boolean
   ftp: number | null
   weightKg: number | null
-  /** geschätzt aus den Strava-Pulszonen */
+  /** geschätzt aus den Strava-Pulszonen oder dem höchsten Puls der letzten 90 Tage */
   thresholdHeartRate: number | null
+  thresholdSource: 'ZONES' | 'ACTIVITIES' | null
+  maxHeartRateObserved: number | null
 }
 
 export function getStravaProfile() {

@@ -20,6 +20,7 @@ const suggestion = ref<StravaProfileSuggestion | null>(null)
 const busy = ref(false)
 const errorMessage = ref('')
 const applied = ref(false)
+const suggestionFailed = ref(false)
 
 onMounted(async () => {
   try {
@@ -32,7 +33,7 @@ onMounted(async () => {
     try {
       suggestion.value = await getStravaProfile()
     } catch {
-      // ohne Vorschlag geht es auch
+      suggestionFailed.value = true
     }
   }
 })
@@ -139,13 +140,31 @@ async function disconnect() {
           </tbody>
         </table>
         <p v-if="differences.some((d) => d.field === 'thresholdHeartRate')" class="hint small">
-          Den Schwellenpuls schätzt quaelmich aus deinen Strava-Pulszonen (Obergrenze Zone 4).
+          <template v-if="suggestion?.thresholdSource === 'ACTIVITIES'">
+            Geschätzt aus deinem höchsten Puls der letzten 90 Tage ({{
+              suggestion.maxHeartRateObserved
+            }}
+            bpm) – davon ca. 90 %.
+          </template>
+          <template v-else>
+            Geschätzt aus deinen Strava-Pulszonen (Beginn von Zone 4 „Schwelle“).
+          </template>
+          Genauer ist ein eigener Test.
         </p>
         <button type="button" class="button" :disabled="busy" @click="applySuggestion">
           Übernehmen
         </button>
       </div>
       <p v-else-if="applied" class="hint">✓ Übernommen.</p>
+      <p v-else-if="suggestionFailed" class="hint">
+        Dein Strava-Profil (FTP, Gewicht, Puls) konnte gerade nicht gelesen werden.
+      </p>
+      <p v-else-if="suggestion?.profileAccess && athlete" class="hint">
+        ✓ Dein Profil passt zu Strava.
+        <template v-if="suggestion.thresholdHeartRate == null">
+          Einen Schwellenpuls kennt Strava nicht – trag ihn unter „Angaben ändern“ selbst ein.
+        </template>
+      </p>
 
       <p class="hint">
         Deine Radfahrten der letzten 14 Tage werden beim Öffnen des Plans und jede Nacht übernommen

@@ -50,7 +50,14 @@ describe('StravaConnection', () => {
     const athlete = { ...emptyAthlete(), ftp: 250, weightKg: 72, thresholdHeartRate: null }
     const fetchMock = backend(
       { ...base, available: true, connected: true },
-      { profileAccess: true, ftp: 250, weightKg: 71.5, thresholdHeartRate: 172 },
+      {
+        profileAccess: true,
+        ftp: 250,
+        weightKg: 71.5,
+        thresholdHeartRate: 172,
+        thresholdSource: 'ZONES',
+        maxHeartRateObserved: null,
+      },
       { ...athlete, weightKg: 71.5, thresholdHeartRate: 172 },
     )
     const wrapper = mount(StravaConnection, { props: { athlete } })
@@ -67,6 +74,19 @@ describe('StravaConnection', () => {
     const saved = JSON.parse(String(fetchMock.mock.calls[2]![1]!.body))
     expect(saved).toMatchObject({ ftp: 250, weightKg: 71.5, thresholdHeartRate: 172 })
     expect(wrapper.emitted('athlete-updated')).toHaveLength(1)
+  })
+
+  it('sagt Bescheid, wenn alles zu Strava passt', async () => {
+    backend(
+      { ...base, available: true, connected: true },
+      { profileAccess: true, ftp: 250, weightKg: null, thresholdHeartRate: null },
+    )
+    const athlete = { ...emptyAthlete(), ftp: 250, weightKg: 72 }
+    const wrapper = mount(StravaConnection, { props: { athlete } })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Dein Profil passt zu Strava')
+    expect(wrapper.text()).toContain('Schwellenpuls kennt Strava nicht')
   })
 
   it('bittet ohne Profil-Erlaubnis um neues Verbinden', async () => {
