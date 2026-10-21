@@ -115,6 +115,29 @@ export function getPlan() {
   return requestOrNull<TrainingPlan>('/me/plan')
 }
 
+export type ProgressLevel = { number: number; name: string; fromXp: number }
+
+export type Progress = {
+  /** Erfahrungspunkte = gefahrene Trainingslast */
+  xp: number
+  level: ProgressLevel
+  nextLevel: ProgressLevel | null
+  /** Wochen in Folge mit mindestens 80 % erledigten Workouts */
+  streakWeeks: number
+  plan: {
+    week: number
+    totalWeeks: number
+    completed: number
+    due: number
+    daysToEvent: number
+    eventName: string
+  } | null
+}
+
+export function getProgress() {
+  return request<Progress>('/me/progress')
+}
+
 export function generatePlan() {
   return request<TrainingPlan>('/me/plan', { method: 'POST' })
 }

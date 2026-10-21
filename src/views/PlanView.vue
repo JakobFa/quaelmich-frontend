@@ -8,7 +8,10 @@ import {
   getPlan,
   importActivities,
   syncToIntervals,
+  getProgress,
+  type Progress,
 } from '../api'
+import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
@@ -18,6 +21,16 @@ import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
 const hasProfile = ref(false)
+const progress = ref<Progress | null>(null)
+
+/** Level & Co. – ohne geht es auch, dann zeigt der Plan den einfachen Überblick */
+async function loadProgress() {
+  try {
+    progress.value = await getProgress()
+  } catch {
+    progress.value = null
+  }
+}
 const loading = ref(true)
 const failed = ref(false)
 const generating = ref(false)
@@ -65,6 +78,7 @@ async function load() {
     // Ohne Plan: Gibt es wenigstens schon ein Profil? Dann reicht ein Klick auf "Plan erstellen"
     hasProfile.value = plan.value !== null || (await getMyAthlete()) !== null
     weekIndex.value = weekIndexFor(weeks.value, today)
+    if (plan.value) loadProgress()
   } catch {
     failed.value = true
   } finally {
@@ -77,6 +91,7 @@ async function createPlan() {
   try {
     plan.value = await generatePlan()
     weekIndex.value = weekIndexFor(weeks.value, today)
+    loadProgress()
   } catch {
     failed.value = true
   } finally {
@@ -108,6 +123,7 @@ async function importRides() {
       const index = weekIndex.value
       plan.value = await getPlan()
       weekIndex.value = index
+      loadProgress()
     }
   } catch {
     // nicht schlimm – dann bleibt der Plan, wie er ist
@@ -156,8 +172,9 @@ onMounted(async () => {
     </div>
 
     <template v-else-if="week">
-      <!-- Überblick -->
-      <div class="panel summary">
+      <!-- Überblick: Level, Fortschritt, Tage bis zum Event -->
+      <ProgressHeader v-if="progress" :progress="progress" />
+      <div v-else class="panel summary">
         <div>
           <span class="label">Event</span>
           <strong>{{ plan.eventName }}</strong>
