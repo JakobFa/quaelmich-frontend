@@ -1,8 +1,9 @@
-import type { Phase, PlannedWorkout, TrainingPlan } from '../types/plan'
+import type { ExtraRide, Phase, PlannedWorkout, TrainingPlan } from '../types/plan'
 
 export type PlanDay = {
   date: string
   workouts: PlannedWorkout[]
+  extraRides: ExtraRide[]
   isEvent: boolean
 }
 
@@ -46,13 +47,22 @@ export function buildWeeks(plan: TrainingPlan): PlanWeek[] {
   for (const planned of plan.workouts) {
     byDate.set(planned.date, [...(byDate.get(planned.date) ?? []), planned])
   }
+  const extraByDate = new Map<string, ExtraRide[]>()
+  for (const ride of plan.extraRides ?? []) {
+    extraByDate.set(ride.date, [...(extraByDate.get(ride.date) ?? []), ride])
+  }
 
   const weeks: PlanWeek[] = []
   const lastMonday = mondayOf(plan.eventDate)
   for (let monday = mondayOf(plan.startDate); monday <= lastMonday; monday = addDays(monday, 7)) {
     const days: PlanDay[] = Array.from({ length: 7 }, (_, i) => {
       const date = addDays(monday, i)
-      return { date, workouts: byDate.get(date) ?? [], isEvent: date === plan.eventDate }
+      return {
+        date,
+        workouts: byDate.get(date) ?? [],
+        extraRides: extraByDate.get(date) ?? [],
+        isEvent: date === plan.eventDate,
+      }
     })
     const workouts = days.flatMap((day) => day.workouts)
     weeks.push({

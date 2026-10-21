@@ -47,10 +47,21 @@ export type PlannedWorkout = {
   adjustment: Adjustment | null
 }
 
+/** Fahrt ohne geplantes Workout, z. B. am Ruhetag; assessment null = lockere Runde (unter 50 TSS) */
+export type ExtraRide = {
+  id: number
+  date: string
+  durationMinutes: number | null
+  distanceKm: number | null
+  tss: number | null
+  assessment: Assessment | null
+}
+
 export type TrainingPlan = {
   id: number
   startDate: string
   eventName: string
   eventDate: string
   workouts: PlannedWorkout[]
+  extraRides?: ExtraRide[]
 }

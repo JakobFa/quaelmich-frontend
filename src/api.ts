@@ -190,7 +190,12 @@ export async function disconnectIntervals() {
   await send('/me/intervals', { method: 'DELETE' })
 }
 
-export type ActivityImportResult = { activities: number; matched: number; adjusted: number }
+export type ActivityImportResult = {
+  activities: number
+  matched: number
+  extra: number
+  adjusted: number
+}
 
 /** Gefahrene Einheiten der letzten 14 Tage aus intervals.icu abholen und dem Plan zuordnen */
 export function importActivities() {

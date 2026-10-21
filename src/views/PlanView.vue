@@ -104,7 +104,7 @@ function formatDate(iso: string) {
 async function importRides() {
   try {
     const result = await importActivities()
-    if (result.matched > 0) {
+    if (result.matched > 0 || result.extra > 0 || result.adjusted > 0) {
       const index = weekIndex.value
       plan.value = await getPlan()
       weekIndex.value = index
@@ -283,7 +283,24 @@ onMounted(async () => {
             <WorkoutProfile :steps="planned.workout.steps" class="profile" />
           </RouterLink>
 
-          <p v-if="!day.isEvent && day.workouts.length === 0" class="rest">Ruhetag</p>
+          <div v-for="ride in day.extraRides" :key="`extra-${ride.id}`" class="extra">
+            <div>
+              <span class="type">+ Zusatzfahrt</span>
+              <p class="extra-values">
+                <template v-if="ride.durationMinutes">{{ formatDuration(ride.durationMinutes) }}</template>
+                <template v-if="ride.distanceKm"> · {{ ride.distanceKm.toLocaleString('de-DE') }} km</template>
+                <template v-if="ride.tss"> · {{ ride.tss }} TSS</template>
+              </p>
+            </div>
+            <AssessmentBadge v-if="ride.assessment" :assessment="ride.assessment" />
+          </div>
+
+          <p
+            v-if="!day.isEvent && day.workouts.length === 0 && day.extraRides.length === 0"
+            class="rest"
+          >
+            Ruhetag
+          </p>
         </li>
       </ol>
     </template>
@@ -541,6 +558,27 @@ onMounted(async () => {
 
 .session-duration .assessment {
   margin-top: 4px;
+}
+
+.extra {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 4px 12px;
+  margin-top: 8px;
+  padding: 8px 10px;
+  border: 2px dashed var(--color-hot);
+}
+
+.extra .type {
+  color: var(--color-hot);
+}
+
+.extra-values {
+  margin: 2px 0 0;
+  font-family: var(--font-mono);
+  font-weight: 600;
 }
 
 .adjusted {

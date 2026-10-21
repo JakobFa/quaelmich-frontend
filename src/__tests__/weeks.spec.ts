@@ -35,6 +35,9 @@ const plan: TrainingPlan = {
     planned(2, '2026-10-24', 180),
     planned(3, '2026-10-27', 60),
   ],
+  extraRides: [
+    { id: 9, date: '2026-10-23', durationMinutes: 40, distanceKm: 15, tss: 25, assessment: null },
+  ],
 }
 
 describe('weeks', () => {
@@ -49,6 +52,14 @@ describe('weeks', () => {
 
     expect(weeks.map((w) => w.monday)).toEqual(['2026-10-19', '2026-10-26', '2026-11-02'])
     expect(weeks.every((w) => w.days.length === 7)).toBe(true)
+  })
+
+  it('ordnet Zusatzfahrten ihrem Tag zu', () => {
+    const [first] = buildWeeks(plan)
+    const friday = first!.days.find((day) => day.date === '2026-10-23')!
+
+    expect(friday.workouts).toHaveLength(0)
+    expect(friday.extraRides.map((ride) => ride.id)).toEqual([9])
   })
 
   it('summiert Umfang, TSS und erledigte Workouts pro Woche', () => {
