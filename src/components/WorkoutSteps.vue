@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { formatRange, targetForStep, type HeartRateZones } from '../plan/heartRate'
+import { powerZoneFor } from '../plan/zones'
 import type { StepKind, WorkoutStep } from '../types/workout'
 
 /** heartRate gesetzt → Training nach Puls: Zone und bpm statt % FTP und Watt */
@@ -71,7 +72,15 @@ function formatWatts(step: WorkoutStep) {
         :key="index"
         :class="{ hard: Math.max(step.powerStartPercent, step.powerEndPercent) > 105 }"
       >
-        <td class="index">{{ index + 1 }}</td>
+        <td
+          class="index"
+          :style="{
+            borderLeftColor: powerZoneFor(Math.max(step.powerStartPercent, step.powerEndPercent))
+              .color,
+          }"
+        >
+          {{ index + 1 }}
+        </td>
         <td>{{ kindLabels[step.kind] }}</td>
         <td>{{ formatDuration(step.durationSeconds) }}</td>
         <template v-if="heartRate">
@@ -112,6 +121,7 @@ td {
 }
 
 .index {
+  border-left: 5px solid transparent;
   color: var(--color-text-muted);
 }
 

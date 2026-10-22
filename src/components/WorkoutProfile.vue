@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { powerZoneFor } from '../plan/zones'
 import type { WorkoutStep } from '../types/workout'
 
 const props = defineProps<{ steps: WorkoutStep[] }>()
@@ -10,18 +11,14 @@ const MAX_PERCENT = 170
 
 const totalSeconds = computed(() => props.steps.reduce((sum, s) => sum + s.durationSeconds, 0))
 
-function zoneClass(step: WorkoutStep) {
-  const percent = Math.max(step.powerStartPercent, step.powerEndPercent)
-  if (percent > 105) return 'zone-hard'
-  if (percent >= 88) return 'zone-threshold'
-  if (percent > 75) return 'zone-tempo'
-  return 'zone-easy'
-}
-
 function barStyle(step: WorkoutStep) {
   const top = (percent: number) => 100 - (Math.min(percent, MAX_PERCENT) / MAX_PERCENT) * 100
+  const from = powerZoneFor(step.powerStartPercent).color
+  const to = powerZoneFor(step.powerEndPercent).color
   return {
     flexGrow: step.durationSeconds,
+    // Rampen laufen farblich von der Start- in die Zielzone
+    background: from === to ? from : `linear-gradient(to right, ${from}, ${to})`,
     // Trapez-Form, damit Rampen (Aufwärmen, Ausfahren) schräg aussehen
     clipPath: `polygon(0 100%, 0 ${top(step.powerStartPercent)}%, 100% ${top(step.powerEndPercent)}%, 100% 100%)`,
   }
@@ -34,9 +31,8 @@ function barStyle(step: WorkoutStep) {
       v-for="(step, index) in steps"
       :key="index"
       class="bar"
-      :class="zoneClass(step)"
       :style="barStyle(step)"
-      :title="`${Math.round(step.durationSeconds / 60)} min · ${step.powerStartPercent}–${step.powerEndPercent} % FTP`"
+      :title="`${Math.round(step.durationSeconds / 60)} min · ${step.powerStartPercent}–${step.powerEndPercent} % FTP · Z${powerZoneFor(step.powerEndPercent).zone}`"
     ></span>
     <span v-if="totalSeconds === 0" class="empty">Keine Abschnitte</span>
   </div>
@@ -55,22 +51,6 @@ function barStyle(step: WorkoutStep) {
 .bar {
   flex-basis: 0;
   min-width: 2px;
-}
-
-.zone-easy {
-  background: var(--color-lilac-dim);
-}
-
-.zone-tempo {
-  background: color-mix(in srgb, var(--color-lilac) 80%, var(--color-lilac-dim));
-}
-
-.zone-threshold {
-  background: var(--color-lilac);
-}
-
-.zone-hard {
-  background: var(--color-hot);
 }
 
 .empty {

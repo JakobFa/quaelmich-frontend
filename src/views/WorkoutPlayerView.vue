@@ -14,6 +14,7 @@ import {
   positionAt,
   previousStepStart,
 } from '../plan/player'
+import { powerZoneFor } from '../plan/zones'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
 import type { StepKind, Workout, WorkoutStep } from '../types/workout'
 
@@ -128,6 +129,8 @@ function targetOf(step: WorkoutStep, percent: number) {
   }
   return { main: String(percent), unit: '% FTP', sub: 'Ohne FTP im Profil keine Watt' }
 }
+
+const zone = computed(() => powerZoneFor(percentNow.value))
 
 const target = computed(() => (current.value ? targetOf(current.value, percentNow.value) : null))
 
@@ -336,9 +339,12 @@ onBeforeUnmount(() => {
       </div>
 
       <div v-else class="now">
-        <div class="now-main" :class="{ hard: percentNow > 105, paused: !running }">
+        <div class="now-main" :class="{ paused: !running }" :style="{ '--zone': zone.color }">
           <p class="step-label">
-            {{ current ? kindLabels[current.kind] : '' }}
+            <span>
+              {{ current ? kindLabels[current.kind] : '' }}
+              <span class="zone-name">Z{{ zone.zone }} {{ zone.name }}</span>
+            </span>
             <span class="step-count">{{ position.index + 1 }} / {{ steps.length }}</span>
           </p>
           <p v-if="target" class="target">
@@ -447,13 +453,10 @@ onBeforeUnmount(() => {
 
 .now-main {
   padding: 16px;
-  border: 3px solid var(--color-lilac);
+  border: 3px solid var(--zone);
   background: var(--color-panel);
   text-align: center;
-}
-
-.now-main.hard {
-  border-color: var(--color-hot);
+  transition: border-color 0.4s;
 }
 
 .now-main.paused .countdown {
@@ -463,20 +466,28 @@ onBeforeUnmount(() => {
 .step-label {
   display: flex;
   justify-content: space-between;
+  gap: 8px;
+  text-align: left;
   margin: 0;
   font-family: var(--font-mono);
   font-size: 0.85rem;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--color-lilac);
+  color: var(--zone);
 }
 
-.hard .step-label {
-  color: var(--color-hot);
+.zone-name {
+  display: inline-block;
+  margin-left: 6px;
+  white-space: nowrap;
+  padding: 1px 6px;
+  background: var(--zone);
+  color: var(--color-ink);
 }
 
 .step-count {
+  white-space: nowrap;
   color: var(--color-text-muted);
 }
 
@@ -518,11 +529,7 @@ onBeforeUnmount(() => {
 .step-bar span {
   display: block;
   height: 100%;
-  background: var(--color-lilac);
-}
-
-.hard .step-bar span {
-  background: var(--color-hot);
+  background: var(--zone);
 }
 
 .next {
