@@ -66,7 +66,12 @@ onMounted(async () => {
       <WorkoutProfile :steps="workout.steps" class="profile" />
 
       <div class="download">
-        <a :href="workoutFitUrl(workout.id)" class="button" download>.fit herunterladen</a>
+        <RouterLink :to="`/workouts/${workout.id}/fahren`" class="button"
+          >▶ In der App fahren</RouterLink
+        >
+        <a :href="workoutFitUrl(workout.id)" class="button button-ghost" download
+          >.fit herunterladen</a
+        >
         <p>
           Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
           rechnet mit deiner dort eingestellten FTP in Watt um.

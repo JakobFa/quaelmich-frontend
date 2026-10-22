@@ -311,6 +311,14 @@ function formatDate(iso: string) {
 
       <WorkoutProfile :steps="planned.workout.steps" class="profile" />
 
+      <RouterLink
+        v-if="!planned.completed"
+        :to="`/plan/${planned.id}/fahren`"
+        class="button play-link"
+      >
+        ▶ Jetzt in der App fahren
+      </RouterLink>
+
       <!-- Fahrt des Tages selbst zuordnen, wenn sie nicht automatisch erkannt wurde -->
       <div v-if="!planned.actual && candidates.length > 0" class="panel assign">
         <p class="assign-title">Welche Fahrt war dieses Training?</p>
@@ -530,6 +538,14 @@ function formatDate(iso: string) {
 .profile {
   height: 96px;
   margin-bottom: 24px;
+}
+
+.play-link {
+  display: block;
+  margin-bottom: 24px;
+  padding: 14px;
+  text-align: center;
+  font-size: 1.1rem;
 }
 
 .panel {
