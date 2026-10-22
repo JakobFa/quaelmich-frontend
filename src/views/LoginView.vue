@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { computed, onUnmounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { ApiError, login, NO_RESPONSE, register } from '../api'
+import { ApiError, getRegistrationInfo, login, NO_RESPONSE, register } from '../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -15,6 +15,21 @@ const password = ref('')
 /** nur bei der Registrierung – solange es kein "Passwort vergessen" gibt, wäre ein Tippfehler fatal */
 const passwordRepeat = ref('')
 const showPassword = ref(false)
+/** Einladungscode – nur gefragt, wenn das Backend einen verlangt */
+const inviteRequired = ref(false)
+// Code aus dem Einladungslink (…/login?mode=register&code=QUAL-…) gleich eintragen
+const inviteCode = ref(typeof route.query.code === 'string' ? route.query.code : '')
+
+async function loadRegistrationInfo() {
+  if (mode.value !== 'register') return
+  try {
+    inviteRequired.value = (await getRegistrationInfo()).inviteRequired
+  } catch {
+    inviteRequired.value = false // dann meldet das Backend beim Absenden, falls doch einer fehlt
+  }
+}
+onMounted(loadRegistrationInfo)
+watch(mode, loadRegistrationInfo)
 const submitting = ref(false)
 const errorMessage = ref('')
 
@@ -50,6 +65,8 @@ function messageFor(error: unknown): string {
   if (error.status === 401) return 'E-Mail oder Passwort stimmt nicht.'
   if (error.status === 429) return 'Zu viele Versuche – bitte warte ein paar Minuten.'
   if (error.status === 409) return 'Mit dieser E-Mail gibt es schon ein Konto – melde dich an.'
+  if (error.status === 403)
+    return 'Der Einladungscode stimmt nicht, ist abgelaufen oder wurde schon benutzt.'
   if (error.status === 400)
     return 'Bitte gib eine gültige E-Mail und ein Passwort mit mindestens 8 Zeichen ein.'
   return 'Das hat nicht geklappt. Bitte versuch es nochmal.'
@@ -69,7 +86,7 @@ async function submit() {
   slowTimer = setTimeout(() => (slow.value = true), 3000)
   try {
     if (isRegister.value) {
-      await register(email.value, password.value)
+      await register(email.value, password.value, inviteCode.value)
     } else {
       await login(email.value, password.value)
     }
@@ -145,6 +162,12 @@ async function submit() {
         <small v-if="showPasswordMismatch" class="mismatch" role="status">
           Stimmt noch nicht mit dem ersten Passwort überein.
         </small>
+      </label>
+
+      <label v-if="isRegister && inviteRequired" class="field">
+        <span>Einladungscode</span>
+        <input v-model.trim="inviteCode" type="text" autocomplete="off" required />
+        <small class="hint">quaelmich ist gerade nur auf Einladung offen.</small>
       </label>
 
       <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
@@ -242,5 +265,11 @@ async function submit() {
   font-size: 0.8rem;
   text-decoration: underline;
   cursor: pointer;
+}
+.field .hint {
+  display: block;
+  margin-top: 4px;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 </style>

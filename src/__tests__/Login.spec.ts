@@ -98,7 +98,9 @@ describe('Registrierung', () => {
     await fillAndSubmit(wrapper, { emailRepeat: 'lina@exmaple.com' })
 
     expect(wrapper.text()).toContain('E-Mail-Adressen stimmen nicht überein')
-    expect(fetch).not.toHaveBeenCalled()
+    // nur die Frage nach dem Einladungscode, aber keine Registrierung
+    const calls = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
+    expect(calls.some((url) => url.endsWith('/auth/register'))).toBe(false)
     expect(auth.isLoggedIn.value).toBe(false)
   })
 
@@ -118,7 +120,79 @@ describe('Registrierung', () => {
     await fillAndSubmit(wrapper, { passwordRepeat: 'geheim1243' })
 
     expect(wrapper.text()).toContain('Passwörter stimmen nicht überein')
-    expect(fetch).not.toHaveBeenCalled()
+    // nur die Frage nach dem Einladungscode, aber keine Registrierung
+    const calls = vi.mocked(fetch).mock.calls.map(([url]) => String(url))
+    expect(calls.some((url) => url.endsWith('/auth/register'))).toBe(false)
+  })
+})
+
+describe('Einladungscode', () => {
+  beforeEach(() => endSession())
+  afterEach(() => vi.unstubAllGlobals())
+
+  it('fragt nach dem Code, wenn das Backend einen verlangt, und schickt ihn mit', async () => {
+    const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>((url) =>
+      Promise.resolve({
+        ok: true,
+        status: url.endsWith('/auth/registration') ? 200 : 201,
+        json: () =>
+          Promise.resolve(
+            url.endsWith('/auth/registration')
+              ? { inviteRequired: true }
+              : { token: 'abc.def.ghi', email: 'lina@example.com' },
+          ),
+      }),
+    )
+    vi.stubGlobal('fetch', fetchMock)
+    const wrapper = await mountLogin('/login?mode=register')
+    await flushPromises()
+
+    const codeField = wrapper.find('input[autocomplete=off][type=text]')
+    expect(codeField.exists()).toBe(true)
+    await codeField.setValue('quael-2027')
+    await fillAndSubmit(wrapper)
+
+    const registerCall = fetchMock.mock.calls.find(([url]) => url.endsWith('/auth/register'))!
+    expect(JSON.parse(String(registerCall[1]!.body)).inviteCode).toBe('quael-2027')
+  })
+
+  it('übernimmt den Code aus dem Einladungslink', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<() => Promise<unknown>>(() =>
+        Promise.resolve({
+          ok: true,
+          status: 200,
+          json: () => Promise.resolve({ inviteRequired: true }),
+        }),
+      ),
+    )
+    const wrapper = await mountLogin('/login?mode=register&code=QUAL-7KX4-M9PD')
+    await flushPromises()
+
+    const field = wrapper.find('input[autocomplete=off][type=text]').element as HTMLInputElement
+    expect(field.value).toBe('QUAL-7KX4-M9PD')
+  })
+
+  it('meldet einen falschen Code', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn<(url: string) => Promise<unknown>>((url) =>
+        Promise.resolve({
+          ok: url.endsWith('/auth/registration'),
+          status: url.endsWith('/auth/registration') ? 200 : 403,
+          json: () => Promise.resolve({ inviteRequired: true }),
+        }),
+      ),
+    )
+    const wrapper = await mountLogin('/login?mode=register')
+    await flushPromises()
+    await wrapper.find('input[autocomplete=off][type=text]').setValue('falsch')
+    await fillAndSubmit(wrapper)
+
+    expect(wrapper.text()).toContain(
+      'Einladungscode stimmt nicht, ist abgelaufen oder wurde schon benutzt',
+    )
   })
 })
 

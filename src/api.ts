@@ -79,12 +79,40 @@ export async function login(email: string, password: string) {
   startSession(result.token, result.email)
 }
 
-export async function register(email: string, password: string) {
+export async function register(email: string, password: string, inviteCode = '') {
   const result = await request<AuthResponse>('/auth/register', {
     method: 'POST',
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify({ email, password, inviteCode }),
   })
   startSession(result.token, result.email)
+}
+
+export type Invitation = {
+  id: number
+  /** nur direkt nach dem Erstellen gesetzt */
+  code: string | null
+  lastChars: string
+  createdAt: string
+  expiresAt: string
+  status: 'OPEN' | 'USED' | 'EXPIRED' | 'REVOKED'
+}
+
+export function getInvitations() {
+  return request<Invitation[]>('/me/invitations')
+}
+
+/** 409 = schon 3 offene Codes */
+export function createInvitation() {
+  return request<Invitation>('/me/invitations', { method: 'POST' })
+}
+
+export function revokeInvitation(id: number) {
+  return request<Invitation>(`/me/invitations/${id}`, { method: 'DELETE' })
+}
+
+/** Braucht die Registrierung gerade einen Einladungscode? */
+export function getRegistrationInfo() {
+  return request<{ inviteRequired: boolean }>('/auth/registration')
 }
 
 /** "Passwort vergessen": verschickt einen Link, falls es das Konto gibt (Antwort ist immer gleich) */
