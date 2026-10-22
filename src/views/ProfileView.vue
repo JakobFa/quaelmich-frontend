@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
+import { useRoute } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
@@ -18,6 +19,8 @@ import {
 
 const athlete = ref<Athlete | null>(null)
 const loading = ref(true)
+/** Rückmeldung nach dem Speichern eines Bereichs (siehe OnboardingView) */
+const savedSection = useRoute().query.gespeichert === '1'
 
 onMounted(async () => {
   try {
@@ -86,6 +89,9 @@ function formatNumber(hours: number) {
 <template>
   <section>
     <p class="kicker">// Profil</p>
+    <p v-if="savedSection" class="saved" role="status">
+      ✓ Gespeichert – der Plan ist ab heute angepasst, Erledigtes bleibt erhalten.
+    </p>
 
     <LoadingNotice v-if="loading" label="Lädt dein Profil …" />
 
@@ -97,7 +103,12 @@ function formatNumber(hours: number) {
 
     <template v-else>
       <div class="panel">
-        <h2 class="panel-title">Du</h2>
+        <div class="panel-head">
+          <h2 class="panel-title">Du</h2>
+          <RouterLink :to="{ name: 'onboarding', query: { bereich: 'sport' } }" class="edit-link">
+            Ändern
+          </RouterLink>
+        </div>
         <dl class="facts">
           <div>
             <dt>Training nach</dt>
@@ -149,7 +160,12 @@ function formatNumber(hours: number) {
       </div>
 
       <div class="panel">
-        <h2 class="panel-title">Event</h2>
+        <div class="panel-head">
+          <h2 class="panel-title">Event</h2>
+          <RouterLink :to="{ name: 'onboarding', query: { bereich: 'event' } }" class="edit-link">
+            Ändern
+          </RouterLink>
+        </div>
         <dl class="facts">
           <div>
             <dt>Name</dt>
@@ -232,8 +248,6 @@ function formatNumber(hours: number) {
           </button>
         </template>
       </div>
-
-      <RouterLink to="/onboarding" class="button">Angaben ändern</RouterLink>
     </template>
 
     <h2 class="section-label">// Verbindungen</h2>
@@ -403,5 +417,34 @@ form .week li {
 
 .error {
   color: var(--color-hot);
+}
+.panel-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.panel-head .panel-title {
+  margin-bottom: 16px;
+}
+
+.edit-link {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-lilac);
+}
+
+.edit-link:hover {
+  color: var(--color-hot);
+}
+
+.saved {
+  margin: 8px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-lilac);
 }
 </style>

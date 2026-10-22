@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import { heartRateZonesOf } from '../plan/heartRate'
@@ -14,9 +14,22 @@ import {
 } from '../types/athlete'
 
 const router = useRouter()
+const route = useRoute()
 
 const steps = ['Profil', 'Event', 'Verfügbarkeit']
 const currentStep = ref(0)
+
+/** Einzelner Bereich aus dem Profil, z. B. /onboarding?bereich=event – nur dieser Schritt, direkt speichern */
+const SECTIONS: Record<string, { step: number; title: string }> = {
+  sport: { step: 0, title: 'Sportliche Daten ändern' },
+  event: { step: 1, title: 'Event ändern' },
+  verfuegbarkeit: { step: 2, title: 'Verfügbarkeit ändern' },
+}
+const sectionKey = computed(() =>
+  typeof route.query.bereich === 'string' && route.query.bereich in SECTIONS
+    ? route.query.bereich
+    : null,
+)
 
 const athlete = ref<Athlete>(emptyAthlete())
 const saving = ref(false)
@@ -27,6 +40,8 @@ const today = new Date().toISOString().slice(0, 10)
 /** Eigene Pulszonen: Beginn von Zone 2–5, alle vier oder keine */
 /** Gibt es schon ein Profil? Dann wird der vorhandene Plan angepasst statt neu erstellt */
 const hadProfile = ref(false)
+/** Nur einen Bereich bearbeiten – geht nur mit vorhandenem Profil */
+const singleSection = computed(() => hadProfile.value && sectionKey.value !== null)
 const zoneInputs = ref<(number | '' | null)[]>([null, null, null, null])
 const heartRateMode = computed(() => athlete.value.trainingMode === 'HEART_RATE')
 const filledZones = computed(() => zoneInputs.value.filter((v) => typeof v === 'number'))
@@ -48,6 +63,7 @@ onMounted(async () => {
     athlete.value.event.type ??= null
     const own = athlete.value.heartRateZoneStarts
     if (own?.length === 4) zoneInputs.value = [...own]
+    if (singleSection.value) currentStep.value = SECTIONS[sectionKey.value!]!.step
   } catch {
     // Backend nicht erreichbar – dann mit leerem Formular starten
   }
@@ -63,7 +79,7 @@ async function next() {
     athlete.value.heartRateZoneStarts =
       filledZones.value.length === 4 ? (filledZones.value as number[]) : null
   }
-  if (currentStep.value < steps.length - 1) {
+  if (!singleSection.value && currentStep.value < steps.length - 1) {
     currentStep.value++
     return
   }
@@ -73,7 +89,8 @@ async function next() {
   try {
     await saveMyAthlete(athlete.value)
     await generatePlan()
-    router.push('/plan')
+    // einzelner Bereich → zurück ins Profil, sonst in den Plan
+    router.push(singleSection.value ? { name: 'profile', query: { gespeichert: '1' } } : '/plan')
   } catch {
     errorMessage.value =
       'Speichern hat nicht geklappt. Bitte prüfe deine Angaben und versuch es nochmal.'
@@ -89,9 +106,18 @@ function back() {
 
 <template>
   <section>
-    <p class="kicker">// {{ hadProfile ? 'Angaben ändern' : 'Plan erstellen' }}</p>
+    <p class="kicker">
+      //
+      {{
+        singleSection
+          ? SECTIONS[sectionKey!]!.title
+          : hadProfile
+            ? 'Angaben ändern'
+            : 'Plan erstellen'
+      }}
+    </p>
 
-    <ol class="stepper">
+    <ol v-if="!singleSection" class="stepper">
       <li
         v-for="(step, index) in steps"
         :key="step"
@@ -283,7 +309,13 @@ function back() {
 
       <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
 
-      <div class="form-actions">
+      <div v-if="singleSection" class="form-actions">
+        <RouterLink to="/profil" class="button button-ghost">Abbrechen</RouterLink>
+        <button type="submit" class="button" :disabled="saving">
+          {{ saving ? 'Moment …' : 'Speichern' }}
+        </button>
+      </div>
+      <div v-else class="form-actions">
         <button v-if="currentStep > 0" type="button" class="button button-ghost" @click="back">
           Zurück
         </button>
