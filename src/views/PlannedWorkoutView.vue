@@ -11,11 +11,13 @@ import {
   downloadPlannedWorkoutFit,
   getMyAthlete,
   getPlannedWorkout,
+  replacePlannedWorkout,
   resetPlannedWorkout,
   updateProgress,
 } from '../api'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import WorkoutPicker from '../components/WorkoutPicker.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
@@ -169,6 +171,27 @@ async function adjust(direction: AdjustDirection | 'RESET') {
   }
 }
 
+/** "Heute etwas ganz anderes": Auswahl aus der Bibliothek */
+const picking = ref(false)
+
+async function replace(workoutId: number, durationMinutes: number | undefined) {
+  if (!planned.value) return
+  adjusting.value = true
+  adjustError.value = ''
+  try {
+    planned.value = await replacePlannedWorkout(planned.value.id, workoutId, durationMinutes)
+    picking.value = false
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  } catch (error) {
+    adjustError.value =
+      error instanceof ApiError && error.status === 409
+        ? 'Das geht bei diesem Workout gerade nicht.'
+        : 'Tauschen hat nicht geklappt. Bitte versuch es nochmal.'
+  } finally {
+    adjusting.value = false
+  }
+}
+
 async function confirm(matchesPlan: boolean) {
   if (!planned.value) return
   saving.value = true
@@ -236,6 +259,20 @@ function formatDate(iso: string) {
             {{ button.label }}
           </button>
         </div>
+        <button
+          type="button"
+          class="button button-ghost pick-toggle"
+          :aria-expanded="picking"
+          @click="picking = !picking"
+        >
+          {{ picking ? '× Auswahl schließen' : '⇄ Ganz anderes Training wählen' }}
+        </button>
+        <WorkoutPicker
+          v-if="picking"
+          :current-workout-id="planned.workout.id"
+          :disabled="adjusting"
+          @pick="replace"
+        />
         <button
           v-if="planned.options.reset"
           type="button"
@@ -660,7 +697,15 @@ function formatDate(iso: string) {
 }
 
 .customize .link {
+  display: block;
   margin-top: 12px;
+}
+
+.pick-toggle {
+  width: 100%;
+  margin-top: 8px;
+  padding: 10px 6px;
+  font-size: 0.9rem;
 }
 
 /* ---------- Angepasst ---------- */

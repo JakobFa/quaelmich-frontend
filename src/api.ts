@@ -179,6 +179,14 @@ export function adjustPlannedWorkout(id: number, direction: AdjustDirection) {
   })
 }
 
+/** Heute ein anderes Workout aus der Bibliothek fahren (409 = geht gerade nicht) */
+export function replacePlannedWorkout(id: number, workoutId: number, durationMinutes?: number) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/workout`, {
+    method: 'PUT',
+    body: JSON.stringify({ workoutId, durationMinutes }),
+  })
+}
+
 /** Zurück zum ursprünglich geplanten Workout */
 export function resetPlannedWorkout(id: number) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, { method: 'DELETE' })
