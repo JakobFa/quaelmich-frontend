@@ -45,6 +45,14 @@ const singleSection = computed(() => hadProfile.value && sectionKey.value !== nu
 const zoneInputs = ref<(number | '' | null)[]>([null, null, null, null])
 const heartRateMode = computed(() => athlete.value.trainingMode === 'HEART_RATE')
 const filledZones = computed(() => zoneInputs.value.filter((v) => typeof v === 'number'))
+/** Pulsdaten sind Gesundheitsdaten → nur mit Einwilligung (bei bestehenden Angaben schon erteilt) */
+const hasHeartRateData = computed(
+  () =>
+    Boolean(athlete.value.maxHeartRate) ||
+    Boolean(athlete.value.thresholdHeartRate) ||
+    filledZones.value.length > 0,
+)
+const heartRateConsent = ref(false)
 /** Platzhalter: aus dem Maximalpuls berechnete Zonen */
 const zonePlaceholders = computed(
   () =>
@@ -63,6 +71,9 @@ onMounted(async () => {
     athlete.value.event.type ??= null
     const own = athlete.value.heartRateZoneStarts
     if (own?.length === 4) zoneInputs.value = [...own]
+    heartRateConsent.value = Boolean(
+      existing?.maxHeartRate || existing?.thresholdHeartRate || own?.length,
+    )
     if (singleSection.value) currentStep.value = SECTIONS[sectionKey.value!]!.step
   } catch {
     // Backend nicht erreichbar – dann mit leerem Formular starten
@@ -212,6 +223,15 @@ function back() {
             berechnet (wie Strava: 65/81/89/97 %).
           </small>
         </fieldset>
+        <label v-if="hasHeartRateData" class="choice consent">
+          <input v-model="heartRateConsent" type="checkbox" required />
+          <span>
+            Ich willige ein, dass quaelmich meine Pulsangaben (Gesundheitsdaten) speichert, um
+            Trainingsbereiche und Belastung zu berechnen. Widerruf jederzeit durch Löschen der
+            Angaben – mehr in der
+            <RouterLink to="/datenschutz" target="_blank">Datenschutzerklärung</RouterLink>.
+          </span>
+        </label>
         <label class="field">
           <span>Gewicht (kg)</span>
           <input
@@ -452,5 +472,14 @@ function back() {
   display: block;
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+.consent {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.consent a {
+  color: var(--color-lilac);
 }
 </style>

@@ -1,3 +1,16 @@
+// Schriften werden mit der App ausgeliefert – keine Verbindung zu Google Fonts (Datenschutz)
+import '@fontsource/barlow-condensed/500.css'
+import '@fontsource/barlow-condensed/600.css'
+import '@fontsource/barlow-condensed/700.css'
+import '@fontsource/barlow-condensed/800.css'
+import '@fontsource/barlow-condensed/900.css'
+import '@fontsource/barlow-condensed/600-italic.css'
+import '@fontsource/barlow-condensed/700-italic.css'
+import '@fontsource/barlow-condensed/800-italic.css'
+import '@fontsource/barlow-condensed/900-italic.css'
+import '@fontsource/saira-stencil-one/400.css'
+import '@fontsource/space-mono/400.css'
+import '@fontsource/space-mono/700.css'
 import './assets/main.css'
 
 // Alte Render-Adresse → eigene Domain (Pfad und Parameter bleiben erhalten)

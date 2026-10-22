@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 
 import { auth, endSession } from './auth'
 import logoUrl from './assets/logo.png'
+import { hasImpressum } from './legal'
 
 const router = useRouter()
 
@@ -43,6 +44,11 @@ function logout() {
   <main class="content">
     <RouterView />
   </main>
+
+  <footer class="footer">
+    <RouterLink v-if="hasImpressum" to="/impressum">Impressum</RouterLink>
+    <RouterLink to="/datenschutz">Datenschutz</RouterLink>
+  </footer>
 </template>
 
 <style scoped>
@@ -181,5 +187,28 @@ function logout() {
   max-width: 800px;
   margin: 0 auto;
   padding: 24px 16px 64px;
+}
+.footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 8px 24px;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 16px 16px 40px;
+  border-top: 1px solid var(--color-panel-raised);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.footer a {
+  color: var(--color-text-muted);
+  text-decoration: none;
+}
+
+.footer a:hover {
+  color: var(--color-lilac);
 }
 </style>
