@@ -4,7 +4,6 @@ import { useRoute } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
-import InviteFriends from '../components/InviteFriends.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import { formatRange, heartRateZonesOf, rangeFor } from '../plan/heartRate'
@@ -251,7 +250,6 @@ function formatNumber(hours: number) {
       </div>
     </template>
 
-    <InviteFriends v-if="athlete" />
 
     <h2 class="section-label">// Verbindungen</h2>
     <IntervalsConnection />

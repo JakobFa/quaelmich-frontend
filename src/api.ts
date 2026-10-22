@@ -87,29 +87,6 @@ export async function register(email: string, password: string, inviteCode = '')
   startSession(result.token, result.email)
 }
 
-export type Invitation = {
-  id: number
-  /** nur direkt nach dem Erstellen gesetzt */
-  code: string | null
-  lastChars: string
-  createdAt: string
-  expiresAt: string
-  status: 'OPEN' | 'USED' | 'EXPIRED' | 'REVOKED'
-}
-
-export function getInvitations() {
-  return request<Invitation[]>('/me/invitations')
-}
-
-/** 409 = schon 3 offene Codes */
-export function createInvitation() {
-  return request<Invitation>('/me/invitations', { method: 'POST' })
-}
-
-export function revokeInvitation(id: number) {
-  return request<Invitation>(`/me/invitations/${id}`, { method: 'DELETE' })
-}
-
 /** Braucht die Registrierung gerade einen Einladungscode? */
 export function getRegistrationInfo() {
   return request<{ inviteRequired: boolean }>('/auth/registration')
