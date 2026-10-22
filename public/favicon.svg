@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <rect width="64" height="64" rx="12" fill="#561a44"/>
+  <g transform="rotate(-8 32 32)">
+    <!-- quaelmich: Q als Schablone, Schwanz in Pink, schräg wie das Logo -->
+    <circle cx="31" cy="30" r="17" fill="none" stroke="#dcbaf7" stroke-width="9"/>
+    <rect x="28.5" y="6" width="5" height="10" fill="#561a44"/>
+    <rect x="28.5" y="44" width="5" height="10" fill="#561a44"/>
+    <path d="M36 38 L52 56" stroke="#ff5fb0" stroke-width="10" stroke-linecap="square"/>
+  </g>
+</svg>
