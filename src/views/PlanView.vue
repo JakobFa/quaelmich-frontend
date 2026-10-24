@@ -165,6 +165,12 @@ const pastDays = computed(() => week.value?.days.filter((day) => day.date < toda
 const hidePast = computed(
   () => !showPast.value && pastDays.value.length > 0 && week.value!.days[6]!.date >= today,
 )
+/** Ist Vergangenes eingeklappt, rücken die ersten Tage der nächsten Woche nach – so sieht man immer 7 Tage */
+const nextWeekDays = computed(() =>
+  hidePast.value
+    ? (weeks.value[weekIndex.value + 1]?.days.slice(0, pastDays.value.length) ?? [])
+    : [],
+)
 const visibleDays = computed(() =>
   hidePast.value ? week.value!.days.filter((day) => day.date >= today) : (week.value?.days ?? []),
 )
@@ -455,10 +461,11 @@ onMounted(async () => {
 
       <ol class="days">
         <li
-          v-for="day in visibleDays"
+          v-for="day in [...visibleDays, ...nextWeekDays]"
           :key="day.date"
           class="day"
-          :class="{ today: day.date === today }"
+          :class="{ today: day.date === today, 'next-week': nextWeekDays.includes(day) }"
+          :data-next-week-start="day === nextWeekDays[0] ? 'Nächste Woche' : undefined"
         >
           <div class="day-label">
             <span class="weekday">{{ formatDay(day.date).weekday }}</span>
@@ -718,6 +725,33 @@ onMounted(async () => {
   padding: 12px 16px;
   background: var(--color-panel);
   border-left: 5px solid var(--color-panel-raised);
+}
+
+/* Vorschau auf die nächste Woche: gedämpft, mit Trenner vor dem Montag */
+.day.next-week {
+  opacity: 0.6;
+}
+
+.day.next-week:hover,
+.day.next-week:focus-within {
+  opacity: 1;
+}
+
+.day[data-next-week-start] {
+  position: relative;
+  margin-top: 28px;
+}
+
+.day[data-next-week-start]::before {
+  content: '// ' attr(data-next-week-start);
+  position: absolute;
+  top: -22px;
+  left: 0;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
 }
 
 .day.today {
