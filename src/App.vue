@@ -71,6 +71,12 @@ function logout() {
   padding: 24px 16px;
 }
 
+/* manche Browser zeigen über gedrehten/gefilterten Bildern sonst den normalen Pfeil */
+.stage,
+.stage * {
+  cursor: pointer;
+}
+
 /* schräges Brust-Band wie auf dem Trikot – liegt hinter dem Logo */
 .band {
   position: absolute;
