@@ -8,6 +8,17 @@ import { hasImpressum } from './legal'
 
 const router = useRouter()
 
+/** Beta: Version und Stand des letzten Deploys, z. B. "v0.9.0 · 24.10.2026, 22:15" */
+const version = `v${__APP_VERSION__}`
+const builtAt = new Date(__BUILD_TIME__).toLocaleString('de-DE', {
+  day: '2-digit',
+  month: '2-digit',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+  timeZone: 'Europe/Berlin',
+})
+
 function logout() {
   endSession()
   router.push('/')
@@ -23,7 +34,10 @@ function logout() {
       <h1 class="logo-heading">
         <img :src="logoUrl" alt="quaelmich" class="logo" />
       </h1>
-      <span class="beta" title="quaelmich ist noch in der Beta – Feedback hilft!">Beta</span>
+      <span class="beta" title="quaelmich ist noch in der Beta – Feedback hilft!">
+        Beta
+        <small class="version">{{ version }} · {{ builtAt }}</small>
+      </span>
     </RouterLink>
     <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— Watt muss, dat muss!</span></p>
     <nav class="nav">
@@ -130,6 +144,16 @@ function logout() {
   letter-spacing: 0.12em;
   transform: rotate(6deg);
   box-shadow: 3px 3px 0 var(--color-plum);
+}
+
+.version {
+  display: block;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: var(--color-text-muted);
 }
 
 .claim {
