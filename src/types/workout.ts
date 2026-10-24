@@ -91,3 +91,44 @@ export const workoutPurpose: Record<WorkoutType, { why: string; how: string }> =
     how: 'Ausgeruht fahren, die ersten Minuten eher zurückhaltend, am Ende alles geben.',
   },
 }
+
+/** Eigene Workouts haben IDs ab 1.000.000 (Bibliothek darunter) */
+export const CUSTOM_WORKOUT_ID_OFFSET = 1_000_000
+
+export function isCustomWorkout(id: number) {
+  return id >= CUSTOM_WORKOUT_ID_OFFSET
+}
+
+export const stepKindLabels: Record<StepKind, string> = {
+  WARMUP: 'Aufwärmen',
+  STEADY: 'Gleichmäßig',
+  INTERVAL: 'Intervall',
+  RECOVERY: 'Pause',
+  COOLDOWN: 'Ausfahren',
+}
+
+/** TSS eines Abschnitts wie im Backend: Stunden × Ø(Intensität²) × 100, bei Rampen (a² + ab + b²) / 3 */
+export function stepTss(step: WorkoutStep) {
+  const a = step.powerStartPercent / 100
+  const b = step.powerEndPercent / 100
+  return (step.durationSeconds / 3600) * ((a * a + a * b + b * b) / 3) * 100
+}
+
+/** Passende Trainingsart aus dem härtesten Intervall (Vorschlag im Builder) */
+export function suggestWorkoutType(steps: WorkoutStep[]): WorkoutType {
+  const minutes = steps.reduce((sum, step) => sum + step.durationSeconds, 0) / 60
+  const hardest = Math.max(
+    0,
+    ...steps
+      .filter((step) => step.kind === 'INTERVAL' || step.kind === 'STEADY')
+      .map((step) => Math.max(step.powerStartPercent, step.powerEndPercent)),
+  )
+  if (hardest <= 55) return 'RECOVERY'
+  if (hardest <= 75) return minutes >= 150 ? 'LONG_RIDE' : 'ENDURANCE'
+  if (hardest <= 87) return 'TEMPO'
+  if (hardest <= 93) return 'SWEET_SPOT'
+  if (hardest <= 105) return 'THRESHOLD'
+  if (hardest <= 120) return 'VO2MAX'
+  if (hardest <= 150) return 'ANAEROBIC'
+  return 'SPRINT'
+}

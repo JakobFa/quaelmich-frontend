@@ -12,6 +12,7 @@ import PlanView from '../views/PlanView.vue'
 import PlannedWorkoutView from '../views/PlannedWorkoutView.vue'
 import WorkoutDetailView from '../views/WorkoutDetailView.vue'
 import WorkoutLibraryView from '../views/WorkoutLibraryView.vue'
+import WorkoutBuilderView from '../views/WorkoutBuilderView.vue'
 import WorkoutPlayerView from '../views/WorkoutPlayerView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import StravaCallbackView from '../views/StravaCallbackView.vue'
@@ -45,6 +46,18 @@ const router = createRouter({
       meta: { requiresAuth: true },
     },
     { path: '/workouts', name: 'workouts', component: WorkoutLibraryView },
+    {
+      path: '/workouts/neu',
+      name: 'workout-new',
+      component: WorkoutBuilderView,
+      meta: { requiresAuth: true },
+    },
+    {
+      path: '/workouts/:id/bearbeiten',
+      name: 'workout-edit',
+      component: WorkoutBuilderView,
+      meta: { requiresAuth: true },
+    },
     { path: '/workouts/:id', name: 'workout', component: WorkoutDetailView },
     { path: '/workouts/:id/fahren', name: 'workout-player', component: WorkoutPlayerView },
     { path: '/profil', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },

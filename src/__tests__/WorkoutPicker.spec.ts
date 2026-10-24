@@ -24,11 +24,17 @@ const library = [
   },
 ]
 
+let own: unknown[] = []
+
 async function mountPicker(currentWorkoutId = 5) {
   vi.stubGlobal(
     'fetch',
-    vi.fn<() => Promise<unknown>>(() =>
-      Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(library) }),
+    vi.fn<(url: string) => Promise<unknown>>((url) =>
+      Promise.resolve({
+        ok: true,
+        status: 200,
+        json: () => Promise.resolve(url.includes('/me/workouts') ? own : library),
+      }),
     ),
   )
   const wrapper = mount(WorkoutPicker, { props: { currentWorkoutId } })
@@ -37,7 +43,31 @@ async function mountPicker(currentWorkoutId = 5) {
 }
 
 describe('WorkoutPicker', () => {
-  afterEach(() => vi.unstubAllGlobals())
+  afterEach(() => {
+    vi.unstubAllGlobals()
+    own = []
+  })
+
+  it('zeigt eigene Workouts als eigene Gruppe zuerst', async () => {
+    own = [
+      {
+        id: 1_000_001,
+        title: 'Hausberg 4 × 8',
+        type: 'THRESHOLD',
+        description: '',
+        steps: [],
+        durationInMinutes: 64,
+        tss: 70,
+      },
+    ]
+    const wrapper = await mountPicker()
+
+    expect(wrapper.findAll('summary').map((s) => s.text())).toEqual([
+      'Eigene Workouts',
+      'Grundlage',
+      'VO2max',
+    ])
+  })
 
   it('gruppiert die Bibliothek nach Trainingsart', async () => {
     const wrapper = await mountPicker()

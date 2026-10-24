@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, onMounted, reactive, ref } from 'vue'
 
-import { getWorkouts } from '../api'
+import { getMyWorkouts, getWorkouts } from '../api'
 import { formatDuration } from '../plan/weeks'
 import { workoutTypeLabels, type Workout, type WorkoutType } from '../types/workout'
 
@@ -24,7 +24,10 @@ const minutes = reactive<Record<number, number>>({})
 
 onMounted(async () => {
   try {
-    workouts.value = await getWorkouts()
+    // eigene Workouts zuerst, falls es welche gibt
+    const [library, own] = await Promise.all([getWorkouts(), getMyWorkouts().catch(() => [])])
+    workouts.value = [...own, ...library]
+    ownIds.value = new Set(own.map((workout) => workout.id))
     for (const workout of workouts.value) {
       if (variableNames[workout.id]) minutes[workout.id] = workout.durationInMinutes
     }
@@ -33,14 +36,23 @@ onMounted(async () => {
   }
 })
 
+const ownIds = ref(new Set<number>())
+
 const groups = computed(() =>
-  (Object.keys(workoutTypeLabels) as WorkoutType[])
-    .map((type) => ({
+  [
+    {
+      type: 'OWN',
+      label: 'Eigene Workouts',
+      workouts: workouts.value.filter((workout) => ownIds.value.has(workout.id)),
+    },
+    ...(Object.keys(workoutTypeLabels) as WorkoutType[]).map((type) => ({
       type,
       label: workoutTypeLabels[type],
-      workouts: workouts.value.filter((workout) => workout.type === type),
-    }))
-    .filter((group) => group.workouts.length > 0),
+      workouts: workouts.value.filter(
+        (workout) => workout.type === type && !ownIds.value.has(workout.id),
+      ),
+    })),
+  ].filter((group) => group.workouts.length > 0),
 )
 
 function durationOptions(id: number) {

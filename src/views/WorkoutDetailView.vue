@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getMyAthlete, getWorkout, workoutFitUrl } from '../api'
+import { downloadMyWorkoutFit, getMyAthlete, getWorkout, workoutFitUrl } from '../api'
 import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
@@ -11,7 +11,7 @@ import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
 import { heartRateZonesOf } from '../plan/heartRate'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
-import { workoutTypeLabels, type Workout } from '../types/workout'
+import { isCustomWorkout, workoutTypeLabels, type Workout } from '../types/workout'
 
 const route = useRoute()
 const workout = ref<Workout | null>(null)
@@ -21,6 +21,18 @@ const heartRate = computed(() =>
   isHeartRateMode(athlete.value) ? heartRateZonesOf(athlete.value) : null,
 )
 const loading = ref(true)
+/** eigenes Workout: bearbeitbar, .fit nur mit Login */
+const custom = computed(() => !!workout.value && isCustomWorkout(workout.value.id))
+const downloadFailed = ref(false)
+
+async function downloadCustomFit() {
+  downloadFailed.value = false
+  try {
+    await downloadMyWorkoutFit(workout.value!.id)
+  } catch {
+    downloadFailed.value = true
+  }
+}
 const failed = ref(false)
 
 onMounted(async () => {
@@ -49,7 +61,9 @@ onMounted(async () => {
     </div>
 
     <template v-else>
-      <p class="type">{{ workoutTypeLabels[workout.type] }}</p>
+      <p class="type">
+        {{ workoutTypeLabels[workout.type] }}<template v-if="custom"> · eigenes Workout</template>
+      </p>
       <h2 class="headline">{{ workout.title }}</h2>
       <p class="description">{{ workout.description }}</p>
       <WorkoutPurpose :type="workout.type" />
@@ -71,9 +85,20 @@ onMounted(async () => {
         <RouterLink :to="`/workouts/${workout.id}/fahren`" class="button"
           >▶ In der App fahren</RouterLink
         >
-        <a :href="workoutFitUrl(workout.id)" class="button button-ghost" download
+        <RouterLink
+          v-if="custom"
+          :to="`/workouts/${workout.id}/bearbeiten`"
+          class="button button-ghost"
+        >
+          ✎ Bearbeiten
+        </RouterLink>
+        <button v-if="custom" type="button" class="button button-ghost" @click="downloadCustomFit">
+          .fit herunterladen
+        </button>
+        <a v-else :href="workoutFitUrl(workout.id)" class="button button-ghost" download
           >.fit herunterladen</a
         >
+        <p v-if="downloadFailed" class="error" role="alert">Download hat nicht geklappt.</p>
         <p>
           Für Garmin, Wahoo &amp; Co. – die Leistung ist in % FTP angegeben, dein Radcomputer
           rechnet mit deiner dort eingestellten FTP in Watt um.

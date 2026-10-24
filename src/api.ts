@@ -9,7 +9,7 @@ import type {
   IntervalAccuracy,
   SkipReason,
 } from './types/plan'
-import type { Workout } from './types/workout'
+import { isCustomWorkout, type Workout } from './types/workout'
 
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
 
@@ -119,8 +119,33 @@ export function getWorkouts() {
   return request<Workout[]>('/workouts')
 }
 
+/** Bibliothek oder – bei eigenen IDs – das eigene Workout (braucht Login) */
 export function getWorkout(id: number) {
-  return request<Workout>(`/workouts/${id}`)
+  return request<Workout>(isCustomWorkout(id) ? `/me/workouts/${id}` : `/workouts/${id}`)
+}
+
+// ---------- Eigene Workouts ----------
+
+export type WorkoutDraft = Pick<Workout, 'title' | 'description' | 'type' | 'steps'>
+
+export function getMyWorkouts() {
+  return request<Workout[]>('/me/workouts')
+}
+
+/** id null = neu anlegen (400 mit Text, z. B. "Höchstens 6 Stunden.") */
+export function saveMyWorkout(id: number | null, draft: WorkoutDraft) {
+  return request<Workout>(id === null ? '/me/workouts' : `/me/workouts/${id}`, {
+    method: id === null ? 'POST' : 'PUT',
+    body: JSON.stringify(draft),
+  })
+}
+
+export async function deleteMyWorkout(id: number) {
+  await send(`/me/workouts/${id}`, { method: 'DELETE' })
+}
+
+export function downloadMyWorkoutFit(id: number) {
+  return downloadFit(`/me/workouts/${id}/fit`)
 }
 
 export function workoutFitUrl(workoutId: number) {
@@ -281,8 +306,12 @@ export function confirmActivity(id: number, matchesPlan: boolean) {
  * Lädt die .fit-Datei eines geplanten Workouts herunter. Ein einfacher Link reicht hier nicht,
  * weil der Download den Login-Token im Header braucht.
  */
-export async function downloadPlannedWorkoutFit(id: number) {
-  const response = await send(`/planned-workouts/${id}/fit`)
+export function downloadPlannedWorkoutFit(id: number) {
+  return downloadFit(`/planned-workouts/${id}/fit`)
+}
+
+async function downloadFit(path: string) {
+  const response = await send(path)
   const fileName =
     /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ??
     'workout.fit'
