@@ -135,6 +135,11 @@ export function saveMyAthlete(athlete: Athlete) {
   return request<Athlete>('/me/athlete', { method: 'PUT', body: JSON.stringify(athlete) })
 }
 
+/** Feedback aus der Beta (429 = zu viel auf einmal) */
+export async function sendFeedback(message: string, page: string) {
+  await send('/me/feedback', { method: 'POST', body: JSON.stringify({ message, page }) })
+}
+
 /** Hinweis "FTP wahrscheinlich zu niedrig" ausblenden */
 export function dismissFtpSuggestion() {
   return request<Athlete>('/me/athlete/ftp-suggestion', { method: 'DELETE' })

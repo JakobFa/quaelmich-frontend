@@ -49,6 +49,11 @@ import { hasImpressum, legal } from '../legal'
           – nur verschlüsselt (AES-256) gespeichert –, dazu Athleten-ID und bei Strava dein Vorname.
         </li>
         <li>
+          <strong>Feedback (freiwillig):</strong> dein Text, die Seite, auf der du ihn geschrieben
+          hast, und der Zeitpunkt – verknüpft mit deinem Konto, damit eine Rückfrage möglich ist.
+          Der Betreiber bekommt es per E-Mail und liest es, um quaelmich zu verbessern.
+        </li>
+        <li>
           <strong>Technisch:</strong> Für den Schutz vor automatisierten Angriffen wird deine
           IP-Adresse kurzzeitig im Arbeitsspeicher gezählt (höchstens eine Stunde, nicht dauerhaft
           gespeichert). Der Server-Anbieter protokolliert Zugriffe in üblichem Umfang.

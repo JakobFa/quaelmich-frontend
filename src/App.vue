@@ -3,6 +3,7 @@ import { useRouter } from 'vue-router'
 
 import { auth, endSession } from './auth'
 import logoUrl from './assets/logo.png'
+import FeedbackButton from './components/FeedbackButton.vue'
 import { hasImpressum } from './legal'
 
 const router = useRouter()
@@ -22,6 +23,7 @@ function logout() {
       <h1 class="logo-heading">
         <img :src="logoUrl" alt="quaelmich" class="logo" />
       </h1>
+      <span class="beta" title="quaelmich ist noch in der Beta – Feedback hilft!">Beta</span>
     </RouterLink>
     <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— quäl dich.</span></p>
     <nav class="nav">
@@ -44,6 +46,8 @@ function logout() {
   <main class="content">
     <RouterView />
   </main>
+
+  <FeedbackButton v-if="auth.isLoggedIn.value" />
 
   <footer class="footer">
     <RouterLink v-if="hasImpressum" to="/impressum">Impressum</RouterLink>
@@ -103,6 +107,23 @@ function logout() {
   transform: rotate(-4deg);
   filter: drop-shadow(2px 2px 0 var(--color-ink)) drop-shadow(2px 2px 0 var(--color-ink))
     drop-shadow(2px 2px 0 var(--color-ink)) drop-shadow(0 6px 12px rgba(0, 0, 0, 0.5));
+}
+
+/* Stempel: noch in der Beta */
+.beta {
+  position: absolute;
+  right: 6%;
+  bottom: 4%;
+  padding: 2px 10px;
+  border: 3px solid var(--color-hot);
+  background: var(--color-ink);
+  color: var(--color-hot);
+  font-family: var(--font-heading);
+  font-size: clamp(0.9rem, 3vw, 1.3rem);
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  transform: rotate(6deg);
+  box-shadow: 3px 3px 0 var(--color-plum);
 }
 
 .claim {
