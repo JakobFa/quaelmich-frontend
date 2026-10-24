@@ -284,8 +284,22 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
     </template>
 
     <h2 class="section-label">// Verbindungen</h2>
-    <IntervalsConnection />
+    <div class="connections-intro">
+      <p>Beide sind freiwillig – mit ihnen wird quaelmich aber erst richtig gut:</p>
+      <ul>
+        <li>
+          <strong>Strava – fürs Feedback:</strong> holt deine gefahrenen Einheiten (auch von Apple
+          Watch &amp; Co.), hakt passende Workouts ab, rechnet die Belastung und passt den Plan an.
+        </li>
+        <li>
+          <strong>intervals.icu – für den Radcomputer:</strong> schickt deine geplanten Workouts
+          dorthin und weiter zu Wahoo oder Garmin. Ohne Strava holt quaelmich die gefahrenen
+          Einheiten auch von hier.
+        </li>
+      </ul>
+    </div>
     <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
+    <IntervalsConnection />
   </section>
 </template>
 
@@ -483,5 +497,26 @@ form .week li {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--color-lilac);
+}
+
+.connections-intro {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.connections-intro p {
+  margin: 0 0 6px;
+}
+
+.connections-intro ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding-left: 18px;
+}
+
+.connections-intro strong {
+  color: var(--color-text);
 }
 </style>
