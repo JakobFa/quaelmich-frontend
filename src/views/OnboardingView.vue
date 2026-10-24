@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
+import { DEFAULT_POWER_ZONE_STARTS } from '../plan/zones'
 import { heartRateZonesOf } from '../plan/heartRate'
 import {
   emptyAthlete,
@@ -44,6 +45,9 @@ const hadProfile = ref(false)
 /** Nur einen Bereich bearbeiten – geht nur mit vorhandenem Profil */
 const singleSection = computed(() => hadProfile.value && sectionKey.value !== null)
 const zoneInputs = ref<(number | '' | null)[]>([null, null, null, null])
+/** Eigene Leistungszonen: Beginn von Zone 2–7 in % FTP, alle sechs oder keine */
+const powerZoneInputs = ref<(number | '' | null)[]>([null, null, null, null, null, null])
+const filledPowerZones = computed(() => powerZoneInputs.value.filter((v) => typeof v === 'number'))
 const heartRateMode = computed(() => athlete.value.trainingMode === 'HEART_RATE')
 const filledZones = computed(() => zoneInputs.value.filter((v) => typeof v === 'number'))
 /** Pulsdaten sind Gesundheitsdaten → nur mit Einwilligung (bei bestehenden Angaben schon erteilt) */
@@ -72,6 +76,8 @@ onMounted(async () => {
     athlete.value.event.type ??= null
     const own = athlete.value.heartRateZoneStarts
     if (own?.length === 4) zoneInputs.value = [...own]
+    const ownPower = athlete.value.powerZoneStarts
+    if (ownPower?.length === 6) powerZoneInputs.value = [...ownPower]
     heartRateConsent.value = Boolean(
       existing?.maxHeartRate || existing?.thresholdHeartRate || own?.length,
     )
@@ -87,6 +93,16 @@ async function next() {
       errorMessage.value = 'Pulszonen: bitte alle vier Werte eintragen oder alle leer lassen.'
       return
     }
+    const power = filledPowerZones.value as number[]
+    if (power.length !== 0 && power.length !== 6) {
+      errorMessage.value = 'Leistungszonen: bitte alle sechs Werte eintragen oder alle leer lassen.'
+      return
+    }
+    if (power.some((value, i) => i > 0 && value <= power[i - 1]!)) {
+      errorMessage.value = 'Leistungszonen: jede Zone muss höher beginnen als die davor.'
+      return
+    }
+    athlete.value.powerZoneStarts = power.length === 6 ? power : null
     errorMessage.value = ''
     athlete.value.heartRateZoneStarts =
       filledZones.value.length === 4 ? (filledZones.value as number[]) : null
@@ -171,6 +187,27 @@ function back() {
             :required="!heartRateMode"
           />
         </label>
+        <details v-if="!heartRateMode" class="field own-zones" :open="filledPowerZones.length > 0">
+          <summary>Eigene Leistungszonen (optional, für Ambitionierte)</summary>
+          <div class="zone-inputs power">
+            <label v-for="(_, index) in powerZoneInputs" :key="index">
+              <small>Z{{ index + 2 }} ab %</small>
+              <input
+                v-model.number="powerZoneInputs[index]"
+                type="number"
+                min="30"
+                max="250"
+                :placeholder="String(DEFAULT_POWER_ZONE_STARTS[index])"
+                :aria-label="`Beginn Leistungszone ${index + 2} in Prozent der FTP`"
+              />
+            </label>
+          </div>
+          <small class="field-hint">
+            Beginn von Zone 2 bis 7 in % deiner FTP, z. B. aus einer Leistungsdiagnostik. Leer =
+            klassische Zonen nach Coggan (56/76/91/106/121/151 %). Bestimmt Farben und Zonen in der
+            App – die Workouts selbst bleiben in % FTP.
+          </small>
+        </details>
         <label class="field">
           <span>Maximalpuls{{ heartRateMode ? '' : ' (optional)' }}</span>
           <input
@@ -470,6 +507,24 @@ function back() {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 8px;
+}
+
+.zone-inputs.power {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  margin-top: 8px;
+}
+
+@media (min-width: 640px) {
+  .zone-inputs.power {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+}
+
+.own-zones summary {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-lilac);
+  cursor: pointer;
 }
 
 .zone-inputs label {

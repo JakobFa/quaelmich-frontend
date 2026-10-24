@@ -1,4 +1,5 @@
 import { auth, endSession, startSession } from './auth'
+import { setPowerZoneStarts } from './plan/zones'
 import type { Athlete, WeeklyAvailability } from './types/athlete'
 import type {
   PlannedWorkout,
@@ -127,12 +128,20 @@ export function workoutFitUrl(workoutId: number) {
 
 // ---------- Eigenes Profil und Plan ----------
 
-export function getMyAthlete() {
-  return requestOrNull<Athlete>('/me/athlete')
+/** Lädt das Profil und merkt sich dabei die eigenen Leistungszonen für Farben und Anzeige */
+export async function getMyAthlete() {
+  const athlete = await requestOrNull<Athlete>('/me/athlete')
+  setPowerZoneStarts(athlete?.powerZoneStarts)
+  return athlete
 }
 
-export function saveMyAthlete(athlete: Athlete) {
-  return request<Athlete>('/me/athlete', { method: 'PUT', body: JSON.stringify(athlete) })
+export async function saveMyAthlete(athlete: Athlete) {
+  const saved = await request<Athlete>('/me/athlete', {
+    method: 'PUT',
+    body: JSON.stringify(athlete),
+  })
+  setPowerZoneStarts(saved.powerZoneStarts)
+  return saved
 }
 
 /** Feedback aus der Beta (429 = zu viel auf einmal) */

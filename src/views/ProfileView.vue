@@ -6,6 +6,7 @@ import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import { powerZones, type PowerZone } from '../plan/zones'
 import { formatRange, heartRateZonesOf, rangeFor } from '../plan/heartRate'
 import {
   effectiveThresholdHeartRate,
@@ -85,6 +86,14 @@ function formatDate(isoDate: string) {
 function formatNumber(hours: number) {
   return hours.toLocaleString('de-DE')
 }
+
+/** "≤ 140 W", "141–190 W", "≥ 378 W" */
+function formatPowerZone(zone: PowerZone, ftp: number) {
+  const watts = (percent: number) => Math.round((ftp * percent) / 100)
+  if (zone.zone === 1) return `≤ ${watts(zone.upTo)} W`
+  if (zone.upTo === Infinity) return `≥ ${watts(zone.from)} W`
+  return `${watts(zone.from)}–${watts(zone.upTo)} W`
+}
 </script>
 
 <template>
@@ -143,6 +152,25 @@ function formatNumber(hours: number) {
             <dd>{{ athlete.level ? levelLabels[athlete.level] : '–' }}</dd>
           </div>
         </dl>
+      </div>
+
+      <div v-if="athlete.ftp" class="panel">
+        <h2 class="panel-title">
+          Leistungszonen
+          <small class="zones-source">{{
+            athlete.powerZoneStarts?.length === 6 ? 'eigene' : 'klassisch nach Coggan'
+          }}</small>
+        </h2>
+        <ol class="zones power">
+          <li
+            v-for="zone in powerZones(athlete.powerZoneStarts ?? null)"
+            :key="zone.zone"
+            :style="{ borderTopColor: zone.color }"
+          >
+            <span class="zone-name">Z{{ zone.zone }} {{ zone.name }}</span>
+            <span class="zone-range">{{ formatPowerZone(zone, athlete.ftp) }}</span>
+          </li>
+        </ol>
       </div>
 
       <div v-if="heartRateZones" class="panel">
@@ -361,6 +389,10 @@ function formatNumber(hours: number) {
   padding: 8px 6px;
   border-top: 4px solid var(--color-lilac);
   background: var(--color-ink);
+}
+
+.zones.power li {
+  border-top-width: 5px;
 }
 
 .zones .z4,

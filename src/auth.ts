@@ -1,4 +1,5 @@
 import { computed, ref } from 'vue'
+import { setPowerZoneStarts } from './plan/zones'
 
 /**
  * Anmeldezustand der App. Das Token (JWT) wird im Browser gespeichert,
@@ -41,6 +42,7 @@ export function startSession(newToken: string, userEmail: string) {
 }
 
 export function endSession() {
+  setPowerZoneStarts(null)
   token.value = null
   email.value = null
   write(TOKEN_KEY, null)

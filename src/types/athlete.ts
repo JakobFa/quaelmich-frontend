@@ -73,6 +73,8 @@ export type Athlete = {
   /** im Puls-Modus optional */
   ftp: number | null
   trainingMode?: TrainingMode | null
+  /** Beginn von Leistungszone 2–7 in % FTP, optional – sonst die Standardzonen nach Coggan */
+  powerZoneStarts?: number[] | null
   /** Beginn von Zone 2–5 in bpm, optional – sonst aus dem Maximalpuls berechnet */
   heartRateZoneStarts?: number[] | null
   /** Maximalpuls, optional – Grundlage für den Puls-TSS bei Fahrten ohne Wattmesser */
