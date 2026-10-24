@@ -29,7 +29,13 @@ function logout() {
   <header class="masthead">
     <!-- Der ganze Logo-Bereich ist der Link zur Startseite: das gedrehte Bild selbst hätte
          eine schräge Klickfläche mit durchsichtigen Rändern -->
-    <RouterLink to="/" class="stage" aria-label="quaelmich – zur Startseite">
+    <RouterLink
+      :to="auth.isLoggedIn.value ? '/plan' : '/'"
+      class="stage"
+      :aria-label="
+        auth.isLoggedIn.value ? 'quaelmich – zu deinem Plan' : 'quaelmich – zur Startseite'
+      "
+    >
       <div class="band" aria-hidden="true"></div>
       <h1 class="logo-heading">
         <img :src="logoUrl" alt="quaelmich" class="logo" />
@@ -39,7 +45,9 @@ function logout() {
         <small class="version">{{ version }} · {{ builtAt }}</small>
       </span>
     </RouterLink>
-    <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— Watt muss, dat muss!</span></p>
+    <p class="claim">
+      Trainingsplan fürs Rad <span class="claim-accent">— Watt muss, dat muss!</span>
+    </p>
     <nav class="nav">
       <template v-if="auth.isLoggedIn.value">
         <RouterLink to="/plan">Plan</RouterLink>

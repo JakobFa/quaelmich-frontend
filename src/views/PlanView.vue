@@ -11,7 +11,6 @@ import {
   resumePlan,
   type Progress,
 } from '../api'
-import FormPanel from '../components/FormPanel.vue'
 import FtpHint from '../components/FtpHint.vue'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -333,8 +332,6 @@ onMounted(async () => {
           <small>{{ plan.workouts.length }} Workouts</small>
         </div>
       </div>
-
-      <FormPanel :key="plan.workouts.length + (progress?.load?.actualTss ?? 0)" />
 
       <!-- Erinnerung: vergangene Tage ohne Rückmeldung -->
       <div v-if="missing.length" class="panel reminder" role="status">
