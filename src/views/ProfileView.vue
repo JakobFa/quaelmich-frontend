@@ -4,6 +4,7 @@ import { useRoute } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import AccountPanel from '../components/AccountPanel.vue'
+import MoreEventsPanel from '../components/MoreEventsPanel.vue'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -219,6 +220,8 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
           </div>
         </dl>
       </div>
+
+      <MoreEventsPanel :first-event-date="athlete.event.date" />
 
       <div class="panel">
         <h2 class="panel-title">Verfügbarkeit · {{ formatNumber(totalHours) }} h / Woche</h2>

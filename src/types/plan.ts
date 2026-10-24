@@ -1,4 +1,4 @@
-import type { EventGoal, WeeklyAvailability } from './athlete'
+import type { EventGoal, EventType, WeeklyAvailability } from './athlete'
 import type { Workout } from './workout'
 
 export type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RECOVERY'
@@ -146,6 +146,19 @@ export type TrainingPlan = {
   eventProfile?: EventProfile
   /** abweichende Zeit für einzelne Wochen, Schlüssel = Montag (ISO-Datum) */
   weekAvailability?: Record<string, WeeklyAvailability>
+  /** weitere Events, gleich wichtig wie das erste */
+  moreEvents?: MoreEvent[]
+}
+
+/** Ein weiteres Event – gleiche Angaben wie das erste */
+export type MoreEvent = {
+  id?: number
+  name: string
+  date: string
+  distanceKm: number | null
+  elevationMeters: number | null
+  type?: EventType | null
+  goal?: EventGoal | null
 }
 
 /** Wie genau die Intervalle getroffen wurden (Richtwert) */

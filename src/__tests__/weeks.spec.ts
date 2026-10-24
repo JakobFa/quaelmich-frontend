@@ -91,4 +91,23 @@ describe('weeks', () => {
     expect(formatDuration(45)).toBe('45 min')
     expect(formatDuration(65)).toBe('1:05 h')
   })
+
+  it('zeigt alle Events und reicht bis zur Woche des letzten', () => {
+    const plan = {
+      startDate: '2026-10-26',
+      eventDate: '2026-11-07',
+      eventName: 'Erstes',
+      workouts: [],
+      moreEvents: [{ name: 'Zweites', date: '2026-11-21', distanceKm: 100, elevationMeters: 500 }],
+    } as unknown as Parameters<typeof buildWeeks>[0]
+
+    const weeks = buildWeeks(plan)
+
+    expect(weeks).toHaveLength(4)
+    const eventDays = weeks.flatMap((w) => w.days).filter((d) => d.isEvent)
+    expect(eventDays.map((d) => [d.date, d.eventName])).toEqual([
+      ['2026-11-07', 'Erstes'],
+      ['2026-11-21', 'Zweites'],
+    ])
+  })
 })

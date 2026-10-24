@@ -473,7 +473,7 @@ onMounted(async () => {
             <span class="date">{{ formatDay(day.date).date }}</span>
           </div>
 
-          <div v-if="day.isEvent" class="event">🏁 {{ plan.eventName }}</div>
+          <div v-if="day.isEvent" class="event">🏁 {{ day.eventName }}</div>
 
           <RouterLink
             v-for="planned in day.workouts"

@@ -5,6 +5,8 @@ export type PlanDay = {
   workouts: PlannedWorkout[]
   extraRides: ExtraRide[]
   isEvent: boolean
+  /** Name des Events an diesem Tag (erstes oder weiteres) */
+  eventName?: string
 }
 
 export type PlanWeek = {
@@ -52,8 +54,14 @@ export function buildWeeks(plan: TrainingPlan): PlanWeek[] {
     extraByDate.set(ride.date, [...(extraByDate.get(ride.date) ?? []), ride])
   }
 
+  // alle Events: das erste und die weiteren
+  const events = new Map<string, string>([[plan.eventDate, plan.eventName]])
+  for (const event of plan.moreEvents ?? []) events.set(event.date, event.name)
+  const sortedDates = [...events.keys()].sort()
+  const lastEvent = sortedDates[sortedDates.length - 1] ?? plan.eventDate
+
   const weeks: PlanWeek[] = []
-  const lastMonday = mondayOf(plan.eventDate)
+  const lastMonday = mondayOf(lastEvent)
   for (let monday = mondayOf(plan.startDate); monday <= lastMonday; monday = addDays(monday, 7)) {
     const days: PlanDay[] = Array.from({ length: 7 }, (_, i) => {
       const date = addDays(monday, i)
@@ -61,7 +69,8 @@ export function buildWeeks(plan: TrainingPlan): PlanWeek[] {
         date,
         workouts: byDate.get(date) ?? [],
         extraRides: extraByDate.get(date) ?? [],
-        isEvent: date === plan.eventDate,
+        isEvent: events.has(date),
+        eventName: events.get(date),
       }
     })
     const workouts = days.flatMap((day) => day.workouts)

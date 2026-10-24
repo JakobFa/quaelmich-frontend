@@ -7,6 +7,7 @@ import type {
   AdjustDirection,
   ExtraRide,
   IntervalAccuracy,
+  MoreEvent,
   SkipReason,
 } from './types/plan'
 import { isCustomWorkout, type Workout } from './types/workout'
@@ -178,6 +179,24 @@ export async function sendFeedback(message: string, page: string) {
 /** Hinweis "FTP wahrscheinlich zu niedrig" ausblenden */
 export function dismissFtpSuggestion() {
   return request<Athlete>('/me/athlete/ftp-suggestion', { method: 'DELETE' })
+}
+
+// ---------- Weitere Events ----------
+
+export function getMoreEvents() {
+  return request<MoreEvent[]>('/me/events')
+}
+
+/** id null = neu (409 = an dem Tag ist schon ein Event) */
+export function saveMoreEvent(id: number | null, event: MoreEvent) {
+  return request<MoreEvent>(id === null ? '/me/events' : `/me/events/${id}`, {
+    method: id === null ? 'POST' : 'PUT',
+    body: JSON.stringify(event),
+  })
+}
+
+export async function deleteMoreEvent(id: number) {
+  await send(`/me/events/${id}`, { method: 'DELETE' })
 }
 
 export function getPlan() {
