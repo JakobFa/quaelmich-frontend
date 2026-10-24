@@ -113,6 +113,24 @@ async function next() {
 function back() {
   currentStep.value--
 }
+
+// ---------- Zielzeit als Stunden + Minuten ----------
+
+function setTarget(hours: number | '', minutes: number | '') {
+  const total = (Number(hours) || 0) * 60 + (Number(minutes) || 0)
+  athlete.value.event.targetMinutes = total > 0 ? total : null
+}
+
+const targetHours = computed<number | ''>({
+  get: () =>
+    athlete.value.event.targetMinutes ? Math.floor(athlete.value.event.targetMinutes / 60) : '',
+  set: (hours) => setTarget(hours, targetRestMinutes.value),
+})
+
+const targetRestMinutes = computed<number | ''>({
+  get: () => (athlete.value.event.targetMinutes ? athlete.value.event.targetMinutes % 60 : ''),
+  set: (minutes) => setTarget(targetHours.value, minutes),
+})
 </script>
 
 <template>
@@ -306,6 +324,30 @@ function back() {
             />
           </label>
         </div>
+        <fieldset class="field target-time">
+          <legend>Zielzeit (optional)</legend>
+          <div class="field-row">
+            <label class="field">
+              <span>Stunden</span>
+              <input v-model.number="targetHours" type="number" min="0" max="336" placeholder="–" />
+            </label>
+            <label class="field">
+              <span>Minuten</span>
+              <input
+                v-model.number="targetRestMinutes"
+                type="number"
+                min="0"
+                max="59"
+                step="5"
+                placeholder="–"
+              />
+            </label>
+          </div>
+          <small class="field-hint">
+            In welcher Zeit willst du ankommen? Schneller als die Schätzung macht das Training
+            härter, langsamer setzt mehr auf Grundlage. Leer lassen = quaelmich schätzt.
+          </small>
+        </fieldset>
       </template>
 
       <!-- Schritt 3: Verfügbarkeit -->

@@ -49,6 +49,8 @@ export type TargetEvent = {
   distanceKm: number | null
   elevationMeters: number | null
   type?: EventType | null
+  /** Zielzeit in Minuten, optional – sonst gilt die Schätzung */
+  targetMinutes?: number | null
 }
 
 export type Athlete = {

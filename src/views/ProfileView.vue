@@ -84,6 +84,10 @@ function formatDate(isoDate: string) {
 function formatNumber(hours: number) {
   return hours.toLocaleString('de-DE')
 }
+
+function formatTarget(minutes: number) {
+  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')} h`
+}
 </script>
 
 <template>
@@ -183,6 +187,10 @@ function formatNumber(hours: number) {
             <dt>Art</dt>
             <dd>{{ eventTypeLabels[athlete.event.type] }}</dd>
           </div>
+          <div v-if="athlete.event.targetMinutes">
+            <dt>Zielzeit</dt>
+            <dd>{{ formatTarget(athlete.event.targetMinutes) }}</dd>
+          </div>
         </dl>
       </div>
 
@@ -249,7 +257,6 @@ function formatNumber(hours: number) {
         </template>
       </div>
     </template>
-
 
     <h2 class="section-label">// Verbindungen</h2>
     <IntervalsConnection />

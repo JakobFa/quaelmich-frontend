@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 
 import {
   generatePlan,
@@ -19,6 +19,7 @@ import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
 import {
+  ambitionLabels,
   eventFocusLabels,
   phaseLabels,
   skipReasonLabels,
@@ -143,6 +144,19 @@ async function changePause(action: 'pause' | 'resume') {
     pausing.value = false
   }
 }
+
+// ---------- Vergangene Tage der aktuellen Woche einklappen ----------
+
+/** In der laufenden Woche steht heute oben; Vergangenes nur auf Wunsch (offene Rückmeldungen zeigt die Erinnerung) */
+const showPast = ref(false)
+watch(weekIndex, () => (showPast.value = false))
+const pastDays = computed(() => week.value?.days.filter((day) => day.date < today) ?? [])
+const hidePast = computed(
+  () => !showPast.value && pastDays.value.length > 0 && week.value!.days[6]!.date >= today,
+)
+const visibleDays = computed(() =>
+  hidePast.value ? week.value!.days.filter((day) => day.date >= today) : (week.value?.days ?? []),
+)
 
 // ---------- Zeit für eine Woche ----------
 
@@ -293,6 +307,11 @@ onMounted(async () => {
         <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
         · geschätzte Dauer ca.
         {{ formatHours(roundToQuarterHour(plan.eventProfile.estimatedMinutes)) }}
+        <template v-if="plan.eventProfile.targetMinutes">
+          · <strong>Ziel {{ formatHours(plan.eventProfile.targetMinutes) }}</strong> ({{
+            ambitionLabels[plan.eventProfile.ambition ?? 'REALISTIC']
+          }})
+        </template>
         <span>{{ eventFocusLabels[plan.eventProfile.focus].hint }}</span>
       </p>
       <div v-else class="panel summary">
@@ -397,9 +416,28 @@ onMounted(async () => {
       </div>
 
       <!-- Tage der Woche -->
+      <button v-if="hidePast" type="button" class="show-past" @click="showPast = true">
+        ▸
+        {{
+          pastDays.length === 1 ? 'Vergangenen Tag' : `${pastDays.length} vergangene Tage`
+        }}
+        anzeigen ({{ formatDay(pastDays[0]!.date).weekday
+        }}<template v-if="pastDays.length > 1"
+          >–{{ formatDay(pastDays[pastDays.length - 1]!.date).weekday }}</template
+        >)
+      </button>
+      <button
+        v-else-if="showPast && pastDays.length"
+        type="button"
+        class="show-past"
+        @click="showPast = false"
+      >
+        ▾ Vergangene Tage ausblenden
+      </button>
+
       <ol class="days">
         <li
-          v-for="day in week.days"
+          v-for="day in visibleDays"
           :key="day.date"
           class="day"
           :class="{ today: day.date === today }"
@@ -761,6 +799,25 @@ onMounted(async () => {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.show-past {
+  display: block;
+  width: 100%;
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  border: 2px dashed var(--color-panel-raised);
+  background: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-align: left;
+  cursor: pointer;
+}
+
+.show-past:hover {
+  border-color: var(--color-lilac);
+  color: var(--color-lilac);
 }
 
 .plan-links {
