@@ -19,13 +19,13 @@ import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
 import {
-  ambitionLabels,
   eventFocusLabels,
   phaseLabels,
   skipReasonLabels,
   sportLabels,
   type TrainingPlan,
 } from '../types/plan'
+import { eventGoalLabels } from '../types/athlete'
 import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
@@ -307,10 +307,8 @@ onMounted(async () => {
         <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
         · geschätzte Dauer ca.
         {{ formatHours(roundToQuarterHour(plan.eventProfile.estimatedMinutes)) }}
-        <template v-if="plan.eventProfile.targetMinutes">
-          · <strong>Ziel {{ formatHours(plan.eventProfile.targetMinutes) }}</strong> ({{
-            ambitionLabels[plan.eventProfile.ambition ?? 'REALISTIC']
-          }})
+        <template v-if="plan.eventProfile.goal && plan.eventProfile.goal !== 'GOOD_TIME'">
+          · Ziel: <strong>{{ eventGoalLabels[plan.eventProfile.goal].title }}</strong>
         </template>
         <span>{{ eventFocusLabels[plan.eventProfile.focus].hint }}</span>
       </p>
@@ -418,9 +416,7 @@ onMounted(async () => {
       <!-- Tage der Woche -->
       <button v-if="hidePast" type="button" class="show-past" @click="showPast = true">
         ▸
-        {{
-          pastDays.length === 1 ? 'Vergangenen Tag' : `${pastDays.length} vergangene Tage`
-        }}
+        {{ pastDays.length === 1 ? 'Vergangenen Tag' : `${pastDays.length} vergangene Tage` }}
         anzeigen ({{ formatDay(pastDays[0]!.date).weekday
         }}<template v-if="pastDays.length > 1"
           >–{{ formatDay(pastDays[pastDays.length - 1]!.date).weekday }}</template
@@ -514,7 +510,7 @@ onMounted(async () => {
                 >
               </p>
             </div>
-            <AssessmentBadge v-if="ride.assessment" :assessment="ride.assessment" />
+            <AssessmentBadge v-if="ride.assessment" :assessment="ride.assessment" extra />
             <a
               v-if="ride.stravaUrl"
               :href="ride.stravaUrl"

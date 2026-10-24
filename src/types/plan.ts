@@ -1,4 +1,4 @@
-import type { WeeklyAvailability } from './athlete'
+import type { EventGoal, WeeklyAvailability } from './athlete'
 import type { Workout } from './workout'
 
 export type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RECOVERY'
@@ -130,20 +130,10 @@ export const eventFocusLabels: Record<EventFocus, { title: string; hint: string 
   ULTRA: { title: 'Ultra', hint: 'Viel Grundlage und Tempo – stundenlang gleichmäßig.' },
 }
 
-/** Wie ehrgeizig die Zielzeit gegenüber der Schätzung ist */
-export type Ambition = 'RELAXED' | 'REALISTIC' | 'AMBITIOUS'
-
-export const ambitionLabels: Record<Ambition, string> = {
-  RELAXED: 'entspannt – mehr Grundlage, weniger hart',
-  REALISTIC: 'realistisch',
-  AMBITIOUS: 'ambitioniert – härtere Stufen und mehr Renntempo',
-}
-
 export type EventProfile = {
   estimatedMinutes: number
   focus: EventFocus
-  targetMinutes?: number | null
-  ambition?: Ambition
+  goal?: EventGoal
 }
 
 export type TrainingPlan = {

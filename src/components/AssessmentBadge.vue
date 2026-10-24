@@ -1,11 +1,19 @@
 <script setup lang="ts">
 import { assessmentLabels, type Assessment } from '../types/plan'
 
-defineProps<{ assessment: Assessment }>()
+/** extra: Einheit ohne geplantes Workout – "härter" ergibt da keinen Sinn, also die Belastung selbst */
+defineProps<{ assessment: Assessment; extra?: boolean }>()
+
+const extraLabels: Partial<Record<Assessment, string>> = {
+  HARDER: '▲ fordernd',
+  MUCH_HARDER: '▲▲ hart',
+}
 </script>
 
 <template>
-  <span class="badge" :class="assessment.toLowerCase()">{{ assessmentLabels[assessment] }}</span>
+  <span class="badge" :class="assessment.toLowerCase()">{{
+    (extra && extraLabels[assessment]) || assessmentLabels[assessment]
+  }}</span>
 </template>
 
 <style scoped>

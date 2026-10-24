@@ -9,6 +9,7 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import { formatRange, heartRateZonesOf, rangeFor } from '../plan/heartRate'
 import {
   effectiveThresholdHeartRate,
+  eventGoalLabels,
   eventTypeLabels,
   levelLabels,
   trainingModeLabels,
@@ -83,10 +84,6 @@ function formatDate(isoDate: string) {
 
 function formatNumber(hours: number) {
   return hours.toLocaleString('de-DE')
-}
-
-function formatTarget(minutes: number) {
-  return `${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')} h`
 }
 </script>
 
@@ -187,9 +184,9 @@ function formatTarget(minutes: number) {
             <dt>Art</dt>
             <dd>{{ eventTypeLabels[athlete.event.type] }}</dd>
           </div>
-          <div v-if="athlete.event.targetMinutes">
-            <dt>Zielzeit</dt>
-            <dd>{{ formatTarget(athlete.event.targetMinutes) }}</dd>
+          <div>
+            <dt>Ziel</dt>
+            <dd>{{ eventGoalLabels[athlete.event.goal ?? 'GOOD_TIME'].title }}</dd>
           </div>
         </dl>
       </div>

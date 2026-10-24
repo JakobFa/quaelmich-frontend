@@ -42,6 +42,21 @@ export const eventTypeLabels: Record<EventType, string> = {
   ULTRA: 'Ultra / Bikepacking',
 }
 
+/** Was beim Event das Ziel ist – macht den Plan etwas leichter oder härter */
+export type EventGoal = 'FINISH' | 'GOOD_TIME' | 'COMPETE'
+
+export const eventGoalLabels: Record<EventGoal, { title: string; hint: string }> = {
+  FINISH: { title: 'Ankommen', hint: 'Durchkommen und genießen – harte Einheiten etwas leichter.' },
+  GOOD_TIME: {
+    title: 'Gute Zeit',
+    hint: 'Eine starke Zeit für dein Level – der Plan wie berechnet.',
+  },
+  COMPETE: {
+    title: 'Vorne mitfahren',
+    hint: 'Ganz vorne dabei sein – härtere Einheiten und mehr Renntempo.',
+  },
+}
+
 export type TargetEvent = {
   id?: number
   name: string
@@ -49,8 +64,8 @@ export type TargetEvent = {
   distanceKm: number | null
   elevationMeters: number | null
   type?: EventType | null
-  /** Zielzeit in Minuten, optional – sonst gilt die Schätzung */
-  targetMinutes?: number | null
+  /** Ankommen, gute Zeit oder vorne mitfahren – ohne Angabe "gute Zeit" */
+  goal?: EventGoal | null
 }
 
 export type Athlete = {
