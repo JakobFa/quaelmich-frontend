@@ -80,6 +80,10 @@ export type Athlete = {
   /** Schwellenpuls (LTHR), optional – nur wenn aus einem Test bekannt, sonst 90 % vom Maximalpuls */
   thresholdHeartRate?: number | null
   weightKg: number | null
+  /** gesetzt von quaelmich: geschätzte FTP aus einer Fahrt, die mit der eingetragenen FTP nicht möglich ist */
+  suggestedFtp?: number | null
+  suggestedFtpNote?: string | null
+  dismissedSuggestedFtp?: number | null
   level: Level | null
   event: TargetEvent
   availability: WeeklyAvailability

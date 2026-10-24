@@ -135,6 +135,11 @@ export function saveMyAthlete(athlete: Athlete) {
   return request<Athlete>('/me/athlete', { method: 'PUT', body: JSON.stringify(athlete) })
 }
 
+/** Hinweis "FTP wahrscheinlich zu niedrig" ausblenden */
+export function dismissFtpSuggestion() {
+  return request<Athlete>('/me/athlete/ftp-suggestion', { method: 'DELETE' })
+}
+
 export function getPlan() {
   return requestOrNull<TrainingPlan>('/me/plan')
 }

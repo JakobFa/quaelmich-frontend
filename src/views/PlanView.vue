@@ -11,6 +11,7 @@ import {
   resumePlan,
   type Progress,
 } from '../api'
+import FtpHint from '../components/FtpHint.vue'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
@@ -25,11 +26,21 @@ import {
   sportLabels,
   type TrainingPlan,
 } from '../types/plan'
-import { eventGoalLabels } from '../types/athlete'
+import { eventGoalLabels, type Athlete } from '../types/athlete'
 import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
 const hasProfile = ref(false)
+/** fürs FTP-Hinweisfeld; ohne geht es auch */
+const athlete = ref<Athlete | null>(null)
+
+async function loadAthlete() {
+  try {
+    athlete.value = await getMyAthlete()
+  } catch {
+    athlete.value = null
+  }
+}
 const progress = ref<Progress | null>(null)
 
 /** Level & Co. – ohne geht es auch, dann zeigt der Plan den einfachen Überblick */
@@ -185,6 +196,7 @@ function onWeekTimeSaved(updated: TrainingPlan, message: string) {
 async function importRides() {
   try {
     const result = await importActivities()
+    loadAthlete() // der Import kann einen FTP-Hinweis setzen
     if (result.matched > 0 || result.extra > 0 || result.adjusted > 0) {
       const index = weekIndex.value
       plan.value = await getPlan()
@@ -199,6 +211,7 @@ async function importRides() {
 onMounted(async () => {
   await load()
   if (plan.value) {
+    loadAthlete()
     // Fahrten aus intervals.icu und/oder Strava – ohne Verbindung antwortet das Backend mit 409
     importRides()
   }
@@ -257,6 +270,15 @@ onMounted(async () => {
           </li>
         </ul>
       </div>
+
+      <FtpHint
+        v-if="athlete"
+        :athlete="athlete"
+        :plan="plan"
+        :today="today"
+        @athlete="athlete = $event"
+        @plan="plan = $event"
+      />
 
       <!-- Pause -->
       <div v-if="pauseUntil" class="panel paused" role="status">
