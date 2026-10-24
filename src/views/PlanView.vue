@@ -7,14 +7,23 @@ import {
   getPlan,
   importActivities,
   getProgress,
+  pausePlan,
+  resumePlan,
   type Progress,
 } from '../api'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
+import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
-import { eventFocusLabels, phaseLabels, sportLabels, type TrainingPlan } from '../types/plan'
+import {
+  eventFocusLabels,
+  phaseLabels,
+  skipReasonLabels,
+  sportLabels,
+  type TrainingPlan,
+} from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
@@ -93,6 +102,47 @@ function formatDate(iso: string) {
   })
 }
 
+// ---------- Rückmeldung fehlt ----------
+
+const missing = computed(() => (plan.value ? missingFeedback(plan.value, today) : []))
+
+function formatShortDay(iso: string) {
+  return new Date(iso).toLocaleDateString('de-DE', {
+    weekday: 'short',
+    day: '2-digit',
+    month: '2-digit',
+  })
+}
+
+// ---------- Pause ----------
+
+const pauseUntil = computed(() => (plan.value ? pausedUntil(plan.value, today) : null))
+const pauseFormOpen = ref(false)
+const pauseFrom = ref(today)
+const pauseTo = ref(toIsoDate(new Date(Date.now() + 6 * 24 * 60 * 60 * 1000)))
+const pausing = ref(false)
+const pauseError = ref('')
+
+async function changePause(action: 'pause' | 'resume') {
+  pausing.value = true
+  pauseError.value = ''
+  try {
+    const index = weekIndex.value
+    plan.value =
+      action === 'pause' ? await pausePlan(pauseFrom.value, pauseTo.value) : await resumePlan()
+    weekIndex.value = index
+    pauseFormOpen.value = false
+    loadProgress()
+  } catch {
+    pauseError.value =
+      action === 'pause'
+        ? 'Pausieren geht nur ab heute und für höchstens 8 Wochen.'
+        : 'Das hat nicht geklappt. Bitte versuch es nochmal.'
+  } finally {
+    pausing.value = false
+  }
+}
+
 /** Im Hintergrund gefahrene Einheiten abholen; wurde etwas zugeordnet, den Plan neu laden */
 async function importRides() {
   try {
@@ -154,6 +204,67 @@ onMounted(async () => {
         :selected-week="weekIndex"
         @select-week="weekIndex = $event"
       />
+      <!-- Erinnerung: vergangene Tage ohne Rückmeldung -->
+      <div v-if="missing.length" class="panel reminder" role="status">
+        <p class="reminder-title">
+          ⚠ Noch keine Rückmeldung für {{ missing.length }}
+          {{ missing.length === 1 ? 'Tag' : 'Tage' }}
+        </p>
+        <p class="hint">Gefahren, etwas anderes gemacht oder ausgefallen? Tipp auf den Tag.</p>
+        <ul class="reminder-list">
+          <li v-for="planned in missing.slice(0, 5)" :key="planned.id">
+            <RouterLink :to="`/plan/${planned.id}`">
+              {{ formatShortDay(planned.date) }} · {{ planned.workout.title }} →
+            </RouterLink>
+          </li>
+        </ul>
+      </div>
+
+      <!-- Pause -->
+      <div v-if="pauseUntil" class="panel paused" role="status">
+        <p class="paused-title">⏸ Plan pausiert bis {{ formatShortDay(pauseUntil) }}</p>
+        <button
+          type="button"
+          class="button button-ghost"
+          :disabled="pausing"
+          @click="changePause('resume')"
+        >
+          Pause beenden
+        </button>
+        <p v-if="pauseError" class="error" role="alert">{{ pauseError }}</p>
+      </div>
+      <div v-else-if="pauseFormOpen" class="panel pause-form">
+        <p class="paused-title">Plan pausieren</p>
+        <p class="hint">
+          Urlaub, krank, keine Zeit? In der Pause stehen keine Workouts an, und sie verschwinden aus
+          intervals.icu. Nach einer Pause ab 4 Tagen wird das erste harte Training sanfter.
+        </p>
+        <div class="pause-dates">
+          <label>
+            Von
+            <input v-model="pauseFrom" type="date" :min="today" />
+          </label>
+          <label>
+            Bis
+            <input v-model="pauseTo" type="date" :min="pauseFrom" />
+          </label>
+        </div>
+        <div class="pause-actions">
+          <button
+            type="button"
+            class="button"
+            :disabled="pausing || !pauseFrom || !pauseTo"
+            @click="changePause('pause')"
+          >
+            Pausieren
+          </button>
+          <button type="button" class="button button-ghost" @click="pauseFormOpen = false">
+            Abbrechen
+          </button>
+        </div>
+        <p v-if="pauseError" class="error" role="alert">{{ pauseError }}</p>
+      </div>
+
       <p v-if="plan.eventProfile" class="focus-note">
         <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
         · geschätzte Dauer ca.
@@ -228,6 +339,15 @@ onMounted(async () => {
         </div>
       </dl>
 
+      <button
+        v-if="!pauseUntil && !pauseFormOpen"
+        type="button"
+        class="pause-link"
+        @click="pauseFormOpen = true"
+      >
+        ⏸ Plan pausieren
+      </button>
+
       <!-- Tage der Woche -->
       <ol class="days">
         <li
@@ -248,12 +368,23 @@ onMounted(async () => {
             :key="planned.id"
             :to="`/plan/${planned.id}`"
             class="session"
-            :class="{ completed: planned.completed }"
+            :class="{
+              completed: planned.completed,
+              skipped: !!planned.skipReason,
+              open: needsFeedback(planned, today),
+            }"
           >
             <div class="session-main">
               <span class="type">
                 <span v-if="planned.completed" class="done-badge">
                   ✓ erledigt<template v-if="planned.rating"> · {{ planned.rating }}/10</template>
+                </span>
+                <span v-else-if="planned.skipReason === 'PAUSE'" class="skip-badge">⏸ Pause</span>
+                <span v-else-if="planned.skipReason" class="skip-badge">
+                  ✗ nicht gefahren · {{ skipReasonLabels[planned.skipReason] }}
+                </span>
+                <span v-else-if="needsFeedback(planned, today)" class="open-badge">
+                  ? Rückmeldung fehlt
                 </span>
                 {{ workoutTypeLabels[planned.workout.type] }}
               </span>
@@ -508,6 +639,127 @@ onMounted(async () => {
 .date {
   font-size: 0.75rem;
   color: var(--color-text-muted);
+}
+
+.reminder {
+  border-left-color: var(--color-hot);
+}
+
+.reminder-title,
+.paused-title {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.reminder-title {
+  color: var(--color-hot);
+}
+
+.reminder .hint,
+.pause-form .hint {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.reminder-list {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: 0.9rem;
+}
+
+.reminder-list a {
+  color: var(--color-lilac);
+}
+
+.paused {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 16px;
+}
+
+.paused .paused-title {
+  margin: 0;
+  color: var(--color-lilac);
+}
+
+.pause-dates {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  margin-bottom: 12px;
+}
+
+.pause-dates label {
+  display: grid;
+  gap: 4px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-text-muted);
+}
+
+.pause-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.pause-link {
+  display: block;
+  margin: 0 0 12px auto;
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--color-text-muted);
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.pause-link:hover {
+  color: var(--color-lilac);
+}
+
+.session.skipped {
+  opacity: 0.55;
+}
+
+.session.skipped .session-title {
+  text-decoration: line-through;
+}
+
+.session.open {
+  outline: 2px dashed var(--color-hot);
+  outline-offset: 4px;
+}
+
+.skip-badge,
+.open-badge {
+  margin-right: 6px;
+  padding: 1px 6px;
+  font-weight: 700;
+}
+
+.skip-badge {
+  background: var(--color-panel-raised);
+  color: var(--color-text);
+}
+
+.open-badge {
+  background: var(--color-hot);
+  color: var(--color-ink);
 }
 
 .rest {

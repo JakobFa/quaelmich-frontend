@@ -13,6 +13,8 @@ import {
   getPlannedWorkout,
   replacePlannedWorkout,
   resetPlannedWorkout,
+  skipPlannedWorkout,
+  undoSkipPlannedWorkout,
   updateProgress,
 } from '../api'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
@@ -25,7 +27,9 @@ import { heartRateZonesOf } from '../plan/heartRate'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
 import {
   phaseLabels,
+  skipReasonLabels,
   type AdjustDirection,
+  type SkipReason,
   type AdjustOptions,
   type ExtraRide,
   type PlannedWorkout,
@@ -207,6 +211,28 @@ async function confirm(matchesPlan: boolean) {
   }
 }
 
+// ---------- Nicht gemacht ----------
+
+const skipReasons: SkipReason[] = ['NO_TIME', 'SICK', 'TIRED', 'INJURED', 'OTHER']
+const skipOpen = ref(false)
+
+async function skip(reason: SkipReason | null) {
+  if (!planned.value) return
+  saving.value = true
+  saveError.value = false
+  try {
+    planned.value =
+      reason === null
+        ? await undoSkipPlannedWorkout(planned.value.id)
+        : await skipPlannedWorkout(planned.value.id, reason)
+    skipOpen.value = false
+  } catch {
+    saveError.value = true
+  } finally {
+    saving.value = false
+  }
+}
+
 function toggleCompleted() {
   if (!planned.value) return
   save(!planned.value.completed, planned.value.rating)
@@ -245,7 +271,27 @@ function formatDate(iso: string) {
       <p class="description">{{ planned.workout.description }}</p>
 
       <!-- Für heute anpassen -->
-      <div v-if="planned.options && !planned.completed" class="panel customize">
+      <!-- Nicht gemacht -->
+      <div v-if="planned.skipReason" class="panel skipped" role="status">
+        <p class="skipped-title">
+          {{
+            planned.skipReason === 'PAUSE'
+              ? '⏸ Pausiert'
+              : `✗ Nicht gemacht – ${skipReasonLabels[planned.skipReason]}`
+          }}
+        </p>
+        <p v-if="planned.skipReason === 'SICK' || planned.skipReason === 'INJURED'" class="hint">
+          Gute Besserung! Das nächste harte Training in den Tagen danach wird sanfter.
+        </p>
+        <button type="button" class="link" :disabled="saving" @click="skip(null)">
+          ↺ Doch nicht – Rückmeldung zurücknehmen
+        </button>
+      </div>
+
+      <div
+        v-if="planned.options && !planned.completed && !planned.skipReason"
+        class="panel customize"
+      >
         <p class="customize-title">Heute lieber anders?</p>
         <div class="customize-buttons">
           <button
@@ -312,7 +358,7 @@ function formatDate(iso: string) {
       <WorkoutProfile :steps="planned.workout.steps" class="profile" />
 
       <RouterLink
-        v-if="!planned.completed"
+        v-if="!planned.completed && !planned.skipReason"
         :to="`/plan/${planned.id}/fahren`"
         class="button play-link"
       >
@@ -448,6 +494,30 @@ function formatDate(iso: string) {
             </button>
           </div>
         </fieldset>
+
+        <!-- Nicht gefahren, auch nichts anderes -->
+        <div v-if="!planned.completed && !planned.actual && !planned.skipReason" class="skip">
+          <button
+            type="button"
+            class="link"
+            :aria-expanded="skipOpen"
+            @click="skipOpen = !skipOpen"
+          >
+            ✗ Nicht gemacht?
+          </button>
+          <div v-if="skipOpen" class="skip-reasons">
+            <button
+              v-for="reason in skipReasons"
+              :key="reason"
+              type="button"
+              class="button button-ghost"
+              :disabled="saving"
+              @click="skip(reason)"
+            >
+              {{ skipReasonLabels[reason] }}
+            </button>
+          </div>
+        </div>
 
         <p v-if="saveError" class="error" role="alert">Speichern hat nicht geklappt.</p>
       </div>
@@ -741,6 +811,43 @@ function formatDate(iso: string) {
   font-weight: 600;
   text-transform: uppercase;
   color: var(--color-lilac);
+}
+
+/* ---------- Nicht gemacht ---------- */
+
+.skipped {
+  border-left-color: var(--color-panel-raised);
+}
+
+.skipped-title {
+  margin: 0 0 6px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.skipped .hint {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.skip {
+  margin-top: 20px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--color-panel-raised);
+}
+
+.skip-reasons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.skip-reasons .button {
+  padding: 8px 12px;
+  font-size: 0.85rem;
 }
 
 /* ---------- Abhaken ---------- */

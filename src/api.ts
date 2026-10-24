@@ -1,6 +1,12 @@
 import { auth, endSession, startSession } from './auth'
 import type { Athlete } from './types/athlete'
-import type { PlannedWorkout, TrainingPlan, AdjustDirection, ExtraRide } from './types/plan'
+import type {
+  PlannedWorkout,
+  TrainingPlan,
+  AdjustDirection,
+  ExtraRide,
+  SkipReason,
+} from './types/plan'
 import type { Workout } from './types/workout'
 
 const baseUrl = import.meta.env.VITE_APP_BACKEND_BASE_URL
@@ -177,6 +183,30 @@ export function adjustPlannedWorkout(id: number, direction: AdjustDirection) {
     method: 'PUT',
     body: JSON.stringify({ direction }),
   })
+}
+
+/** "Nicht gemacht" mit Grund (409 = es ist schon eine Fahrt zugeordnet) */
+export function skipPlannedWorkout(id: number, reason: SkipReason) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/skip`, {
+    method: 'PUT',
+    body: JSON.stringify({ reason }),
+  })
+}
+
+export function undoSkipPlannedWorkout(id: number) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/skip`, { method: 'DELETE' })
+}
+
+/** Plan pausieren, beide Tage eingeschlossen (409 = Vergangenheit oder länger als 8 Wochen) */
+export function pausePlan(from: string, until: string) {
+  return request<TrainingPlan>('/me/plan/pause', {
+    method: 'PUT',
+    body: JSON.stringify({ from, until }),
+  })
+}
+
+export function resumePlan() {
+  return request<TrainingPlan>('/me/plan/pause', { method: 'DELETE' })
 }
 
 /** Heute ein anderes Workout aus der Bibliothek fahren (409 = geht gerade nicht) */

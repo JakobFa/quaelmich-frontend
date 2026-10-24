@@ -40,12 +40,26 @@ export type Adjustment = {
   originalTitle: string
 }
 
+/** Warum ein Workout ausgefallen ist – auch "nichts gemacht" ist eine Rückmeldung */
+export type SkipReason = 'NO_TIME' | 'SICK' | 'TIRED' | 'INJURED' | 'OTHER' | 'PAUSE'
+
+export const skipReasonLabels: Record<SkipReason, string> = {
+  NO_TIME: 'Keine Zeit',
+  SICK: 'Krank',
+  TIRED: 'Zu müde',
+  INJURED: 'Verletzt',
+  OTHER: 'Anderer Grund',
+  PAUSE: 'Pause',
+}
+
 export type PlannedWorkout = {
   id: number
   date: string
   phase: Phase
   completed: boolean
   rating: number | null
+  /** gesetzt = nicht gemacht (mit Grund) oder pausiert */
+  skipReason?: SkipReason | null
   workout: Workout
   actual: ActualRide | null
   adjustment: Adjustment | null
