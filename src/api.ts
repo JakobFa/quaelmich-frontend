@@ -1,5 +1,5 @@
 import { auth, endSession, startSession } from './auth'
-import type { Athlete } from './types/athlete'
+import type { Athlete, WeeklyAvailability } from './types/athlete'
 import type {
   PlannedWorkout,
   TrainingPlan,
@@ -160,6 +160,14 @@ export type Progress = {
 
 export function getProgress() {
   return request<Progress>('/me/progress')
+}
+
+/** Andere Zeit nur für eine Woche (monday = Montag als ISO-Datum); null = zurück zur normalen Zeit */
+export function setWeekAvailability(monday: string, availability: WeeklyAvailability | null) {
+  return request<TrainingPlan>(`/me/plan/weeks/${monday}/availability`, {
+    method: availability ? 'PUT' : 'DELETE',
+    body: availability ? JSON.stringify(availability) : undefined,
+  })
 }
 
 export function generatePlan() {

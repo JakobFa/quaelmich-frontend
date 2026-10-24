@@ -14,6 +14,7 @@ import {
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
+import WeekTimeEditor from '../components/WeekTimeEditor.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
 import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
@@ -141,6 +142,29 @@ async function changePause(action: 'pause' | 'resume') {
   } finally {
     pausing.value = false
   }
+}
+
+// ---------- Zeit für eine Woche ----------
+
+const weekTimeOpen = ref(false)
+const weekTimeMessage = ref('')
+const weekMonday = computed(() => week.value?.days[0]?.date ?? '')
+/** vergangene Wochen lassen sich nicht mehr ändern */
+const weekEditable = computed(() => !!week.value && week.value.days[6]!.date >= today)
+const weekOverride = computed(() => plan.value?.weekAvailability?.[weekMonday.value] ?? null)
+
+function openWeekTime() {
+  weekTimeOpen.value = true
+  weekTimeMessage.value = ''
+}
+
+function onWeekTimeSaved(updated: TrainingPlan, message: string) {
+  const index = weekIndex.value
+  plan.value = updated
+  weekIndex.value = index
+  weekTimeOpen.value = false
+  weekTimeMessage.value = message
+  loadProgress()
 }
 
 /** Im Hintergrund gefahrene Einheiten abholen; wurde etwas zugeordnet, den Plan neu laden */
@@ -339,14 +363,38 @@ onMounted(async () => {
         </div>
       </dl>
 
-      <button
-        v-if="!pauseUntil && !pauseFormOpen"
-        type="button"
-        class="pause-link"
-        @click="pauseFormOpen = true"
-      >
-        ⏸ Plan pausieren
-      </button>
+      <WeekTimeEditor
+        v-if="weekTimeOpen && weekEditable"
+        :key="weekMonday"
+        :monday="weekMonday"
+        :today="today"
+        :override="weekOverride"
+        @saved="onWeekTimeSaved"
+        @close="weekTimeOpen = false"
+      />
+      <p v-else-if="weekTimeMessage" class="week-time-message" role="status">
+        {{ weekTimeMessage }}
+      </p>
+
+      <div class="plan-links">
+        <button
+          v-if="weekEditable && !weekTimeOpen"
+          type="button"
+          class="pause-link"
+          @click="openWeekTime"
+        >
+          🕒
+          {{ weekOverride ? 'Zeit diese Woche angepasst – ändern' : 'Zeit für diese Woche ändern' }}
+        </button>
+        <button
+          v-if="!pauseUntil && !pauseFormOpen"
+          type="button"
+          class="pause-link"
+          @click="pauseFormOpen = true"
+        >
+          ⏸ Plan pausieren
+        </button>
+      </div>
 
       <!-- Tage der Woche -->
       <ol class="days">
@@ -715,9 +763,23 @@ onMounted(async () => {
   gap: 8px;
 }
 
+.plan-links {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 4px 20px;
+  margin: 0 0 12px;
+}
+
+.week-time-message {
+  margin: 0 0 8px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-lilac);
+}
+
 .pause-link {
   display: block;
-  margin: 0 0 12px auto;
   padding: 0;
   border: 0;
   background: none;

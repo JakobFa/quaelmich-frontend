@@ -1,3 +1,4 @@
+import type { WeeklyAvailability } from './athlete'
 import type { Workout } from './workout'
 
 export type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RECOVERY'
@@ -139,4 +140,6 @@ export type TrainingPlan = {
   workouts: PlannedWorkout[]
   extraRides?: ExtraRide[]
   eventProfile?: EventProfile
+  /** abweichende Zeit für einzelne Wochen, Schlüssel = Montag (ISO-Datum) */
+  weekAvailability?: Record<string, WeeklyAvailability>
 }
