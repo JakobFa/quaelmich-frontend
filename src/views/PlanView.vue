@@ -11,6 +11,7 @@ import {
   resumePlan,
   type Progress,
 } from '../api'
+import FormPanel from '../components/FormPanel.vue'
 import FtpHint from '../components/FtpHint.vue'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -261,30 +262,6 @@ onMounted(async () => {
         :selected-week="weekIndex"
         @select-week="weekIndex = $event"
       />
-      <!-- Erinnerung: vergangene Tage ohne Rückmeldung -->
-      <div v-if="missing.length" class="panel reminder" role="status">
-        <p class="reminder-title">
-          ⚠ Noch keine Rückmeldung für {{ missing.length }}
-          {{ missing.length === 1 ? 'Tag' : 'Tage' }}
-        </p>
-        <p class="hint">Gefahren, etwas anderes gemacht oder ausgefallen? Tipp auf den Tag.</p>
-        <ul class="reminder-list">
-          <li v-for="planned in missing.slice(0, 5)" :key="planned.id">
-            <RouterLink :to="`/plan/${planned.id}`">
-              {{ formatShortDay(planned.date) }} · {{ planned.workout.title }} →
-            </RouterLink>
-          </li>
-        </ul>
-      </div>
-
-      <FtpHint
-        v-if="athlete"
-        :athlete="athlete"
-        :plan="plan"
-        :today="today"
-        @athlete="athlete = $event"
-        @plan="plan = $event"
-      />
 
       <!-- Pause -->
       <div v-if="pauseUntil" class="panel paused" role="status">
@@ -356,6 +333,33 @@ onMounted(async () => {
           <small>{{ plan.workouts.length }} Workouts</small>
         </div>
       </div>
+
+      <FormPanel :key="plan.workouts.length + (progress?.load?.actualTss ?? 0)" />
+
+      <!-- Erinnerung: vergangene Tage ohne Rückmeldung -->
+      <div v-if="missing.length" class="panel reminder" role="status">
+        <p class="reminder-title">
+          ⚠ Noch keine Rückmeldung für {{ missing.length }}
+          {{ missing.length === 1 ? 'Tag' : 'Tage' }}
+        </p>
+        <p class="hint">Gefahren, etwas anderes gemacht oder ausgefallen? Tipp auf den Tag.</p>
+        <ul class="reminder-list">
+          <li v-for="planned in missing.slice(0, 5)" :key="planned.id">
+            <RouterLink :to="`/plan/${planned.id}`">
+              {{ formatShortDay(planned.date) }} · {{ planned.workout.title }} →
+            </RouterLink>
+          </li>
+        </ul>
+      </div>
+
+      <FtpHint
+        v-if="athlete"
+        :athlete="athlete"
+        :plan="plan"
+        :today="today"
+        @athlete="athlete = $event"
+        @plan="plan = $event"
+      />
 
       <!-- Wochen-Navigation -->
       <div class="week-nav">

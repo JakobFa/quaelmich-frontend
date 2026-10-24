@@ -184,6 +184,28 @@ export function getPlan() {
   return requestOrNull<TrainingPlan>('/me/plan')
 }
 
+/** Ein Tag der Form-Kurve; planned = Zukunft, aus dem Plan berechnet */
+export type FormDay = {
+  date: string
+  tss: number
+  fitness: number
+  fatigue: number
+  form: number
+  planned: boolean
+}
+
+export type FormCurve = {
+  days: FormDay[]
+  today: FormDay | null
+  /** voraussichtliche Form am Eventtag; null, wenn das Event vorbei ist */
+  eventForm: number | null
+  eventDate: string
+}
+
+export function getFormCurve() {
+  return requestOrNull<FormCurve>('/me/form')
+}
+
 export type ProgressLevel = { number: number; name: string; fromXp: number }
 
 export type Progress = {
