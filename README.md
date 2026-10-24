@@ -52,3 +52,7 @@ npm run test:unit
 ```sh
 npm run lint
 ```
+
+## Freigabe
+
+Gearbeitet wird auf `develop`. Jede Nacht übernimmt der Ablauf „Nächtliche Freigabe“ den Stand nach `main` (nur wenn die Tests grün sind); Render liefert `main` aus. Dringendes per Hand im Tab „Actions“.
