@@ -201,6 +201,12 @@ export type Progress = {
     daysToEvent: number
     eventName: string
   } | null
+  /** Belastung der letzten 7 Tage im Vergleich zum Plan; null ohne Plan */
+  load?: {
+    plannedTss: number
+    actualTss: number
+    status: 'TOO_LITTLE' | 'ON_TRACK' | 'A_BIT_MUCH' | 'TOO_MUCH' | 'RESTING'
+  } | null
 }
 
 export function getProgress() {

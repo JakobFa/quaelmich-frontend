@@ -12,6 +12,7 @@ const progress: Progress = {
   nextLevel: { number: 8, name: 'Laktat-Rebell', fromXp: 5200 },
   streakWeeks: 4,
   plan: { week: 3, totalWeeks: 4, completed: 7, due: 9, daysToEvent: 18, eventName: 'Ötztaler' },
+  load: { plannedTss: 340, actualTss: 310, status: 'ON_TRACK' as const },
 }
 
 function week(monday: string, phase: Phase | null): PlanWeek {
@@ -33,12 +34,14 @@ function mountHeader(overrides: Partial<Progress> = {}) {
 }
 
 describe('ProgressHeader', () => {
-  it('zeigt die aktuelle Woche, die Tage bis zum Event und die Quote', () => {
+  it('zeigt die aktuelle Woche, die Tage bis zum Event und die Einschätzung', () => {
     const text = mountHeader().text()
 
     expect(text).toContain('Woche 3 von 4')
     expect(text).toContain('noch 18 Tage bis Ötztaler')
-    expect(text).toContain('78% (7/9)')
+    expect(text).toContain('Auf Kurs')
+    expect(text).toContain('310 / 340 TSS')
+    expect(text).not.toContain('(7/9)')
     expect(text).toContain('🔥 4')
     expect(text).not.toContain('Bergziegen-Punk')
   })

@@ -41,10 +41,21 @@ const currentWeek = computed(() => {
   return index >= 0 ? index : null
 })
 
-const completionPercent = computed(() => {
-  const plan = props.progress.plan
-  return plan && plan.due > 0 ? Math.round((plan.completed / plan.due) * 100) : null
-})
+/** Einschätzung der letzten 7 Tage: zu wenig, auf Kurs, zu viel */
+const loadLabels = {
+  TOO_LITTLE: {
+    title: '▼ Etwas wenig',
+    hint: 'Kein Drama – nicht nachholen, einfach normal weitermachen.',
+  },
+  ON_TRACK: { title: '✓ Auf Kurs', hint: 'Belastung passt zum Plan.' },
+  A_BIT_MUCH: { title: '▲ Etwas viel', hint: 'Achte auf Schlaf und lockere Tage.' },
+  TOO_MUCH: {
+    title: '▲▲ Zu viel',
+    hint: 'Gönn dir Erholung – quaelmich macht das nächste harte Training schon leichter.',
+  },
+  RESTING: { title: 'Ruhephase', hint: 'Gerade steht nichts an.' },
+} as const
+const load = computed(() => props.progress.load ?? null)
 
 /** Legende: die vorkommenden Phasen in Reihenfolge */
 const legend = computed(() => [...new Set(segments.value.map((segment) => segment.phase))])
@@ -102,11 +113,11 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
         <dt>Geschafft</dt>
         <dd>{{ elapsedPercent }}<small>%</small></dd>
       </div>
-      <div v-if="completionPercent !== null">
-        <dt>Workouts erledigt</dt>
+      <div v-if="load" class="load" :class="load.status.toLowerCase()">
+        <dt>Letzte 7 Tage</dt>
         <dd>
-          {{ completionPercent
-          }}<small>% ({{ progress.plan!.completed }}/{{ progress.plan!.due }})</small>
+          {{ loadLabels[load.status].title }}
+          <small>{{ load.actualTss }} / {{ load.plannedTss }} TSS</small>
         </dd>
       </div>
       <div v-if="progress.streakWeeks > 0" class="streak">
@@ -114,6 +125,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
         <dd>🔥 {{ progress.streakWeeks }}<small> Wo.</small></dd>
       </div>
     </dl>
+    <p v-if="load" class="load-hint">{{ loadLabels[load.status].hint }}</p>
   </div>
 </template>
 
@@ -293,5 +305,28 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
 
 .streak dd {
   color: var(--color-hot);
+}
+
+.load dd small {
+  margin-left: 4px;
+}
+
+.load.on_track dd {
+  color: #35b86b;
+}
+
+.load.too_little dd,
+.load.a_bit_much dd {
+  color: #f4c430;
+}
+
+.load.too_much dd {
+  color: var(--color-hot);
+}
+
+.load-hint {
+  margin: 6px 0 0;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 </style>
