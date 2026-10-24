@@ -148,6 +148,36 @@ export type TrainingPlan = {
   weekAvailability?: Record<string, WeeklyAvailability>
 }
 
+/** Wie genau die Intervalle getroffen wurden (Richtwert) */
+export type AccuracyVerdict = 'ON_TARGET' | 'SLIGHTLY_HARD' | 'HARD' | 'SLIGHTLY_EASY' | 'EASY'
+
+export const accuracyVerdictLabels: Record<AccuracyVerdict, string> = {
+  ON_TARGET: '✓ im Ziel',
+  SLIGHTLY_HARD: '▲ etwas zu hart',
+  HARD: '▲▲ zu hart',
+  SLIGHTLY_EASY: '▼ etwas zu leicht',
+  EASY: '▼▼ zu leicht',
+}
+
+export type IntervalAccuracy = {
+  basis: 'POWER' | 'HEART_RATE'
+  /** 0–100, nach Dauer gewichtet */
+  score: number
+  onTarget: number
+  uncertain: boolean
+  tip: string | null
+  blocks: {
+    number: number
+    durationSeconds: number
+    targetLow: number
+    /** null = Vollgas, nach oben offen */
+    targetHigh: number | null
+    actual: number
+    verdict: AccuracyVerdict
+    score: number
+  }[]
+}
+
 /** Wofür die Phase da ist – eine Zeile beim Workout */
 export const phasePurpose: Record<Phase, string> = {
   BASE: 'Grundlagenphase: Ausdauer aufbauen – viel locker, wenig hart.',

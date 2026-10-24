@@ -43,6 +43,9 @@ import { hasImpressum, legal } from '../legal'
         <li>
           <strong>Gemachte Einheiten</strong> (nur wenn du Strava oder intervals.icu verbindest):
           Datum, Sportart, Dauer, Distanz und Trainingslast (TSS). Keine GPS-Strecken, keine Fotos.
+          Für die Intervall-Genauigkeit ruft quaelmich beim Öffnen eines Workouts die
+          sekundengenauen Watt- und Pulswerte der zugeordneten Fahrt ab, wertet sie aus und verwirft
+          sie wieder – sie werden nicht gespeichert. Standortdaten werden dabei nicht abgerufen.
         </li>
         <li>
           <strong>Verbindungen:</strong> dein intervals.icu-Schlüssel bzw. deine Strava-Zugangsdaten

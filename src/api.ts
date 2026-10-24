@@ -6,6 +6,7 @@ import type {
   TrainingPlan,
   AdjustDirection,
   ExtraRide,
+  IntervalAccuracy,
   SkipReason,
 } from './types/plan'
 import type { Workout } from './types/workout'
@@ -247,6 +248,12 @@ export function replacePlannedWorkout(id: number, workoutId: number, durationMin
 /** Zurück zum ursprünglich geplanten Workout */
 export function resetPlannedWorkout(id: number) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, { method: 'DELETE' })
+}
+
+/** Intervall-Genauigkeit; null, wenn nicht auswertbar (keine Intervalle, keine Watt-/Pulsdaten) */
+export async function getIntervalAccuracy(id: number): Promise<IntervalAccuracy | null> {
+  const response = await send(`/planned-workouts/${id}/accuracy`)
+  return response.status === 204 ? null : ((await response.json()) as IntervalAccuracy)
 }
 
 /** Fahrten des Tages, die man diesem Workout selbst zuordnen kann */

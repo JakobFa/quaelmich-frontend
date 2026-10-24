@@ -19,6 +19,7 @@ import {
 } from '../api'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import IntervalAccuracyPanel from '../components/IntervalAccuracyPanel.vue'
 import WorkoutPicker from '../components/WorkoutPicker.vue'
 import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
@@ -452,6 +453,12 @@ function formatDate(iso: string) {
           </template>
           <template v-else>Übernommen aus intervals.icu.</template>
         </p>
+
+        <IntervalAccuracyPanel
+          v-if="planned.workout.steps.some((step) => step.kind === 'INTERVAL')"
+          :key="planned.actual.durationMinutes ?? 0"
+          :planned-id="planned.id"
+        />
 
         <div v-if="planned.actual.confirmed == null" class="confirm">
           <p>War das dieses Training?</p>
