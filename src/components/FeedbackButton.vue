@@ -60,8 +60,8 @@ async function submit() {
       <form v-else @submit.prevent="submit">
         <label for="feedback-message" class="title">Feedback zur Beta</label>
         <p class="hint">
-          Was ist komisch, kaputt oder fehlt dir? Die Seite, auf der du gerade bist, wird
-          mitgeschickt.
+          Was ist komisch, kaputt oder fehlt dir? Mitgeschickt wird nur die Adresse der Seite (z. B.
+          „/plan“), damit klar ist, worum es geht – kein Bildschirmfoto, keine weiteren Daten.
         </p>
         <textarea
           id="feedback-message"
