@@ -25,7 +25,7 @@ function logout() {
       </h1>
       <span class="beta" title="quaelmich ist noch in der Beta – Feedback hilft!">Beta</span>
     </RouterLink>
-    <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— quäl dich.</span></p>
+    <p class="claim">Trainingsplan fürs Rad <span class="claim-accent">— Watt muss, dat muss!</span></p>
     <nav class="nav">
       <template v-if="auth.isLoggedIn.value">
         <RouterLink to="/plan">Plan</RouterLink>
