@@ -4,6 +4,7 @@ import { useRouter } from 'vue-router'
 import { auth, endSession } from './auth'
 import logoUrl from './assets/logo.png'
 import FeedbackButton from './components/FeedbackButton.vue'
+import { isStaging } from './stage'
 import { hasImpressum } from './legal'
 
 const router = useRouter()
@@ -26,6 +27,10 @@ function logout() {
 </script>
 
 <template>
+  <p v-if="isStaging" class="staging-banner" role="note">
+    ⚠ Test-Seite – Daten sind simuliert und werden regelmäßig gelöscht.
+    <a href="https://quaelmich.com">Zur echten App →</a>
+  </p>
   <header class="masthead">
     <!-- Der ganze Logo-Bereich ist der Link zur Startseite: das gedrehte Bild selbst hätte
          eine schräge Klickfläche mit durchsichtigen Rändern -->
@@ -40,8 +45,16 @@ function logout() {
       <h1 class="logo-heading">
         <img :src="logoUrl" alt="quaelmich" class="logo" />
       </h1>
-      <span class="beta" title="quaelmich ist noch in der Beta – Feedback hilft!">
-        Beta
+      <span
+        class="beta"
+        :class="{ staging: isStaging }"
+        :title="
+          isStaging
+            ? 'Test-Seite – nicht die echte App'
+            : 'quaelmich ist noch in der Beta – Feedback hilft!'
+        "
+      >
+        {{ isStaging ? 'Test' : 'Beta' }}
         <small class="version">{{ version }} · {{ builtAt }}</small>
       </span>
     </RouterLink>
@@ -152,6 +165,37 @@ function logout() {
   letter-spacing: 0.12em;
   transform: rotate(6deg);
   box-shadow: 3px 3px 0 var(--color-plum);
+}
+
+/* Test-Seite: gelb-schwarz wie eine Baustelle, damit man es nie mit der echten App verwechselt */
+.beta.staging {
+  border-color: #141615;
+  background: #f4c430;
+  color: #141615;
+  box-shadow: 3px 3px 0 #141615;
+}
+
+.beta.staging .version {
+  color: #141615;
+}
+
+.staging-banner {
+  margin: 0;
+  padding: 6px 16px;
+  /* Baustellen-Streifen am Rand, Text auf ruhigem Gelb */
+  border-bottom: 6px solid transparent;
+  border-image: repeating-linear-gradient(-45deg, #f4c430 0 10px, #141615 10px 20px) 6;
+  background: #f4c430;
+  color: #141615;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-align: center;
+}
+
+.staging-banner a {
+  margin-left: 8px;
+  color: #141615;
 }
 
 .version {

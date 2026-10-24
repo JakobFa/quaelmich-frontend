@@ -24,6 +24,7 @@ import { createApp } from 'vue'
 import App from './App.vue'
 import { setUnauthorizedHandler } from './api'
 import router from './router'
+import { markStagingInBrowserTab } from './stage'
 
 // Token abgelaufen oder ungültig → zur Anmeldung, danach zurück zur aktuellen Seite
 setUnauthorizedHandler(() => {
@@ -34,4 +35,5 @@ const app = createApp(App)
 
 app.use(router)
 
+markStagingInBrowserTab()
 app.mount('#app')
