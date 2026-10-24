@@ -1,9 +1,17 @@
 <script setup lang="ts">
+import { useRoute } from 'vue-router'
+
 import heroUrl from '../assets/hero.jpg'
+
+/** nach dem Löschen des Kontos kurz bestätigen */
+const deleted = useRoute().query.geloescht === '1'
 </script>
 
 <template>
   <section class="home">
+    <p v-if="deleted" class="panel deleted" role="status">
+      Dein Konto und alle Daten sind gelöscht. Danke fürs Ausprobieren!
+    </p>
     <!-- Hintergrund: Foto als angedeutete Silhouette in den Farben der Seite -->
     <div class="backdrop" aria-hidden="true">
       <img :src="heroUrl" alt="" />
@@ -112,5 +120,10 @@ import heroUrl from '../assets/hero.jpg'
     width: 120%;
     opacity: 0.22;
   }
+}
+
+.deleted {
+  margin-bottom: 16px;
+  border-left-color: var(--color-hot);
 }
 </style>

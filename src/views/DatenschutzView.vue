@@ -131,7 +131,10 @@ import { hasImpressum, legal } from '../legal'
       <p>
         Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
         Datenübertragbarkeit und Widerspruch sowie das Recht, eine Einwilligung jederzeit zu
-        widerrufen. Schreib dafür einfach eine Mail<template v-if="legal.email">
+        widerrufen. Deine Daten herunterladen und dein Konto löschen kannst du selbst im Profil
+        unter „Konto &amp; Daten“. Für alles andere schreib einfach eine Mail<template
+          v-if="legal.email"
+        >
           an <a :href="`mailto:${legal.email}`">{{ legal.email }}</a></template
         >. Außerdem kannst du dich bei einer Datenschutz-Aufsichtsbehörde beschweren.
       </p>

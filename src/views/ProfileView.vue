@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
+import AccountPanel from '../components/AccountPanel.vue'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -300,6 +301,9 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
     </div>
     <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
     <IntervalsConnection />
+
+    <h2 class="section-label">// Konto</h2>
+    <AccountPanel />
   </section>
 </template>
 

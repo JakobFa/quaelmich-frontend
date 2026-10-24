@@ -312,15 +312,27 @@ export function confirmActivity(id: number, matchesPlan: boolean) {
  * Lädt die .fit-Datei eines geplanten Workouts herunter. Ein einfacher Link reicht hier nicht,
  * weil der Download den Login-Token im Header braucht.
  */
+// ---------- Konto ----------
+
+/** Alle eigenen Daten als JSON-Datei herunterladen */
+export function downloadMyData() {
+  return downloadFit('/me/account/export')
+}
+
+/** Konto endgültig löschen (403 = Passwort falsch) */
+export async function deleteMyAccount(password: string) {
+  await send('/me/account/delete', { method: 'POST', body: JSON.stringify({ password }) })
+}
+
 export function downloadPlannedWorkoutFit(id: number) {
   return downloadFit(`/planned-workouts/${id}/fit`)
 }
 
+/** Datei vom Backend herunterladen (Name aus Content-Disposition) */
 async function downloadFit(path: string) {
   const response = await send(path)
   const fileName =
-    /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ??
-    'workout.fit'
+    /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ?? 'download'
   const url = URL.createObjectURL(await response.blob())
   const link = document.createElement('a')
   link.href = url
