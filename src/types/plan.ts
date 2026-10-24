@@ -143,3 +143,13 @@ export type TrainingPlan = {
   /** abweichende Zeit für einzelne Wochen, Schlüssel = Montag (ISO-Datum) */
   weekAvailability?: Record<string, WeeklyAvailability>
 }
+
+/** Wofür die Phase da ist – eine Zeile beim Workout */
+export const phasePurpose: Record<Phase, string> = {
+  BASE: 'Grundlagenphase: Ausdauer aufbauen – viel locker, wenig hart.',
+  BUILD: 'Aufbauphase: Jetzt kommen gezielt härtere Einheiten dazu, die dich schneller machen.',
+  PEAK: 'Spitzenphase: Einheiten, die deinem Event am ähnlichsten sind – Qualität vor Umfang.',
+  TAPER: 'Tapering: weniger Umfang, damit du frisch zum Event kommst. Die Form ist schon da.',
+  RECOVERY:
+    'Erholungswoche: weniger Belastung, damit dein Körper die letzten Wochen verarbeitet – genau hier wirst du stärker.',
+}

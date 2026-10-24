@@ -6,6 +6,7 @@ import { getMyAthlete, getWorkout, workoutFitUrl } from '../api'
 import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
+import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
 import { heartRateZonesOf } from '../plan/heartRate'
@@ -51,6 +52,7 @@ onMounted(async () => {
       <p class="type">{{ workoutTypeLabels[workout.type] }}</p>
       <h2 class="headline">{{ workout.title }}</h2>
       <p class="description">{{ workout.description }}</p>
+      <WorkoutPurpose :type="workout.type" />
 
       <dl class="facts">
         <div>

@@ -20,6 +20,7 @@ import {
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import WorkoutPicker from '../components/WorkoutPicker.vue'
+import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
@@ -269,6 +270,7 @@ function formatDate(iso: string) {
       <p class="type">{{ workoutTypeLabels[planned.workout.type] }}</p>
       <h2 class="headline">{{ planned.workout.title }}</h2>
       <p class="description">{{ planned.workout.description }}</p>
+      <WorkoutPurpose :type="planned.workout.type" :phase="planned.phase" />
 
       <!-- Für heute anpassen -->
       <!-- Nicht gemacht -->
