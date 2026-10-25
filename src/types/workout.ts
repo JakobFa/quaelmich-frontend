@@ -95,7 +95,7 @@ export const workoutPurpose: Record<WorkoutType, { why: string; how: string }> =
   },
   STRENGTH: {
     why: 'Stärkere Beine und ein stabiler Rumpf bringen mehr Druck aufs Pedal, schützen Knie und Rücken und halten dich auch nach Stunden im Sattel stabil.',
-    how: 'Sauber vor schwer: Jede Wiederholung kontrolliert, die letzten zwei sollen fordern, aber nicht wackeln. 1–2 Minuten Pause zwischen den Sätzen.',
+    how: 'Zu Hause, ohne Geräte – eine Matte reicht. Jede Wiederholung kontrolliert, die letzten zwei sollen fordern, aber nicht wackeln. 30–60 Sekunden Pause zwischen den Sätzen.',
   },
 }
 

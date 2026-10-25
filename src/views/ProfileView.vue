@@ -323,8 +323,9 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
             Krafttraining einplanen
           </label>
           <p class="hint">
-            In der Grundlagenphase zweimal pro Woche, danach einmal zum Erhalten, vor dem Event gar
-            nicht. Nie vor harten Radeinheiten – mit Übungen und Animationen, wie sie gehen.
+            Kurze Routinen für zu Hause, ohne Geräte: Kraft mit etwas Mobility. In der
+            Grundlagenphase zweimal pro Woche, danach einmal zum Erhalten, vor dem Event gar nicht.
+            Nie vor harten Radeinheiten – mit Animationen, wie die Übungen gehen.
           </p>
           <p v-if="strengthMessage" class="hint" role="status">{{ strengthMessage }}</p>
         </div>

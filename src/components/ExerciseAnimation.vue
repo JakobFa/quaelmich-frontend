@@ -18,12 +18,13 @@ const cue = ref(props.exercise.cueTowardsEnd)
 let frame = 0
 let startedAt = 0
 
-/** hin, kurz halten, zurück, kurz halten (Stütz: langsames Atmen) */
-const timing = computed(() =>
-  props.exercise.hold
-    ? { towards: 2000, holdEnd: 0, back: 2000, holdStart: 0 }
-    : { towards: 1400, holdEnd: 300, back: 1200, holdStart: 300 },
-)
+/** hin, kurz halten, zurück, kurz halten (Stütz: langsames Atmen, Mobility: ruhig im Atemrhythmus) */
+const timing = computed(() => {
+  if (props.exercise.hold) return { towards: 2000, holdEnd: 0, back: 2000, holdStart: 0 }
+  if (props.exercise.kind === 'mobility')
+    return { towards: 2200, holdEnd: 600, back: 2000, holdStart: 400 }
+  return { towards: 1400, holdEnd: 300, back: 1200, holdStart: 300 }
+})
 
 const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
 
@@ -64,10 +65,10 @@ const pose = computed<Pose>(() => {
   const { start, end } = props.exercise
   const t = progress.value
   return Object.fromEntries(
-    (Object.keys(start) as (keyof Pose)[]).map((joint) => [
-      joint,
-      mix(start[joint], end[joint], t),
-    ]),
+    (Object.keys(start) as (keyof Pose)[]).map((joint) => {
+      const from = start[joint]!
+      return [joint, mix(from, end[joint] ?? from, t)]
+    }),
   ) as Pose
 })
 
@@ -79,7 +80,7 @@ const viewBox = computed(() => {
   const ys = [props.exercise.start, props.exercise.end].flatMap((p) =>
     Object.values(p).map(([, y]) => y),
   )
-  const top = Math.max(0, Math.min(...ys, props.exercise.bench ? 226 : 300) - 32)
+  const top = Math.max(0, Math.min(...ys) - 32)
   return `0 ${top} 300 ${284 - top}`
 })
 
@@ -90,7 +91,7 @@ function limbs(p: Pose) {
   return {
     leg2: line(p.toe2, p.ankle2, p.knee2, p.hip),
     leg: line(p.toe, p.ankle, p.knee, p.hip),
-    body: line(p.hip, p.shoulder),
+    body: p.spine ? line(p.hip, p.spine, p.shoulder) : line(p.hip, p.shoulder),
     arm: line(p.shoulder, p.elbow, p.hand),
   }
 }
@@ -99,7 +100,6 @@ function limbs(p: Pose) {
 <template>
   <svg :viewBox="viewBox" class="figure" role="img" :aria-label="`${exercise.name}: ${cue}`">
     <line x1="20" y1="276" x2="290" y2="276" class="ground" />
-    <rect v-if="exercise.bench" x="30" y="226" width="62" height="48" class="bench" />
 
     <g class="ghost">
       <polyline :points="limbs(ghost).leg2" />
@@ -118,14 +118,6 @@ function limbs(p: Pose) {
       <polyline :points="limbs(pose).arm" />
       <circle :cx="pose.head[0]" :cy="pose.head[1]" r="14" class="head" />
     </g>
-    <rect
-      v-if="exercise.weights"
-      :x="pose.hand[0] - 12"
-      :y="pose.hand[1] - 5"
-      width="24"
-      height="10"
-      class="weight"
-    />
     <circle :cx="pose.knee[0]" :cy="pose.knee[1]" r="5" class="joint" />
     <circle :cx="pose.hip[0]" :cy="pose.hip[1]" r="5" class="joint" />
   </svg>
@@ -143,12 +135,6 @@ function limbs(p: Pose) {
   stroke: var(--color-lilac);
   stroke-width: 2;
   stroke-dasharray: 6 6;
-}
-
-.bench {
-  fill: none;
-  stroke: var(--color-lilac);
-  stroke-width: 3;
 }
 
 .ghost polyline,
@@ -177,10 +163,6 @@ function limbs(p: Pose) {
   fill: var(--color-ink);
   stroke: var(--color-hot);
   stroke-width: 9;
-}
-
-.weight {
-  fill: var(--color-lilac);
 }
 
 .joint {

@@ -2,13 +2,16 @@
 import { computed, ref } from 'vue'
 
 import ExerciseAnimation from './ExerciseAnimation.vue'
-import { exercisesOf, strengthPhaseNotes } from '../strength/exercises'
+import { blockLabels, exercisesOf, strengthPhaseNotes } from '../strength/exercises'
 import type { Phase } from '../types/plan'
 
 /** Die Übungen einer Krafteinheit, jede mit animierter Figur und Hinweisen zur Ausführung */
 const props = defineProps<{ workoutId: number; phase: Phase }>()
 
 const items = computed(() => exercisesOf(props.workoutId))
+/** Überschrift nur über der ersten Übung eines Abschnitts (Mobilisieren, Kraft, Dehnen) */
+const startsBlock = (index: number) =>
+  index === 0 || items.value[index]!.block !== items.value[index - 1]!.block
 const smooth = ref(true)
 const cues = ref<Record<string, string>>({})
 </script>
@@ -23,27 +26,30 @@ const cues = ref<Record<string, string>>({})
     </div>
 
     <ol class="exercises">
-      <li v-for="(item, index) in items" :key="item.exercise.id" class="panel exercise">
-        <div class="exercise-title">
-          <span class="number">{{ index + 1 }}</span>
-          <h3>{{ item.exercise.name }}</h3>
-          <span class="dose">{{ item.sets }} × {{ item.reps }}</span>
-        </div>
-        <ExerciseAnimation
-          :exercise="item.exercise"
-          :smooth="smooth"
-          @cue="(text) => (cues[item.exercise.id] = text)"
-        />
-        <p class="live-cue" aria-live="off">
-          {{ cues[item.exercise.id] ?? item.exercise.cueTowardsEnd }}
-        </p>
-        <p class="why">{{ item.exercise.why }}</p>
-        <ul class="cues">
-          <li v-for="cue in item.exercise.cues" :key="cue">{{ cue }}</li>
-        </ul>
-        <p class="note"><strong>Typischer Fehler:</strong> {{ item.exercise.mistake }}</p>
-        <p class="note"><strong>Leichter:</strong> {{ item.exercise.easier }}</p>
-      </li>
+      <template v-for="(item, index) in items" :key="item.exercise.id">
+        <li v-if="startsBlock(index)" class="block-title">// {{ blockLabels[item.block] }}</li>
+        <li class="panel exercise" :class="item.exercise.kind">
+          <div class="exercise-title">
+            <span class="number">{{ index + 1 }}</span>
+            <h3>{{ item.exercise.name }}</h3>
+            <span class="dose">{{ item.sets }} × {{ item.reps }}</span>
+          </div>
+          <ExerciseAnimation
+            :exercise="item.exercise"
+            :smooth="smooth"
+            @cue="(text) => (cues[item.exercise.id] = text)"
+          />
+          <p class="live-cue" aria-live="off">
+            {{ cues[item.exercise.id] ?? item.exercise.cueTowardsEnd }}
+          </p>
+          <p class="why">{{ item.exercise.why }}</p>
+          <ul class="cues">
+            <li v-for="cue in item.exercise.cues" :key="cue">{{ cue }}</li>
+          </ul>
+          <p class="note"><strong>Typischer Fehler:</strong> {{ item.exercise.mistake }}</p>
+          <p class="note"><strong>Leichter:</strong> {{ item.exercise.easier }}</p>
+        </li>
+      </template>
     </ol>
 
     <p class="safety">
@@ -81,6 +87,20 @@ const cues = ref<Record<string, string>>({})
 
 .exercise {
   margin: 0;
+}
+
+.exercise.mobility {
+  border-left-color: var(--color-lilac);
+}
+
+.block-title {
+  grid-column: 1 / -1;
+  margin: 8px 0 -4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: var(--color-lilac);
 }
 
 .exercise-title {
