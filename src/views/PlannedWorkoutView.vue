@@ -372,14 +372,11 @@ function formatDate(iso: string) {
       <div v-if="!planned.actual && candidates.length > 0" class="panel assign">
         <p class="assign-title">Welche Fahrt war dieses Training?</p>
         <p class="hint">
-          <template v-if="candidates.length === 1">
-            An diesem Tag gibt es eine Fahrt, die quaelmich nicht automatisch zugeordnet hat – sie
-            passt nicht sicher genug zum Plan.
-          </template>
-          <template v-else>
-            An diesem Tag gibt es {{ candidates.length }} Fahrten, die quaelmich nicht automatisch
-            zugeordnet hat – sie passen nicht sicher genug zum Plan.
-          </template>
+          <template v-if="candidates.length === 1">An diesem Tag gibt es eine Fahrt.</template>
+          <template v-else>An diesem Tag gibt es {{ candidates.length }} Fahrten.</template>
+          Automatisch abgehakt werden nur Fahrten auf der Rolle, die genau zum Plan passen – draußen
+          entscheidest du. War es dein Training, sucht quaelmich die Intervalle in der Fahrt, auch
+          mit An- und Abfahrt.
         </p>
         <ul class="assign-list">
           <li v-for="ride in candidates" :key="ride.id">
