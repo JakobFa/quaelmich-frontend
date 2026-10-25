@@ -31,7 +31,8 @@ export const trainingModeLabels: Record<TrainingMode, string> = {
 }
 
 /** Art des Events – optional, sonst schätzt quaelmich den Schwerpunkt aus Dauer und Höhenmetern */
-export type EventType = 'GRAN_FONDO' | 'ROAD_RACE' | 'CRITERIUM' | 'TIME_TRIAL' | 'GRAVEL' | 'ULTRA'
+export type EventType =
+  'GRAN_FONDO' | 'ROAD_RACE' | 'CRITERIUM' | 'TIME_TRIAL' | 'GRAVEL' | 'ULTRA' | 'BIKEPACKING'
 
 export const eventTypeLabels: Record<EventType, string> = {
   GRAN_FONDO: 'Radmarathon',
@@ -39,7 +40,8 @@ export const eventTypeLabels: Record<EventType, string> = {
   CRITERIUM: 'Kriterium',
   TIME_TRIAL: 'Zeitfahren',
   GRAVEL: 'Gravel',
-  ULTRA: 'Ultra / Bikepacking',
+  ULTRA: 'Ultra-Rennen',
+  BIKEPACKING: 'Bikepacking',
 }
 
 /** Was beim Event das Ziel ist – macht den Plan etwas leichter oder härter */
