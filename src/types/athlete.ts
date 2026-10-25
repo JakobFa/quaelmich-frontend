@@ -59,6 +59,36 @@ export const eventGoalLabels: Record<EventGoal, { title: string; hint: string }>
   },
 }
 
+/** Worauf trainiert wird: ein Event mit Datum oder ein Ziel ohne Termin (Plan läuft dann in Zyklen weiter) */
+export type TrainingGoal = 'EVENT' | 'FTP' | 'ENDURANCE' | 'FITNESS' | 'CLIMBING'
+
+export const trainingGoalLabels: Record<TrainingGoal, { title: string; hint: string }> = {
+  EVENT: {
+    title: 'Ein Event',
+    hint: 'Rennen, Radmarathon, Bikepacking … – der Plan läuft auf den Tag hin.',
+  },
+  FTP: {
+    title: 'FTP steigern',
+    hint: 'Mehr Watt an der Schwelle: viel Sweet Spot und Schwelle, später VO2max.',
+  },
+  ENDURANCE: {
+    title: 'Mehr Ausdauer',
+    hint: 'Länger durchhalten: lange Ausfahrten mit Tempo, wenig Intensität.',
+  },
+  FITNESS: {
+    title: 'Fit bleiben',
+    hint: 'Ausgewogen und eher locker – gut auch mit wenig Zeit.',
+  },
+  CLIMBING: {
+    title: 'Schneller am Berg',
+    hint: 'Lange Schwellen- und Over-Under-Intervalle wie an einem langen Anstieg.',
+  },
+}
+
+export function needsEvent(goal: TrainingGoal | null | undefined) {
+  return !goal || goal === 'EVENT'
+}
+
 export type TargetEvent = {
   id?: number
   name: string
@@ -89,8 +119,15 @@ export type Athlete = {
   suggestedFtpNote?: string | null
   dismissedSuggestedFtp?: number | null
   level: Level | null
-  event: TargetEvent
+  /** ohne Angabe: auf ein Event hin */
+  trainingGoal?: TrainingGoal
+  /** nur beim Ziel "Event" – sonst leer */
+  event: TargetEvent | null
   availability: WeeklyAvailability
+}
+
+export function emptyEvent(): TargetEvent {
+  return { name: '', date: '', distanceKm: null, elevationMeters: null }
 }
 
 export function emptyAthlete(): Athlete {
@@ -102,7 +139,8 @@ export function emptyAthlete(): Athlete {
     thresholdHeartRate: null,
     weightKg: null,
     level: null,
-    event: { name: '', date: '', distanceKm: null, elevationMeters: null },
+    trainingGoal: 'EVENT',
+    event: emptyEvent(),
     availability: {
       monday: 0,
       tuesday: 0,

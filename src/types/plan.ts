@@ -1,4 +1,4 @@
-import type { EventGoal, EventType, WeeklyAvailability } from './athlete'
+import type { EventGoal, EventType, TrainingGoal, WeeklyAvailability } from './athlete'
 import type { Workout } from './workout'
 
 export type Phase = 'BASE' | 'BUILD' | 'PEAK' | 'TAPER' | 'RECOVERY'
@@ -139,8 +139,11 @@ export type EventProfile = {
 export type TrainingPlan = {
   id: number
   startDate: string
-  eventName: string
-  eventDate: string
+  /** leer bei einem Ziel ohne Event */
+  eventName: string | null
+  eventDate: string | null
+  /** worauf trainiert wird – ohne Angabe auf ein Event hin */
+  trainingGoal?: TrainingGoal
   workouts: PlannedWorkout[]
   extraRides?: ExtraRide[]
   eventProfile?: EventProfile
