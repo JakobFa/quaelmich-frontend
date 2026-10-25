@@ -132,6 +132,10 @@ export function emptyEvent(): TargetEvent {
   return { name: '', date: '', distanceKm: null, elevationMeters: null }
 }
 
+export function emptyEvent(): TargetEvent {
+  return { name: '', date: '', distanceKm: null, elevationMeters: null }
+}
+
 export function emptyAthlete(): Athlete {
   return {
     ftp: null,
