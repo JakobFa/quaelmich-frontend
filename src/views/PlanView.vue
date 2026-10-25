@@ -57,9 +57,6 @@ const generating = ref(false)
 
 const today = toIsoDate(new Date())
 
-function roundToQuarterHour(minutes: number) {
-  return Math.round(minutes / 15) * 15
-}
 const weeks = computed(() => (plan.value ? buildWeeks(plan.value) : []))
 const weekIndex = ref(0)
 const week = computed(() => weeks.value[weekIndex.value])
@@ -318,8 +315,6 @@ onMounted(async () => {
 
       <p v-if="plan.eventProfile" class="focus-note">
         <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
-        · geschätzte Dauer ca.
-        {{ formatHours(roundToQuarterHour(plan.eventProfile.estimatedMinutes)) }}
         <template v-if="plan.eventProfile.goal && plan.eventProfile.goal !== 'GOOD_TIME'">
           · Ziel: <strong>{{ eventGoalLabels[plan.eventProfile.goal].title }}</strong>
         </template>
