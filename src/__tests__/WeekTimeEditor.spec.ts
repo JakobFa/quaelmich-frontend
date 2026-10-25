@@ -96,4 +96,18 @@ describe('Zeit für eine Woche', () => {
     expect(nextWeek.wednesday).toBe(0) // gehört nicht mehr zu den 7 Tagen → normal
     expect(wrapper.emitted('saved')![0]![1]).toContain('Die nächsten 7 Tage')
   })
+
+  it('speichert keine Ausnahme für eine Woche, die gleich bleibt', async () => {
+    // heute Mi 21.10.: nur Mo 26.10. (nächste Woche) ändern – diese Woche bleibt normal
+    const { wrapper, fetchMock } = mountEditor('2026-10-21')
+    await flushPromises()
+
+    await wrapper.findAll('input')[5]!.setValue(2)
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const weekCalls = fetchMock.mock.calls.filter(([url]) => url.includes('/me/plan/weeks/'))
+    expect(weekCalls.map(([url]) => url.match(/weeks\/([\d-]+)/)![1])).toEqual(['2026-10-26'])
+    expect(wrapper.text()).toContain('Mi 21.10. – Di 27.10.')
+  })
 })

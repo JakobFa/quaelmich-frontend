@@ -57,14 +57,21 @@ const days = computed(() =>
       day,
       monday: mondayOf(iso),
       label: weekdayLabels[day],
-      date: new Date(`${iso}T12:00:00`).toLocaleDateString('de-DE', {
-        day: '2-digit',
-        month: '2-digit',
-      }),
+      // nur der Tag – sieben volle Daten passen auf dem Handy nicht nebeneinander
+      date: `${Number(iso.slice(8, 10))}.`,
       past: iso < props.today,
     }
   }),
 )
+
+/** Zeitraum über den Tagen, z. B. "So 25.10. – Sa 31.10." */
+const span = computed(() => {
+  const format = (iso: string) =>
+    new Date(`${iso}T12:00:00`).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' })
+  const first = days.value[0]!
+  const last = days.value[6]!
+  return `${first.label} ${format(first.iso)} – ${last.label} ${format(last.iso)}`
+})
 
 /** betroffene Kalenderwochen (eine oder zwei) */
 const mondays = computed(() => [...new Set(days.value.map((day) => day.monday))])
@@ -104,9 +111,13 @@ async function save(mode: 'week' | 'always' | 'reset') {
         days.value.forEach((day, index) => {
           if (day.monday === monday) week[day.day] = draft.value![index] ?? 0
         })
-        plan = await setWeekAvailability(monday, week)
+        // wie die normale Zeit? Dann ist das keine Ausnahme (und eine alte fällt weg)
+        const normal = WEEKDAYS.every((day) => week[day] === athlete.value!.availability[day])
+        if (!normal) plan = await setWeekAvailability(monday, week)
+        else if (props.weekAvailability?.[monday]) plan = await setWeekAvailability(monday, null)
       }
-      emit('saved', plan!, `✓ ${what} neu verteilt – deine normale Zeit bleibt.`)
+      if (plan) emit('saved', plan, `✓ ${what} neu verteilt – deine normale Zeit bleibt.`)
+      else emit('close') // nichts geändert
     } else if (mode === 'reset') {
       for (const monday of overridden.value) plan = await setWeekAvailability(monday, null)
       if (plan) emit('saved', plan, `✓ ${what} wieder mit deiner normalen Zeit.`)
@@ -134,6 +145,7 @@ function format(hours: number) {
 <template>
   <div class="panel week-time">
     <p class="title">{{ rolling ? 'Zeit für die nächsten 7 Tage' : 'Zeit für diese Woche' }}</p>
+    <p class="span">{{ span }}</p>
     <p v-if="!draft && !failed" class="hint">Lädt …</p>
     <form v-if="draft" @submit.prevent="save('week')">
       <ul class="days">
@@ -192,8 +204,15 @@ function format(hours: number) {
 </template>
 
 <style scoped>
+.span {
+  margin: 2px 0 10px;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+}
+
 .title {
-  margin: 0 0 10px;
+  margin: 0;
   font-family: var(--font-mono);
   font-weight: 700;
   text-transform: uppercase;
