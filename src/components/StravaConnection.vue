@@ -6,10 +6,11 @@ import {
   getStravaProfile,
   getStravaStatus,
   saveMyAthlete,
+  setStravaDescriptions,
   type StravaProfileSuggestion,
   type StravaStatus,
 } from '../api'
-import { startStravaLogin } from '../strava/oauth'
+import { STRAVA_SCOPE, STRAVA_WRITE_SCOPE, startStravaLogin } from '../strava/oauth'
 import type { Athlete } from '../types/athlete'
 
 const props = defineProps<{ athlete?: Athlete | null }>()
@@ -77,8 +78,26 @@ function formatValue(value: number | null, unit: string) {
   return value == null ? '–' : `${value.toLocaleString('de-DE')} ${unit}`
 }
 
-function connect() {
-  if (status.value?.clientId) startStravaLogin(status.value.clientId)
+/** Wer das Schreiben eingeschaltet hat, behält beim neu Verbinden die Erlaubnis dafür */
+function connect(scope = status.value?.writeDescriptions ? STRAVA_WRITE_SCOPE : STRAVA_SCOPE) {
+  if (status.value?.clientId) startStravaLogin(status.value.clientId, scope)
+}
+
+async function toggleDescriptions(enabled: boolean) {
+  if (enabled && !status.value?.canWriteActivities) {
+    // Strava fragt einmal nach der Erlaubnis; zurück in quaelmich ist der Schalter dann an
+    connect(STRAVA_WRITE_SCOPE)
+    return
+  }
+  busy.value = true
+  errorMessage.value = ''
+  try {
+    status.value = await setStravaDescriptions(enabled)
+  } catch {
+    errorMessage.value = 'Speichern hat nicht geklappt.'
+  } finally {
+    busy.value = false
+  }
 }
 
 async function applySuggestion() {
@@ -132,7 +151,7 @@ async function disconnect() {
           quaelmich kann FTP, Gewicht und Pulszonen aus Strava übernehmen – dafür einmal neu
           verbinden und „Profil ansehen“ erlauben.
         </p>
-        <button type="button" class="button button-ghost" :disabled="busy" @click="connect">
+        <button type="button" class="button button-ghost" :disabled="busy" @click="connect()">
           Neu verbinden
         </button>
       </div>
@@ -186,6 +205,26 @@ async function disconnect() {
         </template>
       </p>
 
+      <div class="describe">
+        <label class="describe-toggle">
+          <input
+            type="checkbox"
+            :checked="status.writeDescriptions"
+            :disabled="busy"
+            @change="toggleDescriptions(($event.target as HTMLInputElement).checked)"
+          />
+          Training in die Strava-Beschreibung schreiben
+        </label>
+        <p class="hint small">
+          Hast du bestätigt, dass eine Fahrt dein geplantes Training war, schreibt quaelmich
+          darunter, was es war, den Ablauf, geplant gegen gefahren und deine Bewertung. Pendel- und
+          Zusatzfahrten bleiben unberührt, dein eigener Text auch.
+          <template v-if="!status.canWriteActivities">
+            Beim Einschalten fragt Strava einmal nach der Erlaubnis, Aktivitäten zu bearbeiten.
+          </template>
+        </p>
+      </div>
+
       <p class="hint">
         Deine Radfahrten der letzten 14 Tage werden beim Öffnen des Plans und jede Nacht übernommen
         – auch Pendelfahrten von der Apple Watch. Gibt es eine Fahrt auch in intervals.icu, zählt
@@ -202,7 +241,7 @@ async function disconnect() {
         Strava-App – und auf Wunsch FTP, Gewicht und Maximalpuls. Noch im Test: höchstens 10
         Personen können sich verbinden.
       </p>
-      <button type="button" class="strava-button" @click="connect">Connect with Strava</button>
+      <button type="button" class="strava-button" @click="connect()">Connect with Strava</button>
     </template>
 
     <p v-if="errorMessage" class="error" role="alert">{{ errorMessage }}</p>
@@ -235,6 +274,28 @@ async function disconnect() {
 .hint.small {
   margin: 8px 0 12px;
   font-size: 0.8rem;
+}
+
+.describe {
+  margin: 12px 0 16px;
+}
+
+.describe-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.describe-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: #fc5200;
+}
+
+.describe .hint.small {
+  margin: 4px 0 0 26px;
 }
 
 .suggestion {

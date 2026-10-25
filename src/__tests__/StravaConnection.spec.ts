@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest'
 import { flushPromises, mount } from '@vue/test-utils'
 
 import StravaConnection from '../components/StravaConnection.vue'
-import { stravaAuthorizeUrl } from '../strava/oauth'
+import { STRAVA_WRITE_SCOPE, stravaAuthorizeUrl } from '../strava/oauth'
 import { emptyAthlete } from '../types/athlete'
 
 /** Antwortet der Reihe nach mit den angegebenen Bodies */
@@ -127,5 +127,44 @@ describe('StravaConnection', () => {
     expect(url.searchParams.get('redirect_uri')).toBe('https://quaelmich.test/strava/callback')
     expect(url.searchParams.get('scope')).toBe('activity:read_all,profile:read_all')
     expect(url.searchParams.get('state')).toBe('zufall')
+  })
+
+  it('fragt die Schreib-Erlaubnis nur für die Strava-Beschreibung an', () => {
+    const url = new URL(
+      stravaAuthorizeUrl('12345', 'https://quaelmich.test', 'zufall', STRAVA_WRITE_SCOPE),
+    )
+
+    expect(url.searchParams.get('scope')).toBe('activity:read_all,profile:read_all,activity:write')
+  })
+
+  it('schaltet das Schreiben in die Beschreibung ein, wenn Strava es erlaubt hat', async () => {
+    const fetchMock = backend(
+      {
+        ...base,
+        available: true,
+        connected: true,
+        canWriteActivities: true,
+        writeDescriptions: false,
+      },
+      { profileAccess: true, ftp: null, weightKg: null, maxHeartRate: null },
+      {
+        ...base,
+        available: true,
+        connected: true,
+        canWriteActivities: true,
+        writeDescriptions: true,
+      },
+    )
+    const wrapper = mount(StravaConnection, { props: { athlete: emptyAthlete() } })
+    await flushPromises()
+
+    await wrapper.find('.describe-toggle input').setValue(true)
+    await flushPromises()
+
+    const [url, init] = fetchMock.mock.calls[2]!
+    expect(url).toContain('/me/strava/descriptions')
+    expect(init?.method).toBe('PUT')
+    expect(init?.body).toBe('{"enabled":true}')
+    expect((wrapper.find('.describe-toggle input').element as HTMLInputElement).checked).toBe(true)
   })
 })

@@ -414,6 +414,10 @@ export type StravaStatus = {
   connected: boolean
   athleteName: string | null
   connectedAt: string | null
+  /** hat Strava das Bearbeiten von Aktivitäten erlaubt? */
+  canWriteActivities?: boolean
+  /** Training in die Beschreibung bestätigter Fahrten schreiben */
+  writeDescriptions?: boolean
 }
 
 export function getStravaStatus() {
@@ -445,6 +449,14 @@ export type StravaProfileSuggestion = {
 
 export function getStravaProfile() {
   return request<StravaProfileSuggestion>('/me/strava/profile')
+}
+
+/** Schalter fürs Schreiben in die Strava-Beschreibung (409 ohne Erlaubnis activity:write) */
+export function setStravaDescriptions(enabled: boolean) {
+  return request<StravaStatus>('/me/strava/descriptions', {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  })
 }
 
 export async function disconnectStrava() {

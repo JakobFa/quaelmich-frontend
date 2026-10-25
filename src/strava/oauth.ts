@@ -10,23 +10,31 @@ const STATE_KEY = 'quaelmich.strava.state'
  */
 export const STRAVA_SCOPE = 'activity:read_all,profile:read_all'
 
-export function stravaAuthorizeUrl(clientId: string, origin: string, state: string): string {
+/** Zusätzlich activity:write – nur, wenn quaelmich das Training in die Beschreibung schreiben soll */
+export const STRAVA_WRITE_SCOPE = `${STRAVA_SCOPE},activity:write`
+
+export function stravaAuthorizeUrl(
+  clientId: string,
+  origin: string,
+  state: string,
+  scope = STRAVA_SCOPE,
+): string {
   const params = new URLSearchParams({
     client_id: clientId,
     redirect_uri: `${origin}/strava/callback`,
     response_type: 'code',
     approval_prompt: 'auto',
-    scope: STRAVA_SCOPE,
+    scope,
     state,
   })
   return `https://www.strava.com/oauth/authorize?${params}`
 }
 
 /** Merkt sich einen Zufallswert, damit nur unser eigener Rücksprung akzeptiert wird */
-export function startStravaLogin(clientId: string) {
+export function startStravaLogin(clientId: string, scope = STRAVA_SCOPE) {
   const state = crypto.randomUUID()
   sessionStorage.setItem(STATE_KEY, state)
-  window.location.assign(stravaAuthorizeUrl(clientId, window.location.origin, state))
+  window.location.assign(stravaAuthorizeUrl(clientId, window.location.origin, state, scope))
 }
 
 export function takeExpectedState(): string | null {
