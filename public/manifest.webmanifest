@@ -1,0 +1,14 @@
+{
+  "name": "quaelmich – Trainingsplan fürs Rad",
+  "short_name": "quaelmich",
+  "start_url": "/plan",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#141615",
+  "theme_color": "#141615",
+  "lang": "de",
+  "icons": [
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" },
+    { "src": "/favicon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}
