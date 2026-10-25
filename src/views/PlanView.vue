@@ -26,7 +26,7 @@ import {
   sportLabels,
   type TrainingPlan,
 } from '../types/plan'
-import { eventGoalLabels, type Athlete } from '../types/athlete'
+import { eventGoalLabels, trainingGoalLabels, type Athlete } from '../types/athlete'
 import { workoutTypeLabels } from '../types/workout'
 
 const plan = ref<TrainingPlan | null>(null)
@@ -64,8 +64,13 @@ const weeks = computed(() => (plan.value ? buildWeeks(plan.value) : []))
 const weekIndex = ref(0)
 const week = computed(() => weeks.value[weekIndex.value])
 
+/** Ziel ohne Event (FTP, Ausdauer …), sonst null */
+const openGoal = computed(() =>
+  plan.value?.trainingGoal && plan.value.trainingGoal !== 'EVENT' ? plan.value.trainingGoal : null,
+)
+
 const weeksUntilEvent = computed(() => {
-  if (!plan.value) return 0
+  if (!plan.value?.eventDate) return 0
   const ms = new Date(plan.value.eventDate).getTime() - new Date(today).getTime()
   return Math.max(0, Math.ceil(ms / (7 * 24 * 60 * 60 * 1000)))
 })
@@ -307,7 +312,12 @@ onMounted(async () => {
         <p v-if="pauseError" class="error" role="alert">{{ pauseError }}</p>
       </div>
 
-      <p v-if="plan.eventProfile" class="focus-note">
+      <!-- Ziel ohne Event: das Ziel statt des Event-Schwerpunkts -->
+      <p v-if="openGoal" class="focus-note">
+        <strong>Ziel: {{ trainingGoalLabels[openGoal].title }}</strong>
+        <span>{{ trainingGoalLabels[openGoal].hint }}</span>
+      </p>
+      <p v-else-if="plan.eventProfile" class="focus-note">
         <strong>Schwerpunkt: {{ eventFocusLabels[plan.eventProfile.focus].title }}</strong>
         · geschätzte Dauer ca.
         {{ formatHours(roundToQuarterHour(plan.eventProfile.estimatedMinutes)) }}
@@ -320,7 +330,7 @@ onMounted(async () => {
         <div>
           <span class="label">Event</span>
           <strong>{{ plan.eventName }}</strong>
-          <small>{{ formatDate(plan.eventDate) }}</small>
+          <small v-if="plan.eventDate">{{ formatDate(plan.eventDate) }}</small>
         </div>
         <div>
           <span class="label">Noch</span>
@@ -371,7 +381,8 @@ onMounted(async () => {
         </button>
         <div class="week-title">
           <h2>
-            Woche {{ weekIndex + 1 }} <span class="of">/ {{ weeks.length }}</span>
+            Woche {{ weekIndex + 1 }}
+            <span v-if="!openGoal" class="of">/ {{ weeks.length }}</span>
           </h2>
           <p>
             {{ formatDay(week.days[0]!.date).date }} – {{ formatDay(week.days[6]!.date).date }}

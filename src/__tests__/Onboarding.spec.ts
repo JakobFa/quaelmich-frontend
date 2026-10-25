@@ -23,7 +23,8 @@ const existing = {
 /** Antwortet auf GET /me/athlete mit dem Profil, auf alles andere mit 200 */
 function backend() {
   const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>((url, init) => {
-    const body = url.endsWith('/me/athlete') && !init?.method ? existing : {}
+    // frische Kopie – das Formular ändert das Objekt, sonst wirkt es in den nächsten Test hinein
+    const body = url.endsWith('/me/athlete') && !init?.method ? structuredClone(existing) : {}
     return Promise.resolve({ ok: true, status: 200, json: () => Promise.resolve(body) })
   })
   vi.stubGlobal('fetch', fetchMock)
@@ -69,5 +70,34 @@ describe('Angaben ändern', () => {
 
     expect(wrapper.find('.stepper').exists()).toBe(true)
     expect(wrapper.text()).toContain('Wer bist du?')
+  })
+
+  it('Ziel ohne Event: keine Event-Felder, gespeichert wird ohne Event', async () => {
+    const fetchMock = backend()
+    const wrapper = await mountAt('/onboarding?bereich=event')
+    expect(wrapper.find('input[type=date]').exists()).toBe(true)
+
+    await wrapper.find('input[name=training-goal][value=FTP]').setValue(true)
+    expect(wrapper.find('input[type=date]').exists()).toBe(false)
+    expect(wrapper.text()).toContain('Zyklen von 8 Wochen')
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const put = fetchMock.mock.calls.find(
+      ([url, init]) => init?.method === 'PUT' && url.endsWith('/me/athlete'),
+    )!
+    const body = JSON.parse(String(put[1]!.body))
+    expect(body.trainingGoal).toBe('FTP')
+    expect(body.event).toBeNull()
+  })
+
+  it('zurück zum Event: die vorherigen Event-Angaben sind noch da', async () => {
+    backend()
+    const wrapper = await mountAt('/onboarding?bereich=event')
+
+    await wrapper.find('input[name=training-goal][value=CLIMBING]').setValue(true)
+    await wrapper.find('input[name=training-goal][value=EVENT]').setValue(true)
+
+    expect((wrapper.find('input[type=text]').element as HTMLInputElement).value).toBe('Ötztaler')
   })
 })

@@ -64,7 +64,12 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
 <template>
   <div class="panel progress-head">
     <p class="headline">
-      <template v-if="currentWeek !== null">
+      <!-- Ziel ohne Event: Zyklus und Woche darin, Countdown bis zum FTP-Test -->
+      <template v-if="progress.plan?.cycle">
+        Zyklus <strong>{{ progress.plan.cycle }}</strong> · Woche {{ progress.plan.week }} von
+        {{ progress.plan.totalWeeks }}
+      </template>
+      <template v-else-if="currentWeek !== null">
         Woche <strong>{{ currentWeek + 1 }}</strong> von {{ weeks.length }}
       </template>
       <template v-else>{{ weeks.length }} Wochen</template>
