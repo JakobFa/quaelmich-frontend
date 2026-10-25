@@ -183,6 +183,15 @@ const weekMonday = computed(() => week.value?.days[0]?.date ?? '')
 /** vergangene Wochen lassen sich nicht mehr ändern */
 const weekEditable = computed(() => !!week.value && week.value.days[6]!.date >= today)
 const weekOverride = computed(() => plan.value?.weekAvailability?.[weekMonday.value] ?? null)
+/** laufende Woche: die nächsten 7 Tage ab heute (so zeigt der Plan sie), spätere Wochen: Montag bis Sonntag */
+const weekTimeStart = computed(() => (weekMonday.value < today ? today : weekMonday.value))
+const weekTimeRolling = computed(() => weekTimeStart.value !== weekMonday.value)
+/** schon angepasst? In der laufenden Woche zählt auch die nächste mit, weil die 7 Tage hineinreichen */
+const weekTimeAdjusted = computed(() => {
+  if (weekOverride.value) return true
+  const nextMonday = weeks.value[weekIndex.value + 1]?.days[0]?.date
+  return weekTimeRolling.value && !!nextMonday && !!plan.value?.weekAvailability?.[nextMonday]
+})
 
 function openWeekTime() {
   weekTimeOpen.value = true
@@ -411,10 +420,10 @@ onMounted(async () => {
 
       <WeekTimeEditor
         v-if="weekTimeOpen && weekEditable"
-        :key="weekMonday"
-        :monday="weekMonday"
+        :key="weekTimeStart"
+        :start="weekTimeStart"
         :today="today"
-        :override="weekOverride"
+        :week-availability="plan?.weekAvailability"
         @saved="onWeekTimeSaved"
         @close="weekTimeOpen = false"
       />
@@ -430,7 +439,18 @@ onMounted(async () => {
           @click="openWeekTime"
         >
           🕒
-          {{ weekOverride ? 'Zeit diese Woche angepasst – ändern' : 'Zeit für diese Woche ändern' }}
+          <template v-if="weekTimeRolling">
+            {{
+              weekTimeAdjusted ? 'Zeit angepasst – ändern' : 'Zeit für die nächsten 7 Tage ändern'
+            }}
+          </template>
+          <template v-else>
+            {{
+              weekTimeAdjusted
+                ? 'Zeit diese Woche angepasst – ändern'
+                : 'Zeit für diese Woche ändern'
+            }}
+          </template>
         </button>
         <button
           v-if="!pauseUntil && !pauseFormOpen"
