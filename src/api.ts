@@ -219,6 +219,8 @@ export type Progress = {
     due: number
     daysToEvent: number
     eventName: string
+    /** Ziel ohne Event: Nummer des 8-Wochen-Zyklus (week/totalWeeks gelten darin), sonst null */
+    cycle?: number | null
   } | null
   /** Belastung der letzten 7 Tage im Vergleich zum Plan; null ohne Plan */
   load?: {

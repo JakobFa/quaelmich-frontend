@@ -55,10 +55,13 @@ export function buildWeeks(plan: TrainingPlan): PlanWeek[] {
   }
 
   // alle Events: das erste und die weiteren
-  const events = new Map<string, string>([[plan.eventDate, plan.eventName]])
+  const events = new Map<string, string>()
+  if (plan.eventDate) events.set(plan.eventDate, plan.eventName ?? 'Event')
   for (const event of plan.moreEvents ?? []) events.set(event.date, event.name)
   const sortedDates = [...events.keys()].sort()
-  const lastEvent = sortedDates[sortedDates.length - 1] ?? plan.eventDate
+  // ohne Event (Ziel ohne Termin): bis zum letzten geplanten Workout
+  const lastWorkout = plan.workouts.map((w) => w.date).sort()[plan.workouts.length - 1]
+  const lastEvent = sortedDates[sortedDates.length - 1] ?? lastWorkout ?? plan.startDate
 
   const weeks: PlanWeek[] = []
   const lastMonday = mondayOf(lastEvent)

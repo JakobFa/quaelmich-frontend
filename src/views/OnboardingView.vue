@@ -7,18 +7,22 @@ import { DEFAULT_POWER_ZONE_STARTS } from '../plan/zones'
 import { heartRateZonesOf } from '../plan/heartRate'
 import {
   emptyAthlete,
+  emptyEvent,
   eventGoalLabels,
   eventTypeLabels,
   levelLabels,
+  needsEvent,
+  trainingGoalLabels,
   trainingModeLabels,
   weekdayLabels,
   type Athlete,
+  type TargetEvent,
 } from '../types/athlete'
 
 const router = useRouter()
 const route = useRoute()
 
-const steps = ['Profil', 'Event', 'Verfügbarkeit']
+const steps = ['Profil', 'Ziel', 'Verfügbarkeit']
 const currentStep = ref(0)
 
 /** Einzelner Bereich aus dem Profil, z. B. /onboarding?bereich=event – nur dieser Schritt, direkt speichern */
@@ -34,6 +38,9 @@ const sectionKey = computed(() =>
 )
 
 const athlete = ref<Athlete>(emptyAthlete())
+/** Entwurf des Events – bleibt beim Wechsel zu einem Ziel ohne Event erhalten, falls man zurückwechselt */
+const event = ref<TargetEvent>(emptyEvent())
+const goal = computed(() => athlete.value.trainingGoal ?? 'EVENT')
 const saving = ref(false)
 const errorMessage = ref('')
 
@@ -73,7 +80,9 @@ onMounted(async () => {
     hadProfile.value = existing !== null
     athlete.value = existing ?? emptyAthlete()
     athlete.value.trainingMode ??= 'POWER'
-    athlete.value.event.type ??= null
+    athlete.value.trainingGoal ??= 'EVENT'
+    event.value = athlete.value.event ?? emptyEvent()
+    event.value.type ??= null
     const own = athlete.value.heartRateZoneStarts
     if (own?.length === 4) zoneInputs.value = [...own]
     const ownPower = athlete.value.powerZoneStarts
@@ -115,7 +124,8 @@ async function next() {
   saving.value = true
   errorMessage.value = ''
   try {
-    await saveMyAthlete(athlete.value)
+    // ohne Event-Ziel kein Event mitschicken
+    await saveMyAthlete({ ...athlete.value, event: needsEvent(goal.value) ? event.value : null })
     await generatePlan()
     // einzelner Bereich → zurück ins Profil, sonst in den Plan
     router.push(singleSection.value ? { name: 'profile', query: { gespeichert: '1' } } : '/plan')
@@ -296,75 +306,101 @@ function back() {
       <!-- Schritt 2: Event -->
       <template v-else-if="currentStep === 1">
         <h2 class="panel-title">Worauf trainierst du hin?</h2>
-        <label class="field">
-          <span>Event</span>
-          <input
-            v-model.trim="athlete.event.name"
-            type="text"
-            placeholder="z. B. Ötztaler Radmarathon"
-            required
-          />
-        </label>
-        <label class="field">
-          <span>Datum</span>
-          <input v-model="athlete.event.date" type="date" :min="today" required />
-        </label>
-        <label class="field">
-          <span>Art des Events (optional)</span>
-          <select v-model="athlete.event.type">
-            <option :value="null">weiß nicht / egal</option>
-            <option v-for="(label, type) in eventTypeLabels" :key="type" :value="type">
-              {{ label }}
-            </option>
-          </select>
-          <small class="field-hint">
-            Bestimmt den Schwerpunkt: ein Kriterium braucht Antritte, ein Bergmarathon lange
-            Schwellenintervalle. Ohne Angabe schätzt quaelmich das aus Distanz und Höhenmetern.
-          </small>
-        </label>
-        <div class="field-row">
-          <label class="field">
-            <span>Distanz (km)</span>
-            <input
-              v-model.number="athlete.event.distanceKm"
-              type="number"
-              min="1"
-              placeholder="227"
-              required
-            />
-          </label>
-          <label class="field">
-            <span>Höhenmeter</span>
-            <input
-              v-model.number="athlete.event.elevationMeters"
-              type="number"
-              min="0"
-              placeholder="5500"
-              required
-            />
-          </label>
-        </div>
         <fieldset class="field">
           <legend>Dein Ziel</legend>
           <div class="goals">
             <label
-              v-for="(goal, key) in eventGoalLabels"
+              v-for="(option, key) in trainingGoalLabels"
               :key="key"
               class="goal"
-              :class="{ selected: (athlete.event.goal ?? 'GOOD_TIME') === key }"
+              :class="{ selected: goal === key }"
             >
               <input
+                v-model="athlete.trainingGoal"
                 type="radio"
-                name="goal"
+                name="training-goal"
                 :value="key"
-                :checked="(athlete.event.goal ?? 'GOOD_TIME') === key"
-                @change="athlete.event.goal = key"
               />
-              <strong>{{ goal.title }}</strong>
-              <small>{{ goal.hint }}</small>
+              <strong>{{ option.title }}</strong>
+              <small>{{ option.hint }}</small>
             </label>
           </div>
+          <small v-if="!needsEvent(goal)" class="field-hint">
+            Ohne festen Termin: Der Plan läuft in Zyklen von 8 Wochen immer weiter, mit einem
+            FTP-Test nach jedem Zyklus. Ein Event kannst du später jederzeit eintragen.
+          </small>
         </fieldset>
+        <template v-if="needsEvent(goal)">
+          <label class="field">
+            <span>Event</span>
+            <input
+              v-model.trim="event.name"
+              type="text"
+              placeholder="z. B. Ötztaler Radmarathon"
+              required
+            />
+          </label>
+          <label class="field">
+            <span>Datum</span>
+            <input v-model="event.date" type="date" :min="today" required />
+          </label>
+          <label class="field">
+            <span>Art des Events (optional)</span>
+            <select v-model="event.type">
+              <option :value="null">weiß nicht / egal</option>
+              <option v-for="(label, type) in eventTypeLabels" :key="type" :value="type">
+                {{ label }}
+              </option>
+            </select>
+            <small class="field-hint">
+              Bestimmt den Schwerpunkt: ein Kriterium braucht Antritte, ein Bergmarathon lange
+              Schwellenintervalle. Ohne Angabe schätzt quaelmich das aus Distanz und Höhenmetern.
+            </small>
+          </label>
+          <div class="field-row">
+            <label class="field">
+              <span>Distanz (km)</span>
+              <input
+                v-model.number="event.distanceKm"
+                type="number"
+                min="1"
+                placeholder="227"
+                required
+              />
+            </label>
+            <label class="field">
+              <span>Höhenmeter</span>
+              <input
+                v-model.number="event.elevationMeters"
+                type="number"
+                min="0"
+                placeholder="5500"
+                required
+              />
+            </label>
+          </div>
+          <fieldset class="field">
+            <legend>Was willst du beim Event?</legend>
+            <div class="goals">
+              <label
+                v-for="(eventGoal, key) in eventGoalLabels"
+                :key="key"
+                class="goal"
+                :class="{ selected: (event.goal ?? 'GOOD_TIME') === key }"
+              >
+                <input
+                  type="radio"
+                  name="event-goal"
+                  :value="key"
+                  :checked="(event.goal ?? 'GOOD_TIME') === key"
+                  @change="event.goal = key"
+                />
+                <strong>{{ eventGoal.title }}</strong>
+                <small>{{ eventGoal.hint }}</small>
+              </label>
+            </div>
+          </fieldset>
+        </template>
       </template>
 
       <!-- Schritt 3: Verfügbarkeit -->

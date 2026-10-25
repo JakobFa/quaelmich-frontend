@@ -17,6 +17,7 @@ import {
   eventTypeLabels,
   levelLabels,
   trainingModeLabels,
+  trainingGoalLabels,
   weekdayLabels,
   type Athlete,
   type WeeklyAvailability,
@@ -217,7 +218,20 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
         </ol>
       </div>
 
-      <div class="panel">
+      <div v-if="!athlete.event" class="panel">
+        <div class="panel-head">
+          <h2 class="panel-title">Ziel</h2>
+          <RouterLink :to="{ name: 'onboarding', query: { bereich: 'event' } }" class="edit-link">
+            Ändern
+          </RouterLink>
+        </div>
+        <p class="goal-title">{{ trainingGoalLabels[athlete.trainingGoal ?? 'EVENT'].title }}</p>
+        <p class="hint">
+          {{ trainingGoalLabels[athlete.trainingGoal ?? 'EVENT'].hint }} Ohne festen Termin läuft
+          der Plan in Zyklen von 8 Wochen weiter, mit einem FTP-Test nach jedem Zyklus.
+        </p>
+      </div>
+      <div v-else class="panel">
         <div class="panel-head">
           <h2 class="panel-title">Event</h2>
           <RouterLink :to="{ name: 'onboarding', query: { bereich: 'event' } }" class="edit-link">
@@ -248,7 +262,8 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
         </dl>
       </div>
 
-      <MoreEventsPanel :first-event-date="athlete.event.date" />
+      <!-- weitere Events gibt es nur, wenn auf ein Event hin trainiert wird -->
+      <MoreEventsPanel v-if="athlete.event" :first-event-date="athlete.event.date" />
 
       <div class="panel">
         <h2 class="panel-title">Verfügbarkeit · {{ formatNumber(totalHours) }} h / Woche</h2>
@@ -592,5 +607,14 @@ form .week li {
   width: 18px;
   height: 18px;
   accent-color: var(--color-hot);
+}
+
+.goal-title {
+  margin: 0 0 4px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 1.1rem;
+  text-transform: uppercase;
+  color: var(--color-lilac);
 }
 </style>
