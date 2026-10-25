@@ -109,10 +109,6 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
     </ul>
 
     <dl class="stats">
-      <div>
-        <dt>Geschafft</dt>
-        <dd>{{ elapsedPercent }}<small>%</small></dd>
-      </div>
       <div v-if="load" class="load" :class="load.status.toLowerCase()">
         <dt>Letzte 7 Tage</dt>
         <dd>
