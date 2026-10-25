@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 
 import { getIntervalAccuracy } from '../api'
+import IntervalOverlayChart from './IntervalOverlayChart.vue'
 import { accuracyVerdictLabels, type IntervalAccuracy } from '../types/plan'
 
 /** "Wie genau getroffen?" – lädt die Auswertung zur zugeordneten Fahrt; ohne Daten bleibt es unsichtbar */
@@ -54,6 +55,7 @@ function formatTarget(low: number, high: number | null) {
     <p v-if="accuracy.uncertain" class="uncertain">
       ⚠ Die Intervalle waren in der Fahrt nicht klar zu erkennen – nimm den Wert mit Vorsicht.
     </p>
+    <IntervalOverlayChart :accuracy="accuracy" />
     <ol class="blocks">
       <li v-for="block in accuracy.blocks" :key="block.number" :class="block.verdict.toLowerCase()">
         <span class="nr">#{{ block.number }}</span>
