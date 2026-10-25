@@ -28,6 +28,7 @@ import {
 } from '../types/plan'
 import { eventGoalLabels, type Athlete } from '../types/athlete'
 import { workoutTypeLabels } from '../types/workout'
+import { exercisesOf } from '../strength/exercises'
 
 const plan = ref<TrainingPlan | null>(null)
 const hasProfile = ref(false)
@@ -504,6 +505,7 @@ onMounted(async () => {
               completed: planned.completed,
               skipped: !!planned.skipReason,
               open: needsFeedback(planned, today),
+              strength: planned.workout.type === 'STRENGTH',
             }"
           >
             <div class="session-main">
@@ -513,7 +515,8 @@ onMounted(async () => {
                 </span>
                 <span v-else-if="planned.skipReason === 'PAUSE'" class="skip-badge">⏸ Pause</span>
                 <span v-else-if="planned.skipReason" class="skip-badge">
-                  ✗ nicht gefahren · {{ skipReasonLabels[planned.skipReason] }}
+                  ✗ nicht {{ planned.workout.type === 'STRENGTH' ? 'gemacht' : 'gefahren' }} ·
+                  {{ skipReasonLabels[planned.skipReason] }}
                 </span>
                 <span v-else-if="needsFeedback(planned, today)" class="open-badge">
                   ? Rückmeldung fehlt
@@ -541,7 +544,10 @@ onMounted(async () => {
                 class="assessment"
               />
             </div>
-            <WorkoutProfile :steps="planned.workout.steps" class="profile" />
+            <p v-if="planned.workout.type === 'STRENGTH'" class="strength-hint">
+              🏋 {{ exercisesOf(planned.workout.id).length }} Übungen mit Anleitung
+            </p>
+            <WorkoutProfile v-else :steps="planned.workout.steps" class="profile" />
           </RouterLink>
 
           <div v-for="ride in day.extraRides" :key="`extra-${ride.id}`" class="extra">
@@ -935,6 +941,19 @@ onMounted(async () => {
 .session.open {
   outline: 2px dashed var(--color-hot);
   outline-offset: 4px;
+}
+
+.session.strength {
+  padding-left: 12px;
+  box-shadow: inset 4px 0 0 var(--color-lilac);
+}
+
+.strength-hint {
+  grid-column: 1 / -1;
+  margin: 6px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  color: var(--color-lilac);
 }
 
 .skip-badge,

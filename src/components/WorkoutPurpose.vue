@@ -9,8 +9,12 @@ defineProps<{ type: WorkoutType; phase?: Phase }>()
 <template>
   <aside class="purpose" aria-label="Warum diese Einheit?">
     <p><strong>Warum?</strong> {{ workoutPurpose[type].why }}</p>
-    <p><strong>So fährst du's:</strong> {{ workoutPurpose[type].how }}</p>
-    <p v-if="phase" class="phase">{{ phasePurpose[phase] }}</p>
+    <p>
+      <strong>{{ type === 'STRENGTH' ? "So geht's:" : "So fährst du's:" }}</strong>
+      {{ workoutPurpose[type].how }}
+    </p>
+    <!-- bei Kraft steht der Hinweis zur Phase bei den Übungen -->
+    <p v-if="phase && type !== 'STRENGTH'" class="phase">{{ phasePurpose[phase] }}</p>
   </aside>
 </template>
 

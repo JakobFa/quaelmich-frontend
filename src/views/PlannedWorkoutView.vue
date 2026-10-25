@@ -19,12 +19,14 @@ import {
 } from '../api'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import StrengthSession from '../components/StrengthSession.vue'
 import IntervalAccuracyPanel from '../components/IntervalAccuracyPanel.vue'
 import WorkoutPicker from '../components/WorkoutPicker.vue'
 import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import { formatDuration } from '../plan/weeks'
+import { exercisesOf } from '../strength/exercises'
 import { heartRateZonesOf } from '../plan/heartRate'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
 import {
@@ -42,6 +44,8 @@ const route = useRoute()
 const planned = ref<PlannedWorkout | null>(null)
 const athlete = ref<Athlete | null>(null)
 const ftp = computed(() => athlete.value?.ftp ?? null)
+/** Krafttraining: keine Radeinheit – kein Player, keine .fit-Datei, keine Fahrt zum Zuordnen */
+const isStrength = computed(() => planned.value?.workout.type === 'STRENGTH')
 /** Im Puls-Modus Pulsbereiche, sonst null (= nach Watt) */
 const heartRate = computed(() =>
   isHeartRateMode(athlete.value) ? heartRateZonesOf(athlete.value) : null,
@@ -292,7 +296,7 @@ function formatDate(iso: string) {
       </div>
 
       <div
-        v-if="planned.options && !planned.completed && !planned.skipReason"
+        v-if="planned.options && !planned.completed && !planned.skipReason && !isStrength"
         class="panel customize"
       >
         <p class="customize-title">Heute lieber anders?</p>
@@ -345,10 +349,14 @@ function formatDate(iso: string) {
           <dd>{{ formatDuration(planned.workout.durationInMinutes) }}</dd>
         </div>
         <div>
-          <dt>TSS</dt>
+          <dt>{{ isStrength ? 'TSS (geschätzt)' : 'TSS' }}</dt>
           <dd>{{ planned.workout.tss }}</dd>
         </div>
-        <div v-if="heartRate">
+        <div v-if="isStrength">
+          <dt>Übungen</dt>
+          <dd>{{ exercisesOf(planned.workout.id).length }}</dd>
+        </div>
+        <div v-else-if="heartRate">
           <dt>Max-Puls</dt>
           <dd>{{ heartRate.maxHeartRate }} bpm</dd>
         </div>
@@ -358,10 +366,11 @@ function formatDate(iso: string) {
         </div>
       </dl>
 
-      <WorkoutProfile :steps="planned.workout.steps" class="profile" />
+      <StrengthSession v-if="isStrength" :workout-id="planned.workout.id" :phase="planned.phase" />
+      <WorkoutProfile v-else :steps="planned.workout.steps" class="profile" />
 
       <RouterLink
-        v-if="!planned.completed && !planned.skipReason"
+        v-if="!planned.completed && !planned.skipReason && !isStrength"
         :to="`/plan/${planned.id}/fahren`"
         class="button play-link"
       >
@@ -369,7 +378,7 @@ function formatDate(iso: string) {
       </RouterLink>
 
       <!-- Fahrt des Tages selbst zuordnen, wenn sie nicht automatisch erkannt wurde -->
-      <div v-if="!planned.actual && candidates.length > 0" class="panel assign">
+      <div v-if="!planned.actual && candidates.length > 0 && !isStrength" class="panel assign">
         <p class="assign-title">Welche Fahrt war dieses Training?</p>
         <p class="hint">
           <template v-if="candidates.length === 1">An diesem Tag gibt es eine Fahrt.</template>
@@ -528,7 +537,7 @@ function formatDate(iso: string) {
         <p v-if="saveError" class="error" role="alert">Speichern hat nicht geklappt.</p>
       </div>
 
-      <div class="download">
+      <div v-if="!isStrength" class="download">
         <button type="button" class="button" :disabled="downloading" @click="download">
           {{ downloading ? 'Lädt …' : '.fit herunterladen' }}
         </button>
@@ -543,7 +552,7 @@ function formatDate(iso: string) {
         </p>
       </div>
 
-      <div class="panel">
+      <div v-if="!isStrength" class="panel">
         <h3 class="panel-title">Abschnitte</h3>
         <WorkoutSteps :steps="planned.workout.steps" :ftp="ftp" :heart-rate="heartRate" />
       </div>

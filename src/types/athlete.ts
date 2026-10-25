@@ -91,6 +91,8 @@ export type Athlete = {
   level: Level | null
   event: TargetEvent
   availability: WeeklyAvailability
+  /** Krafttraining mit einplanen */
+  strengthTraining?: boolean
 }
 
 export function emptyAthlete(): Athlete {

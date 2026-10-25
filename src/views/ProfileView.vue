@@ -50,6 +50,26 @@ function editAvailability() {
   availabilityMessage.value = ''
 }
 
+/** Haken "Krafttraining einplanen": speichern und den Plan ab heute neu verteilen */
+const strengthSaving = ref(false)
+const strengthMessage = ref('')
+async function toggleStrength(enabled: boolean) {
+  if (!athlete.value) return
+  strengthSaving.value = true
+  strengthMessage.value = ''
+  try {
+    athlete.value = await saveMyAthlete({ ...athlete.value, strengthTraining: enabled })
+    await generatePlan()
+    strengthMessage.value = enabled
+      ? '✓ Krafttraining ist ab heute im Plan.'
+      : '✓ Krafttraining ist ab heute aus dem Plan.'
+  } catch {
+    strengthMessage.value = 'Speichern hat nicht geklappt. Bitte versuch es nochmal.'
+  } finally {
+    strengthSaving.value = false
+  }
+}
+
 async function saveAvailability() {
   if (!athlete.value || !availabilityDraft.value) return
   availabilitySaving.value = true
@@ -285,6 +305,23 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
             Verfügbarkeit ändern
           </button>
         </template>
+
+        <div class="strength-option">
+          <label class="strength-toggle">
+            <input
+              type="checkbox"
+              :checked="athlete.strengthTraining"
+              :disabled="strengthSaving"
+              @change="toggleStrength(($event.target as HTMLInputElement).checked)"
+            />
+            Krafttraining einplanen
+          </label>
+          <p class="hint">
+            In der Grundlagenphase zweimal pro Woche, danach einmal zum Erhalten, vor dem Event gar
+            nicht. Nie vor harten Radeinheiten – mit Übungen und Animationen, wie sie gehen.
+          </p>
+          <p v-if="strengthMessage" class="hint" role="status">{{ strengthMessage }}</p>
+        </div>
       </div>
     </template>
 
@@ -528,5 +565,25 @@ form .week li {
 
 .connections-intro strong {
   color: var(--color-text);
+}
+
+.strength-option {
+  margin-top: 16px;
+  padding-top: 12px;
+  border-top: 2px dashed var(--color-panel-raised);
+}
+
+.strength-toggle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.strength-toggle input {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--color-hot);
 }
 </style>
