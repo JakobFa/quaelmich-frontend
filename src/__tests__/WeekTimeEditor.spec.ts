@@ -15,7 +15,10 @@ const athlete = {
   },
 }
 
-function mountEditor() {
+function mountEditor(
+  start = '2026-10-19',
+  weekAvailability: Record<string, unknown> | null = null,
+) {
   const fetchMock = vi.fn<(url: string, init?: RequestInit) => Promise<unknown>>((url) =>
     Promise.resolve({
       ok: true,
@@ -25,7 +28,7 @@ function mountEditor() {
   )
   vi.stubGlobal('fetch', fetchMock)
   const wrapper = mount(WeekTimeEditor, {
-    props: { monday: '2026-10-19', today: '2026-10-21', override: null },
+    props: { start, today: '2026-10-21', weekAvailability: weekAvailability as never },
   })
   return { wrapper, fetchMock }
 }
@@ -61,5 +64,36 @@ describe('Zeit für eine Woche', () => {
       ),
     ).toBe(false)
     expect(wrapper.emitted('saved')).toHaveLength(1)
+  })
+
+  it('in der laufenden Woche: die nächsten 7 Tage ab heute, verteilt auf zwei Wochen', async () => {
+    // heute Mi 21.10. → Mi bis Di; diese Woche schon angepasst (Mo 1 h), die nächste nicht
+    const { wrapper, fetchMock } = mountEditor('2026-10-21', {
+      '2026-10-19': { ...athlete.availability, monday: 1 },
+    })
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Zeit für die nächsten 7 Tage')
+    const inputs = wrapper.findAll('input')
+    expect(inputs).toHaveLength(7)
+    expect(inputs.every((input) => input.attributes('disabled') === undefined)).toBe(true)
+
+    await inputs[5]!.setValue(2) // Mo 26.10. (nächste Woche)
+    await inputs[3]!.setValue(0) // Sa 24.10. (diese Woche)
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const weekCalls = fetchMock.mock.calls.filter(([url]) => url.includes('/me/plan/weeks/'))
+    expect(weekCalls.map(([url]) => url.match(/weeks\/([\d-]+)/)![1])).toEqual([
+      '2026-10-19',
+      '2026-10-26',
+    ])
+    const thisWeek = JSON.parse(String(weekCalls[0]![1]!.body))
+    const nextWeek = JSON.parse(String(weekCalls[1]![1]!.body))
+    expect(thisWeek.monday).toBe(1) // vergangen, bleibt wie angepasst
+    expect(thisWeek.saturday).toBe(0)
+    expect(nextWeek.monday).toBe(2)
+    expect(nextWeek.wednesday).toBe(0) // gehört nicht mehr zu den 7 Tagen → normal
+    expect(wrapper.emitted('saved')![0]![1]).toContain('Die nächsten 7 Tage')
   })
 })
