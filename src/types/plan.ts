@@ -179,8 +179,12 @@ export type IntervalAccuracy = {
   onTarget: number
   uncertain: boolean
   tip: string | null
+  /** Watt bzw. Puls der ganzen Fahrt, ein Wert je 10 s (null = Stillstand) */
+  trace?: (number | null)[]
   blocks: {
     number: number
+    /** wo das Intervall in der Fahrt gefunden wurde (Sekunden seit Start) */
+    startSecond: number
     durationSeconds: number
     targetLow: number
     /** null = Vollgas, nach oben offen */
