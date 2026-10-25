@@ -59,6 +59,12 @@ async function toggleStrength(enabled: boolean) {
   strengthMessage.value = ''
   try {
     athlete.value = await saveMyAthlete({ ...athlete.value, strengthTraining: enabled })
+    // ein Server ohne Krafttraining verwirft den Wert stillschweigend – dann nicht "gespeichert" melden
+    if ((athlete.value.strengthTraining ?? false) !== enabled) {
+      strengthMessage.value =
+        'Das kann der Server gerade noch nicht speichern. Versuch es gleich nochmal.'
+      return
+    }
     await generatePlan()
     strengthMessage.value = enabled
       ? '✓ Krafttraining ist ab heute im Plan.'
