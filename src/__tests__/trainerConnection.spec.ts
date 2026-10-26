@@ -89,8 +89,10 @@ const smartTrainer = () =>
 
 function setUp(devices: ReturnType<typeof fakeDevice>[]) {
   const queue = [...devices]
-  const api: Bluetooth = { requestDevice: vi.fn(async () => queue.shift()!.device) }
-  const sleep = vi.fn(async () => {})
+  const api: Bluetooth = {
+    requestDevice: vi.fn<Bluetooth['requestDevice']>(async () => queue.shift()!.device),
+  }
+  const sleep = vi.fn<(ms: number) => Promise<void>>(async () => {})
   return { connection: createTrainerConnection(() => api, sleep), api, sleep }
 }
 
