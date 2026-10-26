@@ -12,6 +12,7 @@ import {
   getMyAthlete,
   getPlannedWorkout,
   replacePlannedWorkout,
+  shufflePlannedWorkout,
   resetPlannedWorkout,
   skipPlannedWorkout,
   undoSkipPlannedWorkout,
@@ -198,6 +199,24 @@ async function replace(workoutId: number, durationMinutes: number | undefined) {
   }
 }
 
+/** "Überrasch mich": ein zufälliges anderes Workout, das in die Zeit des Tages passt */
+async function shuffle() {
+  if (!planned.value) return
+  adjusting.value = true
+  adjustError.value = ''
+  try {
+    planned.value = await shufflePlannedWorkout(planned.value.id)
+    picking.value = false
+  } catch (error) {
+    adjustError.value =
+      error instanceof ApiError && error.status === 409
+        ? 'Für die Zeit an diesem Tag gibt es gerade nichts anderes.'
+        : 'Das hat nicht geklappt. Bitte versuch es nochmal.'
+  } finally {
+    adjusting.value = false
+  }
+}
+
 async function confirm(matchesPlan: boolean) {
   if (!planned.value) return
   saving.value = true
@@ -308,14 +327,29 @@ function formatDate(iso: string) {
             {{ button.label }}
           </button>
         </div>
-        <button
-          type="button"
-          class="button button-ghost pick-toggle"
-          :aria-expanded="picking"
-          @click="picking = !picking"
-        >
-          {{ picking ? '× Auswahl schließen' : '⇄ Ganz anderes Training wählen' }}
-        </button>
+        <div class="pick-buttons">
+          <button
+            type="button"
+            class="button button-ghost pick-toggle"
+            :aria-expanded="picking"
+            @click="picking = !picking"
+          >
+            {{ picking ? '× Auswahl schließen' : '⇄ Ganz anderes Training wählen' }}
+          </button>
+          <button
+            type="button"
+            class="button button-ghost pick-toggle"
+            :disabled="adjusting"
+            title="Zufällig ein anderes Workout, das in deine Zeit an diesem Tag passt"
+            @click="shuffle"
+          >
+            🎲 Überrasch mich
+          </button>
+        </div>
+        <p class="hint shuffle-hint">
+          Der Zufall nimmt deine verfügbare Zeit an diesem Tag und bleibt ungefähr so hart wie
+          geplant.
+        </p>
         <WorkoutPicker
           v-if="picking"
           :current-workout-id="planned.workout.id"
@@ -793,11 +827,23 @@ function formatDate(iso: string) {
   margin-top: 12px;
 }
 
+.pick-buttons {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 8px;
+  margin-top: 8px;
+}
+
 .pick-toggle {
   width: 100%;
-  margin-top: 8px;
   padding: 10px 6px;
   font-size: 0.9rem;
+}
+
+.shuffle-hint {
+  margin: 6px 0 0;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
 }
 
 /* ---------- Angepasst ---------- */

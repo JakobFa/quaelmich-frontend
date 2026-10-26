@@ -2,9 +2,16 @@
 import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 
-import { getMyAthlete, getPlannedWorkout, getWorkout, updateProgress } from '../api'
+import {
+  downloadRecordingFit,
+  getMyAthlete,
+  getPlannedWorkout,
+  getWorkout,
+  updateProgress,
+} from '../api'
 import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import TrainerPanel from '../components/TrainerPanel.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { formatRange, heartRateZonesOf, targetForStep } from '../plan/heartRate'
 import {
@@ -15,6 +22,8 @@ import {
   previousStepStart,
 } from '../plan/player'
 import { powerZoneFor } from '../plan/zones'
+import { trainer } from '../trainer/connection'
+import { RideRecorder, summarize, type Recording, type RideSummary } from '../trainer/recording'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
 import type { StepKind, Workout, WorkoutStep } from '../types/workout'
 
@@ -67,6 +76,10 @@ function tick() {
     elapsedAtStart + (performance.now() - startedAt) / 1000,
     position.value.totalSeconds,
   )
+  if (deviceConnected.value) {
+    recorder.record(Date.now(), trainer.values())
+    recordedSeconds.value = recorder.samples.length
+  }
 }
 
 function start() {
@@ -77,12 +90,14 @@ function start() {
   running.value = true
   timer = setInterval(tick, 200)
   keepScreenOn()
+  trainer.resumeTrainer()
 }
 
 function pause() {
   running.value = false
   clearInterval(timer)
   releaseScreen()
+  trainer.pauseTrainer()
   remember()
 }
 
@@ -103,6 +118,8 @@ function jumpTo(seconds: number) {
 
 function restart() {
   pause()
+  recorder = new RideRecorder()
+  recordedSeconds.value = 0
   jumpTo(0)
 }
 
@@ -122,9 +139,10 @@ function targetOf(step: WorkoutStep, percent: number) {
   }
   if (ftp.value) {
     return {
-      main: String(Math.round((ftp.value * percent) / 100)),
+      main: String(wattsFor(percent)),
       unit: 'W',
-      sub: `${percent} % FTP`,
+      sub:
+        `${percent} % FTP` + (intensity.value !== 100 ? ` · Intensität ${intensity.value} %` : ''),
     }
   }
   return { main: String(percent), unit: '% FTP', sub: 'Ohne FTP im Profil keine Watt' }
@@ -142,6 +160,91 @@ function describeNext(step: WorkoutStep) {
   const goal = targetOf(step, step.powerStartPercent)
   const detail = heartRate.value ? `${goal.main} ${goal.unit}`.trim() : percent
   return `${kindLabels[step.kind]} · ${formatClock(step.durationSeconds)} · ${detail}`
+}
+
+// ---------- Trainer: ERG und Live-Werte ----------
+
+const live = trainer.state
+const deviceConnected = computed(
+  () => live.trainerStatus !== 'none' || live.heartRateStatus !== 'none',
+)
+/** Workouts, die man nicht in ERG fährt: beim FTP-Test und bei Sprints gibt man selbst alles */
+const FREE_RIDE_TYPES = ['FTP_TEST', 'SPRINT']
+const ergOn = ref(true)
+/** alle Ziele etwas leichter oder härter, wenn die Beine heute nicht (oder besonders gut) wollen */
+const intensity = ref(100)
+const canErg = computed(() => live.trainerKind === 'SMART' && ftp.value !== null)
+
+function wattsFor(percent: number) {
+  return Math.round((ftp.value! * percent * intensity.value) / 10000)
+}
+
+const ergWatts = computed(() => (current.value && ftp.value ? wattsFor(percentNow.value) : null))
+
+watch(
+  [ergWatts, ergOn, canErg, () => live.trainerStatus],
+  () => {
+    if (canErg.value) trainer.setTarget(ergOn.value ? ergWatts.value : null)
+  },
+  { immediate: true },
+)
+
+function changeIntensity(step: number) {
+  intensity.value = Math.min(150, Math.max(50, intensity.value + step))
+}
+
+/** Ist im Vergleich zum Ziel: knapp daneben ist ok (±5 %) */
+const powerVerdict = computed(() => {
+  if (live.power === null || heartRate.value || !ftp.value || !current.value) return ''
+  const goal = ergWatts.value!
+  if (live.power < goal * 0.95) return 'low'
+  if (live.power > goal * 1.05) return 'high'
+  return 'ok'
+})
+
+// ---------- Aufzeichnen ----------
+
+const recordingKey = `quaelmich-recording-${fromPlan ? 'plan' : 'workout'}-${id}`
+let recorder = new RideRecorder()
+const recordedSeconds = ref(0)
+const summary = ref<RideSummary | null>(null)
+const saving = ref(false)
+const saveError = ref(false)
+const saved = ref(false)
+
+function rememberRecording() {
+  try {
+    const recording = recorder.toJSON()
+    if (recording) localStorage.setItem(recordingKey, JSON.stringify(recording))
+    else localStorage.removeItem(recordingKey)
+  } catch {
+    // ohne Speicher geht es auch – dann ist die Aufzeichnung nach dem Neuladen weg
+  }
+}
+
+function restoreRecording() {
+  try {
+    const saved = localStorage.getItem(recordingKey)
+    recorder = new RideRecorder(saved ? (JSON.parse(saved) as Recording) : null)
+  } catch {
+    recorder = new RideRecorder()
+  }
+  recordedSeconds.value = recorder.samples.length
+}
+
+async function saveRecording() {
+  const recording = recorder.toJSON()
+  if (!recording || !workout.value) return
+  saving.value = true
+  saveError.value = false
+  try {
+    await downloadRecordingFit(recording, workout.value.title)
+    saved.value = true
+  } catch {
+    saveError.value = true
+  } finally {
+    saving.value = false
+  }
 }
 
 // ---------- Töne: 3-2-1 vor jedem Wechsel ----------
@@ -238,12 +341,18 @@ function remember() {
   } catch {
     // ohne Speicher geht es auch
   }
+  rememberRecording()
 }
 
 function restore() {
   try {
     const saved = Number(localStorage.getItem(storageKey))
-    if (saved > 0 && saved < position.value.totalSeconds) elapsed.value = saved
+    if (saved > 0 && saved < position.value.totalSeconds) {
+      elapsed.value = saved
+      restoreRecording()
+    } else {
+      localStorage.removeItem(recordingKey) // alte Aufzeichnung gehört zu einer früheren Fahrt
+    }
   } catch {
     // ohne Speicher geht es auch
   }
@@ -260,6 +369,7 @@ const markError = ref(false)
 function finish() {
   pause()
   finished.value = true
+  summary.value = recorder.hasData ? summarize(recorder.samples) : null
   setTimeout(() => beep(1320, 0.6), 450)
 }
 
@@ -286,6 +396,7 @@ function onKey(event: KeyboardEvent) {
 onMounted(async () => {
   try {
     workout.value = fromPlan ? (await getPlannedWorkout(id)).workout : await getWorkout(id)
+    ergOn.value = !FREE_RIDE_TYPES.includes(workout.value.type)
     if (auth.isLoggedIn.value) athlete.value = await getMyAthlete()
     restore()
   } catch {
@@ -300,6 +411,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   if (running.value) pause()
+  trainer.pauseTrainer() // Verbindung bleibt, aber der Trainer hält kein Ziel mehr fest
   clearInterval(rememberTimer)
   document.removeEventListener('visibilitychange', onVisibility)
   window.removeEventListener('keydown', onKey)
@@ -322,7 +434,20 @@ onBeforeUnmount(() => {
 
       <div v-if="finished" class="panel done" role="status">
         <p class="done-title">Geschafft.</p>
-        <p>{{ formatClock(position.totalSeconds) }} gefahren.</p>
+        <p>{{ formatClock(summary ? summary.seconds : elapsed) }} gefahren.</p>
+        <template v-if="summary">
+          <p class="ride-summary">
+            <span v-if="summary.avgPower !== null">Ø {{ summary.avgPower }} W</span>
+            <span v-if="summary.normalizedPower !== null">NP {{ summary.normalizedPower }} W</span>
+            <span v-if="summary.avgCadence !== null">Ø {{ summary.avgCadence }} rpm</span>
+            <span v-if="summary.avgHeartRate !== null">Ø {{ summary.avgHeartRate }} bpm</span>
+          </p>
+          <p v-if="auth.isLoggedIn.value" class="save-hint">
+            Lade die Datei bei Strava oder intervals.icu hoch – dann ordnet quaelmich die Fahrt wie
+            jede andere zu.
+          </p>
+          <p v-else class="save-hint">Zum Speichern der Fahrt musst du eingeloggt sein.</p>
+        </template>
         <div class="done-actions">
           <button
             v-if="fromPlan"
@@ -333,9 +458,20 @@ onBeforeUnmount(() => {
           >
             Als erledigt abhaken
           </button>
+          <button
+            v-if="summary && auth.isLoggedIn.value"
+            type="button"
+            class="button"
+            :class="{ 'button-ghost': fromPlan }"
+            :disabled="saving"
+            @click="saveRecording"
+          >
+            {{ saved ? '✓ Fahrt gespeichert' : 'Fahrt als .fit speichern' }}
+          </button>
           <RouterLink :to="backLink" class="button button-ghost">Zurück</RouterLink>
         </div>
         <p v-if="markError" class="error" role="alert">Abhaken hat nicht geklappt.</p>
+        <p v-if="saveError" class="error" role="alert">Speichern hat nicht geklappt.</p>
       </div>
 
       <div v-else class="now">
@@ -351,6 +487,13 @@ onBeforeUnmount(() => {
             {{ target.main }}<span class="unit">{{ target.unit }}</span>
           </p>
           <p v-if="target" class="target-sub">{{ target.sub }}</p>
+          <p v-if="deviceConnected" class="live" aria-live="off">
+            <span class="live-power" :class="powerVerdict">
+              {{ live.power ?? '–' }}<small>W</small>
+            </span>
+            <span>{{ live.cadence ?? '–' }}<small>rpm</small></span>
+            <span>{{ live.heartRate ?? '–' }}<small>bpm</small></span>
+          </p>
           <p class="countdown" aria-live="off">{{ formatClock(position.stepRemaining) }}</p>
           <div class="step-bar" aria-hidden="true">
             <span :style="{ width: `${stepPercent}%` }"></span>
@@ -397,6 +540,30 @@ onBeforeUnmount(() => {
         </button>
       </div>
 
+      <TrainerPanel v-if="!finished" />
+
+      <div v-if="!finished && (canErg || (deviceConnected && ftp))" class="erg">
+        <button
+          v-if="canErg"
+          type="button"
+          class="link"
+          :aria-pressed="ergOn"
+          @click="ergOn = !ergOn"
+        >
+          {{ ergOn ? '⚡ ERG an' : '⚡ ERG aus – frei fahren' }}
+        </button>
+        <span class="intensity">
+          Intensität
+          <button type="button" class="step" aria-label="Leichter" @click="changeIntensity(-1)">
+            −
+          </button>
+          <strong>{{ intensity }} %</strong>
+          <button type="button" class="step" aria-label="Härter" @click="changeIntensity(1)">
+            +
+          </button>
+        </span>
+      </div>
+
       <div v-if="!finished" class="extras">
         <button type="button" class="link" :aria-pressed="soundOn" @click="soundOn = !soundOn">
           {{ soundOn ? '🔊 Ton an' : '🔇 Ton aus' }}
@@ -406,6 +573,9 @@ onBeforeUnmount(() => {
         </button>
         <button v-if="elapsed > 0 && !running" type="button" class="link" @click="restart">
           ↺ Von vorn
+        </button>
+        <button v-if="recordedSeconds > 0 && !running" type="button" class="link" @click="finish">
+          ■ Beenden &amp; speichern
         </button>
       </div>
       <p v-if="!finished" class="hint">
@@ -642,5 +812,81 @@ onBeforeUnmount(() => {
 .error {
   margin: 12px 0 0;
   color: var(--color-hot);
+}
+
+.live {
+  display: flex;
+  justify-content: center;
+  gap: 20px;
+  margin: 12px 0 0;
+  font-family: var(--font-mono);
+  font-size: 1.4rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.live small {
+  margin-left: 2px;
+  font-size: 0.55em;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+
+.live-power.ok {
+  color: #35b86b;
+}
+
+.live-power.low,
+.live-power.high {
+  color: #f4c430;
+}
+
+.erg {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 20px;
+  margin-top: 12px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+}
+
+.intensity {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--color-text-muted);
+}
+
+.intensity strong {
+  min-width: 3.5em;
+  text-align: center;
+  color: var(--color-text);
+}
+
+.step {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--color-panel-raised);
+  background: none;
+  color: var(--color-text);
+  font: inherit;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.ride-summary {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 16px;
+  margin-top: 8px !important;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.save-hint {
+  margin-top: 8px !important;
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
 }
 </style>
