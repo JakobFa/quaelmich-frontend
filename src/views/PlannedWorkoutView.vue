@@ -10,6 +10,7 @@ import {
   getCandidateRides,
   downloadPlannedWorkoutFit,
   getMyAthlete,
+  getRampTest,
   getPlannedWorkout,
   replacePlannedWorkout,
   shufflePlannedWorkout,
@@ -22,6 +23,8 @@ import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import StrengthSession from '../components/StrengthSession.vue'
 import IntervalAccuracyPanel from '../components/IntervalAccuracyPanel.vue'
+import RampTestResultPanel from '../components/RampTestResult.vue'
+import type { RampTestResult } from '../plan/rampTest'
 import WorkoutPicker from '../components/WorkoutPicker.vue'
 import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
@@ -87,11 +90,24 @@ const ratingHint = computed(() => {
   return `${rating} / 10 – ${ratingLabels[key]}`
 })
 
+/** Rampentest gefahren: Ergebnis aus der zugeordneten Fahrt */
+const rampTest = ref<RampTestResult | null>(null)
+
+async function loadRampTest() {
+  if (planned.value?.workout.type !== 'FTP_TEST' || !planned.value.actual) return
+  try {
+    rampTest.value = await getRampTest(planned.value.id)
+  } catch {
+    rampTest.value = null // dann eben ohne Ergebnis
+  }
+}
+
 onMounted(async () => {
   try {
     planned.value = await getPlannedWorkout(Number(route.params.id))
     athlete.value = await getMyAthlete()
     loadCandidates()
+    loadRampTest()
   } catch {
     failed.value = true
   } finally {
@@ -494,8 +510,22 @@ function formatDate(iso: string) {
           <template v-else>Übernommen aus intervals.icu.</template>
         </p>
 
+        <RampTestResultPanel
+          v-if="rampTest"
+          :result="rampTest"
+          :athlete="athlete"
+          @adopted="athlete = $event"
+        />
+        <p v-else-if="planned.workout.type === 'FTP_TEST'" class="source">
+          In dieser Fahrt ist kein Rampentest zu erkennen (oder es fehlen Wattdaten) – dann gibt es
+          keine neue FTP.
+        </p>
+
         <IntervalAccuracyPanel
-          v-if="planned.workout.steps.some((step) => step.kind === 'INTERVAL')"
+          v-if="
+            planned.workout.type !== 'FTP_TEST' &&
+            planned.workout.steps.some((step) => step.kind === 'INTERVAL')
+          "
           :key="planned.actual.durationMinutes ?? 0"
           :planned-id="planned.id"
         />

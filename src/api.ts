@@ -1,5 +1,6 @@
 import { auth, endSession, startSession } from './auth'
 import { setPowerZoneStarts } from './plan/zones'
+import type { RampTestResult } from './plan/rampTest'
 import type { Recording } from './trainer/recording'
 import type { Athlete, WeeklyAvailability } from './types/athlete'
 import type {
@@ -312,6 +313,12 @@ export function resetPlannedWorkout(id: number) {
 export async function getIntervalAccuracy(id: number): Promise<IntervalAccuracy | null> {
   const response = await send(`/planned-workouts/${id}/accuracy`)
   return response.status === 204 ? null : ((await response.json()) as IntervalAccuracy)
+}
+
+/** Ergebnis des Rampentests aus der zugeordneten Fahrt; null, wenn es keiner war oder Watt fehlen */
+export async function getRampTest(id: number): Promise<RampTestResult | null> {
+  const response = await send(`/planned-workouts/${id}/ramp-test`)
+  return response.status === 204 ? null : ((await response.json()) as RampTestResult)
 }
 
 /** Fahrten des Tages, die man diesem Workout selbst zuordnen kann */

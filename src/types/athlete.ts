@@ -117,6 +117,8 @@ export type Athlete = {
   /** gesetzt von quaelmich: geschätzte FTP aus einer Fahrt, die mit der eingetragenen FTP nicht möglich ist */
   suggestedFtp?: number | null
   suggestedFtpNote?: string | null
+  /** Vorschlag aus einem Rampentest – darf auch niedriger sein als die eingetragene FTP */
+  suggestedFtpFromTest?: boolean | null
   dismissedSuggestedFtp?: number | null
   level: Level | null
   /** ohne Angabe: auf ein Event hin */
