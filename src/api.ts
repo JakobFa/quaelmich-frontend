@@ -298,6 +298,11 @@ export function replacePlannedWorkout(id: number, workoutId: number, durationMin
   })
 }
 
+/** "Überrasch mich": zufälliges anderes Workout, passend zur Zeit des Tages (409 = nichts Passendes) */
+export function shufflePlannedWorkout(id: number) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/random`, { method: 'PUT' })
+}
+
 /** Zurück zum ursprünglich geplanten Workout */
 export function resetPlannedWorkout(id: number) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, { method: 'DELETE' })
