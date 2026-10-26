@@ -11,7 +11,9 @@ import {
 } from '../api'
 import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
+import RampTestResultPanel from '../components/RampTestResult.vue'
 import TrainerPanel from '../components/TrainerPanel.vue'
+import { evaluateRampTest, type RampTestResult } from '../plan/rampTest'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { formatRange, heartRateZonesOf, targetForStep } from '../plan/heartRate'
 import {
@@ -168,8 +170,11 @@ const live = trainer.state
 const deviceConnected = computed(
   () => live.trainerStatus !== 'none' || live.heartRateStatus !== 'none',
 )
-/** Workouts, die man nicht in ERG fährt: beim FTP-Test und bei Sprints gibt man selbst alles */
-const FREE_RIDE_TYPES = ['FTP_TEST', 'SPRINT']
+/** Workouts, die man nicht in ERG fährt: bei Sprints gibt man selbst alles (den Rampentest schon – im ERG) */
+const FREE_RIDE_TYPES = ['SPRINT']
+const isRampTest = computed(() => workout.value?.type === 'FTP_TEST')
+/** Ergebnis des Rampentests aus der Aufzeichnung; null = keine Watt oder keine Rampe erkannt */
+const rampResult = ref<RampTestResult | null>(null)
 const ergOn = ref(true)
 /** alle Ziele etwas leichter oder härter, wenn die Beine heute nicht (oder besonders gut) wollen */
 const intensity = ref(100)
@@ -370,6 +375,13 @@ function finish() {
   pause()
   finished.value = true
   summary.value = recorder.hasData ? summarize(recorder.samples) : null
+  if (isRampTest.value) {
+    rampResult.value = evaluateRampTest(
+      recorder.samples
+        .map((sample) => sample.power)
+        .filter((watts): watts is number => watts !== null),
+    )
+  }
   setTimeout(() => beep(1320, 0.6), 450)
 }
 
@@ -435,6 +447,19 @@ onBeforeUnmount(() => {
       <div v-if="finished" class="panel done" role="status">
         <p class="done-title">Geschafft.</p>
         <p>{{ formatClock(summary ? summary.seconds : elapsed) }} gefahren.</p>
+        <RampTestResultPanel
+          v-if="rampResult"
+          :result="rampResult"
+          :athlete="athlete"
+          @adopted="athlete = $event"
+        />
+        <p v-else-if="isRampTest" class="save-hint">
+          {{
+            summary?.avgPower != null
+              ? 'In der Aufzeichnung ist keine Rampe bis zum Ende zu erkennen – dann gibt es keine neue FTP.'
+              : 'Ohne Watt vom Trainer kein Ergebnis. Lädst du die Fahrt hoch (Strava oder intervals.icu), rechnet quaelmich die FTP daraus aus.'
+          }}
+        </p>
         <template v-if="summary">
           <p class="ride-summary">
             <span v-if="summary.avgPower !== null">Ø {{ summary.avgPower }} W</span>
@@ -539,6 +564,15 @@ onBeforeUnmount(() => {
           ⏭
         </button>
       </div>
+
+      <button
+        v-if="!finished && isRampTest && elapsed > 0"
+        type="button"
+        class="button stop-test"
+        @click="finish"
+      >
+        ■ Geht nicht mehr – Test beenden
+      </button>
 
       <TrainerPanel v-if="!finished" />
 
@@ -812,6 +846,14 @@ onBeforeUnmount(() => {
 .error {
   margin: 12px 0 0;
   color: var(--color-hot);
+}
+
+.stop-test {
+  width: 100%;
+  margin-top: 12px;
+  padding: 14px 8px;
+  font-size: 1.1rem;
+  background: var(--color-hot);
 }
 
 .live {
