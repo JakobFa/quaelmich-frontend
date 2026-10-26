@@ -1,5 +1,6 @@
 import { auth, endSession, startSession } from './auth'
 import { setPowerZoneStarts } from './plan/zones'
+import type { Recording } from './trainer/recording'
 import type { Athlete, WeeklyAvailability } from './types/athlete'
 import type {
   PlannedWorkout,
@@ -349,9 +350,17 @@ export function downloadPlannedWorkoutFit(id: number) {
   return downloadFit(`/planned-workouts/${id}/fit`)
 }
 
+/** Mit dem Trainer aufgezeichnete Fahrt als .fit-Aktivität (zum Hochladen bei Strava/intervals.icu) */
+export function downloadRecordingFit(recording: Recording, title: string) {
+  return downloadFit('/me/recordings/fit', {
+    method: 'POST',
+    body: JSON.stringify({ ...recording, title }),
+  })
+}
+
 /** Datei vom Backend herunterladen (Name aus Content-Disposition) */
-async function downloadFit(path: string) {
-  const response = await send(path)
+async function downloadFit(path: string, options: RequestInit = {}) {
+  const response = await send(path, options)
   const fileName =
     /filename="([^"]+)"/.exec(response.headers.get('Content-Disposition') ?? '')?.[1] ?? 'download'
   const url = URL.createObjectURL(await response.blob())
