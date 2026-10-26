@@ -14,6 +14,8 @@ const variableNames: Record<number, { name: string; minMinutes: number }> = {
   2: { name: 'Grundlage', minMinutes: 60 },
   3: { name: 'Lange Ausfahrt', minMinutes: 90 },
   27: { name: 'Lange Ausfahrt mit Tempo', minMinutes: 90 },
+  29: { name: 'Grundlage mit Antritten', minMinutes: 60 },
+  30: { name: 'Grundlage mit Tempo-Einlagen', minMinutes: 60 },
 }
 const MAX_MINUTES = 360
 

@@ -12,11 +12,16 @@ const emit = defineEmits<{ athlete: [athlete: Athlete]; plan: [plan: TrainingPla
 const busy = ref(false)
 const failed = ref(false)
 
+/** aus einem Rampentest: dann auch nach unten (ein Test ist ein Test) */
+const fromTest = computed(() => !!props.athlete.suggestedFtpFromTest)
+
 const visible = computed(
   () =>
     !!props.athlete.suggestedFtp &&
     !!props.athlete.ftp &&
-    props.athlete.suggestedFtp > props.athlete.ftp &&
+    (fromTest.value
+      ? props.athlete.suggestedFtp !== props.athlete.ftp
+      : props.athlete.suggestedFtp > props.athlete.ftp) &&
     props.athlete.suggestedFtp !== props.athlete.dismissedSuggestedFtp,
 )
 
@@ -64,13 +69,22 @@ async function dismiss() {
 
 <template>
   <div v-if="visible" class="panel ftp-hint" role="status">
-    <p class="title">💡 Deine FTP ist wahrscheinlich zu niedrig</p>
-    <p>
-      {{ athlete.suggestedFtpNote }} Mit {{ athlete.ftp }} W FTP ist das über diese Dauer eigentlich
-      nicht möglich – geschätzt liegt sie bei mindestens
-      <strong>{{ athlete.suggestedFtp }} W</strong>.
-    </p>
-    <p class="hint">
+    <template v-if="fromTest">
+      <p class="title">🎯 Neue FTP aus deinem Rampentest</p>
+      <p>
+        {{ athlete.suggestedFtpNote }} Bisher sind {{ athlete.ftp }} W eingetragen – soll quaelmich
+        ab jetzt mit <strong>{{ athlete.suggestedFtp }} W</strong> rechnen?
+      </p>
+    </template>
+    <template v-else>
+      <p class="title">💡 Deine FTP ist wahrscheinlich zu niedrig</p>
+      <p>
+        {{ athlete.suggestedFtpNote }} Mit {{ athlete.ftp }} W FTP ist das über diese Dauer
+        eigentlich nicht möglich – geschätzt liegt sie bei mindestens
+        <strong>{{ athlete.suggestedFtp }} W</strong>.
+      </p>
+    </template>
+    <p v-if="!fromTest" class="hint">
       <template v-if="nextTest">
         Am sichersten: der FTP-Test am {{ formatDay(nextTest.date) }} in deinem Plan.
       </template>
@@ -82,10 +96,14 @@ async function dismiss() {
       <button type="button" class="button" :disabled="busy" @click="adopt">
         FTP auf {{ athlete.suggestedFtp }} W setzen
       </button>
-      <RouterLink v-if="nextTest" :to="`/plan/${nextTest.id}`" class="button button-ghost">
-        Zum Test
-      </RouterLink>
-      <RouterLink v-else to="/workouts/11" class="button button-ghost">FTP-Test ansehen</RouterLink>
+      <template v-if="!fromTest">
+        <RouterLink v-if="nextTest" :to="`/plan/${nextTest.id}`" class="button button-ghost">
+          Zum Test
+        </RouterLink>
+        <RouterLink v-else to="/workouts/11" class="button button-ghost"
+          >Rampentest ansehen</RouterLink
+        >
+      </template>
       <button type="button" class="link" :disabled="busy" @click="dismiss">Ausblenden</button>
     </div>
     <p v-if="failed" class="error" role="alert">
