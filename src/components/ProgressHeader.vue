@@ -47,15 +47,28 @@ const loadLabels = {
     title: '▼ Etwas wenig',
     hint: 'Kein Drama – nicht nachholen, einfach normal weitermachen.',
   },
-  ON_TRACK: { title: '✓ Auf Kurs', hint: 'Belastung passt zum Plan.' },
-  A_BIT_MUCH: { title: '▲ Etwas viel', hint: 'Achte auf Schlaf und lockere Tage.' },
+  ON_TRACK: { title: '✓ Auf Kurs', hint: 'Belastung passt gut.' },
+  A_BIT_MUCH: {
+    title: '▲ Etwas viel',
+    hint: 'Mehr als zuletzt gewohnt – achte auf Schlaf und lockere Tage.',
+  },
   TOO_MUCH: {
     title: '▲▲ Zu viel',
-    hint: 'Gönn dir Erholung – quaelmich macht das nächste harte Training schon leichter.',
+    hint: 'Deutlich mehr als sonst – gönn dir Erholung. quaelmich macht das nächste harte Training schon leichter.',
   },
   RESTING: { title: 'Ruhephase', hint: 'Gerade steht nichts an.' },
 } as const
 const load = computed(() => props.progress.load ?? null)
+
+/** "Zu wenig" vergleicht mit dem Plan, "zu viel" mit dem Schnitt der letzten Wochen */
+const loadReference = computed(() => {
+  const current = load.value
+  if (!current) return null
+  const vsChronic = current.status === 'A_BIT_MUCH' || current.status === 'TOO_MUCH'
+  return vsChronic
+    ? { value: current.chronicTss, label: 'Schnitt' }
+    : { value: current.plannedTss, label: 'geplant' }
+})
 
 /** Legende: die vorkommenden Phasen in Reihenfolge */
 const legend = computed(() => [...new Set(segments.value.map((segment) => segment.phase))])
@@ -118,7 +131,9 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
         <dt>Letzte 7 Tage</dt>
         <dd>
           {{ loadLabels[load.status].title }}
-          <small>{{ load.actualTss }} / {{ load.plannedTss }} TSS</small>
+          <small v-if="loadReference"
+            >{{ load.actualTss }} / {{ loadReference.value }} TSS {{ loadReference.label }}</small
+          >
         </dd>
       </div>
       <div v-if="progress.streakWeeks > 0" class="streak">
