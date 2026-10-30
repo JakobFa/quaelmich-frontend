@@ -14,6 +14,8 @@ const result: SteadyHold = {
   percentAbove: 6,
   hold: 'STEADY',
   tip: 'Schön gleichmäßig im Zielbereich – genau so sollen lockere Tage aussehen.',
+  // 90 Minuten, ein Punkt je 10 s, mit einer Ampelpause in der Mitte
+  trace: Array.from({ length: 540 }, (_, i) => (i >= 300 && i < 306 ? null : 165 + (i % 5) * 4)),
 }
 
 vi.mock('../api', () => ({
@@ -36,6 +38,15 @@ describe('Einschätzung lockerer Fahrten', () => {
     expect(text).toContain('Ziel 150–190 W')
     expect(text).toContain('86 % im Zielbereich')
     expect(text).toContain('gleichmäßig')
+  })
+
+  it('legt die Kurve über den Zielbereich, Stillstand unterbricht die Linie', async () => {
+    const wrapper = await mountWith(result)
+
+    expect(wrapper.find('svg rect').exists()).toBe(true)
+    expect(wrapper.findAll('polyline')).toHaveLength(2)
+    expect(wrapper.find('figcaption').text()).toContain('Zielbereich')
+    expect(wrapper.find('svg').attributes('aria-label')).toContain('150 bis 190 W')
   })
 
   it('nennt den Puls, wenn nach Puls gemessen wurde', async () => {
