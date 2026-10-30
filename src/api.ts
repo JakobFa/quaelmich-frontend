@@ -228,6 +228,8 @@ export type Progress = {
   load?: {
     plannedTss: number
     actualTss: number
+    /** Wochenschnitt der letzten ~4 Wochen – daran wird "zu viel" gemessen */
+    chronicTss: number
     status: 'TOO_LITTLE' | 'ON_TRACK' | 'A_BIT_MUCH' | 'TOO_MUCH' | 'RESTING'
   } | null
 }
