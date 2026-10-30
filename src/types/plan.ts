@@ -175,6 +175,27 @@ export const accuracyVerdictLabels: Record<AccuracyVerdict, string> = {
   EASY: '▼▼ zu leicht',
 }
 
+/** Einschätzung einer lockeren Fahrt: wie gut wurde der Zielbereich gehalten? */
+export type SteadyHold = {
+  basis: 'POWER' | 'HEART_RATE'
+  targetLow: number
+  targetHigh: number
+  average: number
+  percentBelow: number
+  percentInZone: number
+  percentAbove: number
+  hold: 'STEADY' | 'A_BIT_HARD' | 'TOO_HARD' | 'VERY_EASY'
+  tip: string
+  trace?: (number | null)[]
+}
+
+export const steadyHoldLabels: Record<SteadyHold['hold'], string> = {
+  STEADY: '✓ Locker gehalten',
+  A_BIT_HARD: '▲ Öfter zu hart',
+  TOO_HARD: '▲▲ Zu hart gefahren',
+  VERY_EASY: '▼ Sehr entspannt',
+}
+
 export type IntervalAccuracy = {
   basis: 'POWER' | 'HEART_RATE'
   /** 0–100, nach Dauer gewichtet */

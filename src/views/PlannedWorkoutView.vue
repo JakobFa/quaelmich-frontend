@@ -23,6 +23,7 @@ import AssessmentBadge from '../components/AssessmentBadge.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import IntervalAccuracyPanel from '../components/IntervalAccuracyPanel.vue'
 import RampTestResultPanel from '../components/RampTestResult.vue'
+import SteadyHoldPanel from '../components/SteadyHoldPanel.vue'
 import type { RampTestResult } from '../plan/rampTest'
 import WorkoutPicker from '../components/WorkoutPicker.vue'
 import WorkoutPurpose from '../components/WorkoutPurpose.vue'
@@ -518,6 +519,11 @@ function formatDate(iso: string) {
             planned.workout.steps.some((step) => step.kind === 'INTERVAL')
           "
           :key="planned.actual.durationMinutes ?? 0"
+          :planned-id="planned.id"
+        />
+        <SteadyHoldPanel
+          v-else-if="planned.workout.type !== 'FTP_TEST'"
+          :key="`hold-${planned.actual.durationMinutes ?? 0}`"
           :planned-id="planned.id"
         />
 
