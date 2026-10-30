@@ -3,6 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 
 import { getSteadyHold } from '../api'
 import { steadyHoldLabels, type SteadyHold } from '../types/plan'
+import SteadyHoldChart from './SteadyHoldChart.vue'
 
 /** Einschätzung einer lockeren Fahrt – lädt die Auswertung zur zugeordneten Fahrt; ohne Daten unsichtbar */
 const props = defineProps<{ plannedId: number }>()
@@ -44,6 +45,7 @@ const toneClass = computed(() => {
       Ø {{ hold.average }} {{ unit }} · Ziel {{ hold.targetLow }}–{{ hold.targetHigh }} {{ unit }}
       <template v-if="hold.basis === 'HEART_RATE'"> · nach Puls</template>
     </p>
+    <SteadyHoldChart :hold="hold" />
     <div class="bar" aria-hidden="true">
       <span class="below" :style="{ width: `${hold.percentBelow}%` }"></span>
       <span class="inzone" :style="{ width: `${hold.percentInZone}%` }"></span>
