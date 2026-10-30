@@ -10,6 +10,7 @@ import type {
   ExtraRide,
   IntervalAccuracy,
   MoreEvent,
+  SteadyHold,
   SkipReason,
 } from './types/plan'
 import { isCustomWorkout, type Workout } from './types/workout'
@@ -321,6 +322,12 @@ export async function getIntervalAccuracy(id: number): Promise<IntervalAccuracy 
 export async function getRampTest(id: number): Promise<RampTestResult | null> {
   const response = await send(`/planned-workouts/${id}/ramp-test`)
   return response.status === 204 ? null : ((await response.json()) as RampTestResult)
+}
+
+/** Einschätzung einer lockeren Fahrt (Zielbereich gehalten?); null wenn Intervalle oder keine Daten */
+export async function getSteadyHold(id: number): Promise<SteadyHold | null> {
+  const response = await send(`/planned-workouts/${id}/hold`)
+  return response.status === 204 ? null : ((await response.json()) as SteadyHold)
 }
 
 /** Fahrten des Tages, die man diesem Workout selbst zuordnen kann */
