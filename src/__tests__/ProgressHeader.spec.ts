@@ -12,7 +12,7 @@ const progress: Progress = {
   nextLevel: { number: 8, name: 'Laktat-Rebell', fromXp: 5200 },
   streakWeeks: 4,
   plan: { week: 3, totalWeeks: 4, completed: 7, due: 9, daysToEvent: 18, eventName: 'Ötztaler' },
-  load: { plannedTss: 340, actualTss: 310, status: 'ON_TRACK' as const },
+  load: { plannedTss: 340, actualTss: 310, chronicTss: 320, status: 'ON_TRACK' as const },
 }
 
 function week(monday: string, phase: Phase | null): PlanWeek {
@@ -40,10 +40,19 @@ describe('ProgressHeader', () => {
     expect(text).toContain('Woche 3 von 4')
     expect(text).toContain('noch 18 Tage bis Ötztaler')
     expect(text).toContain('Auf Kurs')
-    expect(text).toContain('310 / 340 TSS')
+    expect(text).toContain('310 / 340 TSS geplant')
     expect(text).not.toContain('(7/9)')
     expect(text).toContain('🔥 4')
     expect(text).not.toContain('Bergziegen-Punk')
+  })
+
+  it('zeigt bei "zu viel" den Schnitt als Vergleich, nicht den Plan', () => {
+    const text = mountHeader({
+      load: { plannedTss: 201, actualTss: 232, chronicTss: 150, status: 'TOO_MUCH' as const },
+    }).text()
+    expect(text).toContain('Zu viel')
+    expect(text).toContain('232 / 150 TSS Schnitt')
+    expect(text).toContain('Deutlich mehr als sonst')
   })
 
   it('füllt den Balken nach der vergangenen Zeit', () => {
