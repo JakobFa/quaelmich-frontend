@@ -18,7 +18,7 @@ describe('Bluetooth-Protokoll der Trainer', () => {
     // Geschwindigkeit 30,00 km/h = 3000, Trittfrequenz 90 rpm = 180 (Einheit 0,5), Leistung 250 W
     const data = view(0x44, 0x00, 0xb8, 0x0b, 0xb4, 0x00, 0xfa, 0x00)
 
-    expect(parseIndoorBikeData(data)).toEqual({ cadence: 90, power: 250 })
+    expect(parseIndoorBikeData(data)).toEqual({ speed: 30, cadence: 90, power: 250 })
   })
 
   it('überspringt Felder, die vor der Leistung stehen (wie beim KICKR)', () => {
@@ -33,7 +33,12 @@ describe('Bluetooth-Protokoll der Trainer', () => {
       0x8c, // 140 bpm
     )
 
-    expect(parseIndoorBikeData(data)).toEqual({ cadence: 80, power: 300, heartRate: 140 })
+    expect(parseIndoorBikeData(data)).toEqual({
+      speed: 36,
+      cadence: 80,
+      power: 300,
+      heartRate: 140,
+    })
   })
 
   it('bricht bei zu kurzen Paketen ab, statt Unsinn zu lesen', () => {

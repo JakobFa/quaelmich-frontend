@@ -450,6 +450,8 @@ export type StravaStatus = {
   canWriteActivities?: boolean
   /** Training in die Beschreibung bestätigter Fahrten schreiben */
   writeDescriptions?: boolean
+  /** im Player aufgezeichnete Fahrten nach dem Training automatisch hochladen */
+  uploadRides?: boolean
 }
 
 export function getStravaStatus() {
@@ -457,10 +459,10 @@ export function getStravaStatus() {
 }
 
 /** Code aus dem Rücksprung von Strava ans Backend geben */
-export function connectStrava(code: string, scope: string) {
+export function connectStrava(code: string, scope: string, purpose?: string) {
   return request<StravaStatus>('/me/strava', {
     method: 'POST',
-    body: JSON.stringify({ code, scope }),
+    body: JSON.stringify({ code, scope, purpose }),
   })
 }
 
@@ -488,6 +490,29 @@ export function setStravaDescriptions(enabled: boolean) {
   return request<StravaStatus>('/me/strava/descriptions', {
     method: 'PUT',
     body: JSON.stringify({ enabled }),
+  })
+}
+
+/** Schalter für den automatischen Upload der Player-Fahrten (409 ohne Erlaubnis activity:write) */
+export function setStravaUploads(enabled: boolean) {
+  return request<StravaStatus>('/me/strava/uploads', {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  })
+}
+
+export type StravaUpload = {
+  /** DONE = angelegt, PROCESSING = Strava arbeitet noch, DUPLICATE = schon dort, FAILED = abgelehnt */
+  outcome: 'DONE' | 'PROCESSING' | 'DUPLICATE' | 'FAILED'
+  activityId: number | null
+  message: string | null
+}
+
+/** Im Player aufgezeichnete Fahrt direkt bei Strava hochladen (404 nicht verbunden, 409 Erlaubnis fehlt) */
+export function uploadRecordingToStrava(recording: Recording, title: string) {
+  return request<StravaUpload>('/me/recordings/strava', {
+    method: 'POST',
+    body: JSON.stringify({ ...recording, title }),
   })
 }
 
