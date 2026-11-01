@@ -15,7 +15,8 @@ export const CYCLING_POWER_MEASUREMENT = 0x2a63
 export const HEART_RATE_SERVICE = 0x180d
 export const HEART_RATE_MEASUREMENT = 0x2a37
 
-export type Reading = { power?: number; cadence?: number; heartRate?: number }
+/** speed in km/h: bei Trainern die virtuelle Geschwindigkeit aus der Leistung */
+export type Reading = { speed?: number; power?: number; cadence?: number; heartRate?: number }
 
 /** Liest der Reihe nach; hört auf, wenn die Nachricht kürzer ist als angekündigt (kaputte Pakete) */
 class Reader {
@@ -56,7 +57,10 @@ export function parseIndoorBikeData(view: DataView): Reading {
   const read = new Reader(view, 2)
   const reading: Reading = {}
   // Bit 0 = "weitere Daten folgen": nur wenn es NICHT gesetzt ist, steht die Geschwindigkeit drin
-  if (!(flags & 0x0001)) read.skip(2)
+  if (!(flags & 0x0001)) {
+    if (!read.has(2)) return reading
+    reading.speed = read.uint16() / 100 // Einheit 0,01 km/h
+  }
   if (flags & 0x0002) read.skip(2) // Durchschnittsgeschwindigkeit
   if (flags & 0x0004) {
     if (!read.has(2)) return reading

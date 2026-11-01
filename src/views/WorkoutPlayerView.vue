@@ -6,8 +6,10 @@ import {
   downloadRecordingFit,
   getMyAthlete,
   getPlannedWorkout,
+  getStravaStatus,
   getWorkout,
   updateProgress,
+  uploadRecordingToStrava,
 } from '../api'
 import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -252,6 +254,46 @@ async function saveRecording() {
   }
 }
 
+// ---------- Strava ----------
+
+type StravaState = 'idle' | 'sending' | 'done' | 'processing' | 'duplicate' | 'failed'
+const stravaState = ref<StravaState>('idle')
+const stravaActivityId = ref<number | null>(null)
+/** Strava ist verbunden und darf Fahrten anlegen – dann gibt es den Upload (auf Wunsch automatisch) */
+const stravaReady = ref(false)
+
+const stravaOutcomes = {
+  DONE: 'done',
+  PROCESSING: 'processing',
+  DUPLICATE: 'duplicate',
+  FAILED: 'failed',
+} as const
+
+async function sendToStrava() {
+  const recording = recorder.toJSON()
+  if (!recording || !workout.value) return
+  stravaState.value = 'sending'
+  try {
+    const result = await uploadRecordingToStrava(recording, workout.value.title)
+    stravaActivityId.value = result.activityId
+    stravaState.value = stravaOutcomes[result.outcome]
+  } catch {
+    stravaState.value = 'failed'
+  }
+}
+
+/** Am Ende der Fahrt: lädt automatisch hoch, wenn der Nutzer das bei Strava eingeschaltet hat */
+async function uploadAfterRide() {
+  if (!auth.isLoggedIn.value || !recorder.hasData) return
+  try {
+    const status = await getStravaStatus()
+    stravaReady.value = status.connected && status.canWriteActivities === true
+    if (stravaReady.value && status.uploadRides) await sendToStrava()
+  } catch {
+    // ohne Strava-Status bleibt es beim Speichern der Datei
+  }
+}
+
 // ---------- Töne: 3-2-1 vor jedem Wechsel ----------
 
 const soundOn = ref(true)
@@ -383,6 +425,7 @@ function finish() {
     )
   }
   setTimeout(() => beep(1320, 0.6), 450)
+  void uploadAfterRide()
 }
 
 async function markDone() {
@@ -466,12 +509,40 @@ onBeforeUnmount(() => {
             <span v-if="summary.normalizedPower !== null">NP {{ summary.normalizedPower }} W</span>
             <span v-if="summary.avgCadence !== null">Ø {{ summary.avgCadence }} rpm</span>
             <span v-if="summary.avgHeartRate !== null">Ø {{ summary.avgHeartRate }} bpm</span>
+            <span v-if="summary.distanceKm !== null">
+              {{ summary.distanceKm.toLocaleString('de-DE', { maximumFractionDigits: 1 }) }} km
+            </span>
           </p>
-          <p v-if="auth.isLoggedIn.value" class="save-hint">
+          <p v-if="stravaState === 'sending'" class="save-hint" role="status">
+            Lade die Fahrt zu Strava hoch …
+          </p>
+          <p v-else-if="stravaState === 'done'" class="save-hint" role="status">
+            ✓ Bei Strava hochgeladen.
+            <a
+              v-if="stravaActivityId"
+              :href="`https://www.strava.com/activities/${stravaActivityId}`"
+              target="_blank"
+              rel="noopener"
+              >Fahrt ansehen</a
+            >
+          </p>
+          <p v-else-if="stravaState === 'processing'" class="save-hint" role="status">
+            Strava verarbeitet die Fahrt noch – sie erscheint gleich in deinem Feed.
+          </p>
+          <p v-else-if="stravaState === 'duplicate'" class="save-hint" role="status">
+            Diese Fahrt ist schon bei Strava.
+          </p>
+          <p v-else-if="stravaState === 'failed'" class="error" role="alert">
+            Der Upload zu Strava hat nicht geklappt. Du kannst es nochmal versuchen oder die Datei
+            speichern.
+          </p>
+          <p v-else-if="!auth.isLoggedIn.value" class="save-hint">
+            Zum Speichern der Fahrt musst du eingeloggt sein.
+          </p>
+          <p v-else-if="!stravaReady" class="save-hint">
             Lade die Datei bei Strava oder intervals.icu hoch – dann ordnet quaelmich die Fahrt wie
             jede andere zu.
           </p>
-          <p v-else class="save-hint">Zum Speichern der Fahrt musst du eingeloggt sein.</p>
         </template>
         <div class="done-actions">
           <button
@@ -484,10 +555,18 @@ onBeforeUnmount(() => {
             Als erledigt abhaken
           </button>
           <button
+            v-if="summary && stravaReady && (stravaState === 'idle' || stravaState === 'failed')"
+            type="button"
+            class="button"
+            @click="sendToStrava"
+          >
+            {{ stravaState === 'failed' ? 'Nochmal zu Strava' : 'An Strava senden' }}
+          </button>
+          <button
             v-if="summary && auth.isLoggedIn.value"
             type="button"
             class="button"
-            :class="{ 'button-ghost': fromPlan }"
+            :class="{ 'button-ghost': fromPlan || stravaReady }"
             :disabled="saving"
             @click="saveRecording"
           >

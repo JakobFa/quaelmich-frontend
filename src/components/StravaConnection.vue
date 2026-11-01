@@ -7,6 +7,7 @@ import {
   getStravaStatus,
   saveMyAthlete,
   setStravaDescriptions,
+  setStravaUploads,
   type StravaProfileSuggestion,
   type StravaStatus,
 } from '../api'
@@ -79,8 +80,30 @@ function formatValue(value: number | null, unit: string) {
 }
 
 /** Wer das Schreiben eingeschaltet hat, behält beim neu Verbinden die Erlaubnis dafür */
-function connect(scope = status.value?.writeDescriptions ? STRAVA_WRITE_SCOPE : STRAVA_SCOPE) {
-  if (status.value?.clientId) startStravaLogin(status.value.clientId, scope)
+function connect(
+  scope = status.value?.writeDescriptions || status.value?.uploadRides
+    ? STRAVA_WRITE_SCOPE
+    : STRAVA_SCOPE,
+  purpose?: string,
+) {
+  if (status.value?.clientId) startStravaLogin(status.value.clientId, scope, purpose)
+}
+
+async function toggleUploads(enabled: boolean) {
+  if (enabled && !status.value?.canWriteActivities) {
+    // Strava fragt einmal nach der Erlaubnis; zurück in quaelmich ist der Schalter dann an
+    connect(STRAVA_WRITE_SCOPE, 'uploads')
+    return
+  }
+  busy.value = true
+  errorMessage.value = ''
+  try {
+    status.value = await setStravaUploads(enabled)
+  } catch {
+    errorMessage.value = 'Speichern hat nicht geklappt.'
+  } finally {
+    busy.value = false
+  }
 }
 
 async function toggleDescriptions(enabled: boolean) {
@@ -221,6 +244,26 @@ async function disconnect() {
           Zusatzfahrten bleiben unberührt, dein eigener Text auch.
           <template v-if="!status.canWriteActivities">
             Beim Einschalten fragt Strava einmal nach der Erlaubnis, Aktivitäten zu bearbeiten.
+          </template>
+        </p>
+      </div>
+
+      <div class="describe">
+        <label class="describe-toggle">
+          <input
+            type="checkbox"
+            :checked="status.uploadRides"
+            :disabled="busy"
+            @change="toggleUploads(($event.target as HTMLInputElement).checked)"
+          />
+          Fahrten aus dem Player automatisch zu Strava hochladen
+        </label>
+        <p class="hint small">
+          Fährst du ein Training im Player mit deinem Trainer, lädt quaelmich es am Ende als
+          Indoor-Fahrt bei Strava hoch – mit Watt, Trittfrequenz, Puls und der Strecke, die dein
+          Trainer meldet.
+          <template v-if="!status.canWriteActivities">
+            Beim Einschalten fragt Strava einmal nach der Erlaubnis, Aktivitäten anzulegen.
           </template>
         </p>
       </div>
