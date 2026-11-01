@@ -31,7 +31,7 @@ function parseIsoDate(iso: string): Date {
   return new Date(y!, m! - 1, d!)
 }
 
-function addDays(iso: string, days: number): string {
+export function addDays(iso: string, days: number): string {
   const date = parseIsoDate(iso)
   date.setDate(date.getDate() + days)
   return toIsoDate(date)
