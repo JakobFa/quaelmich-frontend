@@ -18,7 +18,14 @@ import AssessmentBadge from '../components/AssessmentBadge.vue'
 import WeekTimeEditor from '../components/WeekTimeEditor.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
-import { buildWeeks, formatDuration, formatHours, toIsoDate, weekIndexFor } from '../plan/weeks'
+import {
+  addDays,
+  buildWeeks,
+  formatDuration,
+  formatHours,
+  toIsoDate,
+  weekIndexFor,
+} from '../plan/weeks'
 import {
   eventFocusLabels,
   phaseLabels,
@@ -186,14 +193,17 @@ const weekMonday = computed(() => week.value?.days[0]?.date ?? '')
 /** vergangene Wochen lassen sich nicht mehr ändern */
 const weekEditable = computed(() => !!week.value && week.value.days[6]!.date >= today)
 const weekOverride = computed(() => plan.value?.weekAvailability?.[weekMonday.value] ?? null)
-/** laufende Woche: die nächsten 7 Tage ab heute (so zeigt der Plan sie), spätere Wochen: Montag bis Sonntag */
+/** laufende Woche: die nächsten 10 Tage ab heute, spätere Wochen: Montag bis Sonntag */
 const weekTimeStart = computed(() => (weekMonday.value < today ? today : weekMonday.value))
 const weekTimeRolling = computed(() => weekTimeStart.value !== weekMonday.value)
-/** schon angepasst? In der laufenden Woche zählt auch die nächste mit, weil die 7 Tage hineinreichen */
+/** schon angepasst? In der laufenden Woche zählen auch die folgenden mit, in die die 10 Tage hineinreichen */
 const weekTimeAdjusted = computed(() => {
   if (weekOverride.value) return true
-  const nextMonday = weeks.value[weekIndex.value + 1]?.days[0]?.date
-  return weekTimeRolling.value && !!nextMonday && !!plan.value?.weekAvailability?.[nextMonday]
+  if (!weekTimeRolling.value) return false
+  const lastDay = addDays(weekTimeStart.value, 9)
+  return Object.keys(plan.value?.weekAvailability ?? {}).some(
+    (monday) => monday > weekMonday.value && monday <= lastDay,
+  )
 })
 
 function openWeekTime() {
@@ -448,7 +458,7 @@ onMounted(async () => {
           🕒
           <template v-if="weekTimeRolling">
             {{
-              weekTimeAdjusted ? 'Zeit angepasst – ändern' : 'Zeit für die nächsten 7 Tage ändern'
+              weekTimeAdjusted ? 'Zeit angepasst – ändern' : 'Zeit für die nächsten 10 Tage ändern'
             }}
           </template>
           <template v-else>

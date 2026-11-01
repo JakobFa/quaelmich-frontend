@@ -66,16 +66,16 @@ describe('Zeit für eine Woche', () => {
     expect(wrapper.emitted('saved')).toHaveLength(1)
   })
 
-  it('in der laufenden Woche: die nächsten 7 Tage ab heute, verteilt auf zwei Wochen', async () => {
-    // heute Mi 21.10. → Mi bis Di; diese Woche schon angepasst (Mo 1 h), die nächste nicht
+  it('in der laufenden Woche: die nächsten 10 Tage ab heute, verteilt auf zwei Wochen', async () => {
+    // heute Mi 21.10. → Mi bis Fr 30.10.; diese Woche schon angepasst (Mo 1 h), die nächste nicht
     const { wrapper, fetchMock } = mountEditor('2026-10-21', {
       '2026-10-19': { ...athlete.availability, monday: 1 },
     })
     await flushPromises()
 
-    expect(wrapper.text()).toContain('Zeit für die nächsten 7 Tage')
+    expect(wrapper.text()).toContain('Zeit für die nächsten 10 Tage')
     const inputs = wrapper.findAll('input')
-    expect(inputs).toHaveLength(7)
+    expect(inputs).toHaveLength(10)
     expect(inputs.every((input) => input.attributes('disabled') === undefined)).toBe(true)
 
     await inputs[5]!.setValue(2) // Mo 26.10. (nächste Woche)
@@ -93,8 +93,8 @@ describe('Zeit für eine Woche', () => {
     expect(thisWeek.monday).toBe(1) // vergangen, bleibt wie angepasst
     expect(thisWeek.saturday).toBe(0)
     expect(nextWeek.monday).toBe(2)
-    expect(nextWeek.wednesday).toBe(0) // gehört nicht mehr zu den 7 Tagen → normal
-    expect(wrapper.emitted('saved')![0]![1]).toContain('Die nächsten 7 Tage')
+    expect(nextWeek.saturday).toBe(3) // Sa 31.10. gehört nicht mehr zu den 10 Tagen → normal
+    expect(wrapper.emitted('saved')![0]![1]).toContain('Die nächsten 10 Tage')
   })
 
   it('speichert keine Ausnahme für eine Woche, die gleich bleibt', async () => {
@@ -108,6 +108,41 @@ describe('Zeit für eine Woche', () => {
 
     const weekCalls = fetchMock.mock.calls.filter(([url]) => url.includes('/me/plan/weeks/'))
     expect(weekCalls.map(([url]) => url.match(/weeks\/([\d-]+)/)![1])).toEqual(['2026-10-26'])
-    expect(wrapper.text()).toContain('Mi 21.10. – Di 27.10.')
+    expect(wrapper.text()).toContain('Mi 21.10. – Fr 30.10.')
+  })
+
+  it('reichen die 10 Tage in eine dritte Woche, wird auch die angepasst', async () => {
+    // Sa 24.10. bis Mo 2.11. = Wochen ab 19.10., 26.10. und 2.11.
+    const { wrapper, fetchMock } = mountEditor('2026-10-24')
+    await flushPromises()
+
+    const inputs = wrapper.findAll('input')
+    expect(inputs).toHaveLength(10)
+    await inputs[9]!.setValue(3) // Mo 2.11.
+    await wrapper.find('form').trigger('submit')
+    await flushPromises()
+
+    const weekCalls = fetchMock.mock.calls.filter(([url]) => url.includes('/me/plan/weeks/'))
+    expect(weekCalls.map(([url]) => url.match(/weeks\/([\d-]+)/)![1])).toEqual(['2026-11-02'])
+    expect(JSON.parse(String(weekCalls[0]![1]!.body)).monday).toBe(3)
+  })
+
+  it('"Ab jetzt immer" nimmt nur die ersten 7 Tage als normale Woche', async () => {
+    const { wrapper, fetchMock } = mountEditor('2026-10-21')
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('ersten 7 Tage')
+    await wrapper.findAll('input')[1]!.setValue(2.5) // Do 22.10.
+    await wrapper.findAll('input')[8]!.setValue(5) // Do 29.10. – wiederholt sich, zählt nicht
+    await wrapper
+      .findAll('button')
+      .find((b) => b.text() === 'Ab jetzt immer')!
+      .trigger('click')
+    await flushPromises()
+
+    const save = fetchMock.mock.calls.find(
+      ([url, init]) => url.endsWith('/me/athlete') && init?.method === 'PUT',
+    )!
+    expect(JSON.parse(String(save[1]!.body)).availability.thursday).toBe(2.5)
   })
 })

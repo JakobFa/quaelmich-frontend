@@ -12,9 +12,9 @@ import {
 import type { TrainingPlan } from '../types/plan'
 
 /**
- * Zeit für 7 Tage ab start ändern: in der laufenden Woche die nächsten 7 Tage ab heute (wie der Plan sie
- * zeigt), sonst Montag bis Sonntag. Gespeichert wird je Kalenderwoche – 7 Tage ab Mittwoch landen also zum
- * Teil in dieser und zum Teil in der nächsten Woche; die übrigen Tage dieser Wochen bleiben, wie sie sind.
+ * Zeit ändern: in der laufenden Woche die nächsten 10 Tage ab heute, sonst Montag bis Sonntag. Gespeichert wird
+ * je Kalenderwoche – 10 Tage ab Mittwoch landen also zum Teil in dieser und zum Teil in der nächsten Woche (ab
+ * Samstag sogar in dreien); die übrigen Tage dieser Wochen bleiben, wie sie sind.
  */
 const props = defineProps<{
   start: string
@@ -45,11 +45,14 @@ function mondayOf(iso: string): string {
   return addDays(iso, -WEEKDAYS.indexOf(weekdayOf(iso)))
 }
 
+/** So viele Tage zeigt der Editor in der laufenden Woche (ab heute) – sonst eine Kalenderwoche */
+const ROLLING_DAYS = 10
+
 /** Montag ab start = genau eine Kalenderwoche */
 const rolling = computed(() => weekdayOf(props.start) !== 'monday')
 
 const days = computed(() =>
-  Array.from({ length: 7 }, (_, index) => {
+  Array.from({ length: rolling.value ? ROLLING_DAYS : 7 }, (_, index) => {
     const iso = addDays(props.start, index)
     const day = weekdayOf(iso)
     return {
@@ -57,7 +60,7 @@ const days = computed(() =>
       day,
       monday: mondayOf(iso),
       label: weekdayLabels[day],
-      // nur der Tag – sieben volle Daten passen auf dem Handy nicht nebeneinander
+      // nur der Tag – so viele volle Daten passen auf dem Handy nicht nebeneinander
       date: `${Number(iso.slice(8, 10))}.`,
       past: iso < props.today,
     }
@@ -69,11 +72,11 @@ const span = computed(() => {
   const format = (iso: string) =>
     new Date(`${iso}T12:00:00`).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' })
   const first = days.value[0]!
-  const last = days.value[6]!
+  const last = days.value[days.value.length - 1]!
   return `${first.label} ${format(first.iso)} – ${last.label} ${format(last.iso)}`
 })
 
-/** betroffene Kalenderwochen (eine oder zwei) */
+/** betroffene Kalenderwochen (eine bis drei) */
 const mondays = computed(() => [...new Set(days.value.map((day) => day.monday))])
 const overridden = computed(() =>
   mondays.value.filter((monday) => props.weekAvailability?.[monday]),
@@ -102,7 +105,7 @@ async function save(mode: 'week' | 'always' | 'reset') {
   if (!athlete.value || !draft.value) return
   saving.value = true
   failed.value = false
-  const what = rolling.value ? 'Die nächsten 7 Tage' : 'Diese Woche'
+  const what = rolling.value ? `Die nächsten ${days.value.length} Tage` : 'Diese Woche'
   try {
     let plan: TrainingPlan | null = null
     if (mode === 'week') {
@@ -125,7 +128,10 @@ async function save(mode: 'week' | 'always' | 'reset') {
       // Ausnahmen für diese Tage würden die neue normale Zeit verdecken
       for (const monday of overridden.value) await setWeekAvailability(monday, null)
       const availability = { ...athlete.value.availability }
-      days.value.forEach((day, index) => (availability[day.day] = draft.value![index] ?? 0))
+      // jeder Wochentag zählt einmal: bei 10 Tagen wiederholen sich die letzten drei, dort gilt der erste
+      days.value
+        .slice(0, 7)
+        .forEach((day, index) => (availability[day.day] = draft.value![index] ?? 0))
       await saveMyAthlete({ ...athlete.value, availability })
       plan = await generatePlan()
       emit('saved', plan, '✓ Neue Zeit gespeichert – der Plan ist ab heute angepasst.')
@@ -144,11 +150,13 @@ function format(hours: number) {
 
 <template>
   <div class="panel week-time">
-    <p class="title">{{ rolling ? 'Zeit für die nächsten 7 Tage' : 'Zeit für diese Woche' }}</p>
+    <p class="title">
+      {{ rolling ? `Zeit für die nächsten ${days.length} Tage` : 'Zeit für diese Woche' }}
+    </p>
     <p class="span">{{ span }}</p>
     <p v-if="!draft && !failed" class="hint">Lädt …</p>
     <form v-if="draft" @submit.prevent="save('week')">
-      <ul class="days">
+      <ul class="days" :class="{ ten: days.length > 7 }">
         <li v-for="(day, index) in days" :key="day.iso" :class="{ past: day.past }">
           <label :for="`week-${day.iso}`">
             <span class="label">{{ day.label }}</span>
@@ -167,13 +175,17 @@ function format(hours: number) {
         </li>
       </ul>
       <p class="hint">
-        Stunden pro Tag · {{ format(total) }} h {{ rolling ? 'in 7 Tagen' : 'diese Woche' }} (normal
-        {{ format(normalTotal) }} h). Erledigtes und Rückmeldungen bleiben, vergangene Tage ändern
-        sich nicht.
+        Stunden pro Tag · {{ format(total) }} h
+        {{ rolling ? `in ${days.length} Tagen` : 'diese Woche' }} (normal
+        {{ format(normalTotal) }} h je Woche). Erledigtes und Rückmeldungen bleiben, vergangene Tage
+        ändern sich nicht.
+      </p>
+      <p v-if="days.length > 7" class="hint">
+        „Ab jetzt immer“ übernimmt die ersten 7 Tage als deine normale Woche.
       </p>
       <div class="actions">
         <button type="submit" class="button" :disabled="saving">
-          {{ rolling ? 'Nur diese 7 Tage' : 'Nur diese Woche' }}
+          {{ rolling ? `Nur diese ${days.length} Tage` : 'Nur diese Woche' }}
         </button>
         <button
           type="button"
@@ -227,6 +239,17 @@ function format(hours: number) {
   margin: 0 0 10px;
   padding: 0;
   list-style: none;
+}
+
+/* 10 Tage: zwei Reihen à 5, auf breiten Bildschirmen eine Reihe */
+.days.ten {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+
+@media (min-width: 700px) {
+  .days.ten {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
 }
 
 .days li {
