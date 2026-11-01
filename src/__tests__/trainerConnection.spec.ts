@@ -162,6 +162,18 @@ describe('Trainer-Verbindung', () => {
     expect(connection.state.cadence).toBe(null)
   })
 
+  it('zeigt die Geschwindigkeit des Trainers und vergisst sie, wenn nichts mehr kommt', async () => {
+    const kickr = smartTrainer()
+    const { connection } = setUp([kickr])
+    await connection.connectTrainer()
+
+    kickr.notify(INDOOR_BIKE_DATA, 0x44, 0x00, 0x10, 0x0e, 180, 0, 200, 0) // 36,00 km/h
+    expect(connection.state.speed).toBe(36)
+
+    vi.advanceTimersByTime(4000)
+    expect(connection.state.speed).toBe(null)
+  })
+
   it('nimmt ältere Trainer ohne FTMS als reinen Wattmesser', async () => {
     const old = fakeDevice('Alter Trainer', {
       [CYCLING_POWER_SERVICE]: [CYCLING_POWER_MEASUREMENT],

@@ -40,6 +40,7 @@ const POWER_AVERAGE_MS = 3000
 const RECONNECT_DELAYS_MS = [1000, 2000, 4000, 8000, 15000, 30000]
 
 export type TrainerValues = {
+  speed: number | null
   power: number | null
   cadence: number | null
   heartRate: number | null
@@ -67,6 +68,7 @@ export function createTrainerConnection(
   // ---------- Messwerte ----------
 
   let powerHistory: { at: number; watts: number }[] = []
+  let speed: { at: number; kmh: number } | null = null
   let cadence: { at: number; rpm: number } | null = null
   let lastCrank: { at: number; event: CrankEvent } | null = null
   let trainerHeartRate: { at: number; bpm: number } | null = null
@@ -74,7 +76,7 @@ export function createTrainerConnection(
   let refreshTimer: ReturnType<typeof setInterval> | undefined
 
   function emptyValues(): TrainerValues {
-    return { power: null, cadence: null, heartRate: null }
+    return { speed: null, power: null, cadence: null, heartRate: null }
   }
 
   /** Aktuelle Werte; was zu lange nicht kam, ist null */
@@ -85,6 +87,7 @@ export function createTrainerConnection(
     const recentPower = powerHistory.filter((p) => now - p.at <= STALE_MS)
     const heartRate = fresh(strapHeartRate) ?? fresh(trainerHeartRate)
     return {
+      speed: fresh(speed)?.kmh ?? null,
       power: recentPower.length
         ? Math.round(recentPower.reduce((sum, p) => sum + p.watts, 0) / recentPower.length)
         : null,
@@ -115,6 +118,7 @@ export function createTrainerConnection(
     const reading = parseIndoorBikeData(view)
     const now = Date.now()
     if (reading.power !== undefined) powerHistory.push({ at: now, watts: reading.power })
+    if (reading.speed !== undefined) speed = { at: now, kmh: reading.speed }
     if (reading.cadence !== undefined) cadence = { at: now, rpm: reading.cadence }
     if (reading.heartRate !== undefined) trainerHeartRate = { at: now, bpm: reading.heartRate }
     refresh()

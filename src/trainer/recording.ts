@@ -3,6 +3,8 @@ import type { TrainerValues } from './connection'
 /** Ein Messpunkt je gefahrener Sekunde; second zählt ab dem Start (Pausen mitgezählt) */
 export type RecordedSample = {
   second: number
+  /** km/h laut Trainer; fehlt in älteren Aufzeichnungen */
+  speed?: number | null
   power: number | null
   cadence: number | null
   heartRate: number | null
@@ -48,6 +50,8 @@ export class RideRecorder {
 
 export type RideSummary = {
   seconds: number
+  /** aus der Trainer-Geschwindigkeit; null, wenn der Trainer keine geliefert hat */
+  distanceKm: number | null
   avgPower: number | null
   normalizedPower: number | null
   avgCadence: number | null
@@ -76,8 +80,11 @@ export function summarize(samples: RecordedSample[]): RideSummary {
   const present = (key: 'power' | 'cadence' | 'heartRate') =>
     samples.map((s) => s[key]).filter((v): v is number => v !== null)
   const power = present('power')
+  const speeds = samples.map((s) => s.speed).filter((v): v is number => v != null)
   return {
     seconds: samples.length,
+    // jeder Messpunkt ist eine gefahrene Sekunde
+    distanceKm: speeds.length ? speeds.reduce((sum, v) => sum + v, 0) / 3600 : null,
     avgPower: average(power),
     normalizedPower: normalizedPower(power),
     avgCadence: average(present('cadence').filter((rpm) => rpm > 0)),

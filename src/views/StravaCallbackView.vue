@@ -4,7 +4,7 @@ import { useRoute, useRouter } from 'vue-router'
 
 import { ApiError, connectStrava } from '../api'
 import LoadingNotice from '../components/LoadingNotice.vue'
-import { takeExpectedState } from '../strava/oauth'
+import { takeExpectedState, takePurpose } from '../strava/oauth'
 
 const route = useRoute()
 const router = useRouter()
@@ -17,6 +17,7 @@ function param(name: string): string {
 
 onMounted(async () => {
   const expectedState = takeExpectedState()
+  const purpose = takePurpose()
   if (param('error')) {
     errorMessage.value = 'Du hast den Zugriff bei Strava nicht erlaubt.'
     return
@@ -32,7 +33,7 @@ onMounted(async () => {
     return
   }
   try {
-    await connectStrava(param('code'), param('scope'))
+    await connectStrava(param('code'), param('scope'), purpose)
     router.replace({ name: 'profile' })
   } catch (error) {
     errorMessage.value =

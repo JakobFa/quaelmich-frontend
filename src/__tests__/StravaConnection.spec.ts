@@ -167,4 +167,48 @@ describe('StravaConnection', () => {
     expect(init?.body).toBe('{"enabled":true}')
     expect((wrapper.find('.describe-toggle input').element as HTMLInputElement).checked).toBe(true)
   })
+  it('schaltet den automatischen Upload der Player-Fahrten ein, wenn Strava es erlaubt hat', async () => {
+    const connected = { ...base, available: true, connected: true, canWriteActivities: true }
+    const fetchMock = backend(
+      { ...connected, writeDescriptions: false, uploadRides: false },
+      { profileAccess: true, ftp: null, weightKg: null, maxHeartRate: null },
+      { ...connected, writeDescriptions: false, uploadRides: true },
+    )
+    const wrapper = mount(StravaConnection, { props: { athlete: emptyAthlete() } })
+    await flushPromises()
+
+    const toggles = wrapper.findAll('.describe-toggle input')
+    expect(wrapper.text()).toContain('Fahrten aus dem Player automatisch zu Strava hochladen')
+    await toggles[1]!.setValue(true)
+    await flushPromises()
+
+    const [url, init] = fetchMock.mock.calls[2]!
+    expect(url).toContain('/me/strava/uploads')
+    expect(init?.method).toBe('PUT')
+    expect(init?.body).toBe('{"enabled":true}')
+    expect((wrapper.findAll('.describe-toggle input')[1]!.element as HTMLInputElement).checked).toBe(
+      true,
+    )
+    // die Beschreibung bleibt aus
+    expect((wrapper.findAll('.describe-toggle input')[0]!.element as HTMLInputElement).checked).toBe(
+      false,
+    )
+  })
+
+  it('fragt für den Upload die Schreib-Erlaubnis bei Strava an und merkt sich den Zweck', async () => {
+    backend(
+      { ...base, available: true, connected: true, canWriteActivities: false },
+      { profileAccess: true, ftp: null, weightKg: null, maxHeartRate: null },
+    )
+    const assign = vi.fn<(url: string) => void>()
+    vi.stubGlobal('location', { origin: 'https://quaelmich.test', assign })
+    const wrapper = mount(StravaConnection, { props: { athlete: emptyAthlete() } })
+    await flushPromises()
+
+    await wrapper.findAll('.describe-toggle input')[1]!.setValue(true)
+
+    expect(assign).toHaveBeenCalledOnce()
+    expect(new URL(assign.mock.calls[0]![0]).searchParams.get('scope')).toBe(STRAVA_WRITE_SCOPE)
+    expect(sessionStorage.getItem('quaelmich.strava.purpose')).toBe('uploads')
+  })
 })
