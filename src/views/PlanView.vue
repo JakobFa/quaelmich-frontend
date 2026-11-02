@@ -586,6 +586,7 @@ onMounted(async () => {
             >
               View on Strava
             </a>
+            <span v-else class="source-tag">intervals.icu</span>
           </div>
 
           <p
@@ -1117,5 +1118,11 @@ onMounted(async () => {
   .week-stats {
     gap: 20px;
   }
+}
+
+.source-tag {
+  font-size: 0.75rem;
+  font-weight: 600;
+  opacity: 0.7;
 }
 </style>
