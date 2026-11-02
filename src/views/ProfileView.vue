@@ -124,6 +124,16 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
   if (zone.upTo === Infinity) return `≥ ${watts(zone.from)} W`
   return `${watts(zone.from)}–${watts(zone.upTo)} W`
 }
+
+/** Auswahl in halben Stunden von 0 bis 12; ein schon gespeicherter krummer Wert (z. B. 1,25) bleibt wählbar */
+function hourOptions(current: number | undefined): number[] {
+  const options = Array.from({ length: 25 }, (_, i) => i / 2)
+  if (current !== undefined && !options.includes(current)) {
+    options.push(current)
+    options.sort((a, b) => a - b)
+  }
+  return options
+}
 </script>
 
 <template>
@@ -272,20 +282,19 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
           <ul class="week">
             <li v-for="(label, day) in weekdayLabels" :key="day">
               <label class="day" :for="`availability-${day}`">{{ label }}</label>
-              <input
+              <select
                 :id="`availability-${day}`"
                 v-model.number="availabilityDraft[day]"
                 class="hours-input"
-                type="number"
-                min="0"
-                max="12"
-                step="0.5"
-                required
-              />
+              >
+                <option v-for="hours in hourOptions(availabilityDraft[day])" :key="hours" :value="hours">
+                  {{ formatNumber(hours) }}
+                </option>
+              </select>
             </li>
           </ul>
           <p class="hint">
-            Stunden pro Tag. Der Plan wird ab heute angepasst – erledigte Workouts, Bewertungen und
+            Stunden pro Tag (0 = frei). Der Plan wird ab heute angepasst – erledigte Workouts, Bewertungen und
             gefahrene Einheiten bleiben.
           </p>
           <p v-if="availabilityError" class="error" role="alert">
@@ -502,15 +511,6 @@ function formatPowerZone(zone: PowerZone, ftp: number) {
   font-size: 0.8rem;
   letter-spacing: 0;
   text-align: center;
-  appearance: textfield;
-  -moz-appearance: textfield;
-}
-
-/* Pfeil-Knöpfe ausblenden – in den schmalen Tagesfeldern verdecken sie sonst die Zahl */
-.hours-input::-webkit-inner-spin-button,
-.hours-input::-webkit-outer-spin-button {
-  margin: 0;
-  -webkit-appearance: none;
 }
 
 form .week {
