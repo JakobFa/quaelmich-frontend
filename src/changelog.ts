@@ -17,8 +17,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-03',
-    version: '0.9.32',
+    version: '0.9.33',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Der Rampentest feuert dich an',
+        text: 'Im Player siehst du beim FTP-Test in jeder Minute einen Spruch: erst zum Einrollen, dann härter, kurz vor dem Ende jeder Stufe und wenn du pausierst.',
+      },
       {
         kind: 'Besser',
         title: 'Strava-Titel mit dem Namen des Trainings',
