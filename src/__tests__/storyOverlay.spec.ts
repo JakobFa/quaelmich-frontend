@@ -92,7 +92,7 @@ describe('Story-Overlay', () => {
       {
         measureText: (text: string) => ({ width: text.length * 10 }),
         fillText: (text: string) => texts.push(text),
-        clearRect: vi.fn(),
+        clearRect: vi.fn<() => void>(),
       } as Record<string, unknown>,
       {
         get: (target, key: string) => target[key] ?? (() => undefined),
