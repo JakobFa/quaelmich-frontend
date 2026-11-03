@@ -15,9 +15,11 @@ import FtpHint from '../components/FtpHint.vue'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
+import StoryOverlayButton from '../components/StoryOverlayButton.vue'
 import WeekTimeEditor from '../components/WeekTimeEditor.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
+import { eventFooter, extraRideOverlay } from '../plan/storyOverlay'
 import {
   addDays,
   buildWeeks,
@@ -31,6 +33,7 @@ import {
   phaseLabels,
   skipReasonLabels,
   sportLabels,
+  type ExtraRide,
   type TrainingPlan,
 } from '../types/plan'
 import { eventGoalLabels, trainingGoalLabels, type Athlete } from '../types/athlete'
@@ -78,6 +81,14 @@ const weeksUntilEvent = computed(() => {
   const ms = new Date(plan.value.eventDate).getTime() - new Date(today).getTime()
   return Math.max(0, Math.ceil(ms / (7 * 24 * 60 * 60 * 1000)))
 })
+
+/** Overlay für die Story; leer, wenn die Einheit keine Zahlen hat */
+function overlayOf(ride: ExtraRide) {
+  return extraRideOverlay(
+    ride,
+    eventFooter(plan.value?.eventName ?? undefined, plan.value?.eventDate ?? undefined, today),
+  )
+}
 
 async function load() {
   loading.value = true
@@ -587,6 +598,7 @@ onMounted(async () => {
               View on Strava
             </a>
             <span v-else class="source-tag">intervals.icu</span>
+            <StoryOverlayButton v-if="overlayOf(ride)" :data="overlayOf(ride)!" />
           </div>
 
           <p
