@@ -20,6 +20,10 @@ const builtAt = new Date(__BUILD_TIME__).toLocaleString('de-DE', {
   timeZone: 'Europe/Berlin',
 })
 
+function openNews() {
+  router.push('/neuigkeiten')
+}
+
 function logout() {
   endSession()
   router.push('/')
@@ -45,14 +49,19 @@ function logout() {
       <h1 class="logo-heading">
         <img :src="logoUrl" alt="quaelmich" class="logo" />
       </h1>
+      <!-- der ganze Bereich ist ein Link, deshalb kein verschachteltes <a>: der Stempel öffnet die Neuigkeiten -->
       <span
         class="beta"
         :class="{ staging: isStaging }"
+        role="link"
+        tabindex="0"
         :title="
           isStaging
-            ? 'Test-Seite – nicht die echte App'
-            : 'quaelmich ist noch in der Beta – Feedback hilft!'
+            ? 'Test-Seite – nicht die echte App. Tippen: Neuigkeiten'
+            : 'quaelmich ist noch in der Beta – Tippen: Was ist neu?'
         "
+        @click.prevent.stop="openNews"
+        @keydown.enter.prevent.stop="openNews"
       >
         {{ isStaging ? 'Test' : 'Beta' }}
         <small class="version">{{ version }} · {{ builtAt }}</small>
@@ -85,6 +94,7 @@ function logout() {
   <FeedbackButton v-if="auth.isLoggedIn.value" />
 
   <footer class="footer">
+    <RouterLink to="/neuigkeiten">Neuigkeiten</RouterLink>
     <RouterLink v-if="hasImpressum" to="/impressum">Impressum</RouterLink>
     <RouterLink to="/datenschutz">Datenschutz</RouterLink>
   </footer>
@@ -165,6 +175,11 @@ function logout() {
   letter-spacing: 0.12em;
   transform: rotate(6deg);
   box-shadow: 3px 3px 0 var(--color-plum);
+  cursor: pointer;
+}
+
+.beta:hover {
+  background: var(--color-plum);
 }
 
 /* Test-Seite: gelb-schwarz wie eine Baustelle, damit man es nie mit der echten App verwechselt */
@@ -173,6 +188,10 @@ function logout() {
   background: #f4c430;
   color: #141615;
   box-shadow: 3px 3px 0 #141615;
+}
+
+.beta.staging:hover {
+  background: #ffd75a;
 }
 
 .beta.staging .version {

@@ -5,6 +5,7 @@ import HomeView from '../views/HomeView.vue'
 import DatenschutzView from '../views/DatenschutzView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import ImpressumView from '../views/ImpressumView.vue'
+import NewsView from '../views/NewsView.vue'
 import LoginView from '../views/LoginView.vue'
 import ResetPasswordView from '../views/ResetPasswordView.vue'
 import OnboardingView from '../views/OnboardingView.vue'
@@ -24,6 +25,7 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/impressum', name: 'impressum', component: ImpressumView },
     { path: '/datenschutz', name: 'datenschutz', component: DatenschutzView },
+    { path: '/neuigkeiten', name: 'news', component: NewsView },
     { path: '/passwort-vergessen', name: 'forgot-password', component: ForgotPasswordView },
     { path: '/passwort-zuruecksetzen', name: 'reset-password', component: ResetPasswordView },
     {
