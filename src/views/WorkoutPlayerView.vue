@@ -15,6 +15,7 @@ import { auth } from '../auth'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import RampTestResultPanel from '../components/RampTestResult.vue'
 import TrainerPanel from '../components/TrainerPanel.vue'
+import { RAMP_TEST_DONE, rampTestCheer } from '../plan/cheer'
 import { evaluateRampTest, type RampTestResult } from '../plan/rampTest'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { formatRange, heartRateZonesOf, targetForStep } from '../plan/heartRate'
@@ -410,6 +411,19 @@ let rememberTimer: ReturnType<typeof setInterval> | undefined
 // ---------- Fertig ----------
 
 const finished = ref(false)
+
+/** Anfeuerung im Rampentest: Text je nach Stufe, Sekunden und Watt */
+const cheer = computed(() =>
+  isRampTest.value && !finished.value
+    ? rampTestCheer({
+        steps: steps.value,
+        position: position.value,
+        elapsed: elapsed.value,
+        running: running.value,
+        verdict: powerVerdict.value,
+      })
+    : '',
+)
 const marking = ref(false)
 const markError = ref(false)
 
@@ -489,6 +503,7 @@ onBeforeUnmount(() => {
 
       <div v-if="finished" class="panel done" role="status">
         <p class="done-title">Geschafft.</p>
+        <p v-if="isRampTest" class="cheer-done">{{ RAMP_TEST_DONE }}</p>
         <p>{{ formatClock(summary ? summary.seconds : elapsed) }} gefahren.</p>
         <RampTestResultPanel
           v-if="rampResult"
@@ -599,6 +614,7 @@ onBeforeUnmount(() => {
             <span>{{ live.heartRate ?? '–' }}<small>bpm</small></span>
           </p>
           <p class="countdown" aria-live="off">{{ formatClock(position.stepRemaining) }}</p>
+          <p v-if="cheer" class="cheer" aria-live="off">{{ cheer }}</p>
           <div class="step-bar" aria-hidden="true">
             <span :style="{ width: `${stepPercent}%` }"></span>
           </div>
@@ -802,6 +818,26 @@ onBeforeUnmount(() => {
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+.cheer {
+  min-height: 2.8em;
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  font-family: var(--font-heading);
+  font-size: clamp(1.05rem, 4vw, 1.5rem);
+  line-height: 1.25;
+  text-transform: uppercase;
+  color: var(--color-ink);
+  background: var(--color-hot);
+  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+}
+
+.cheer-done {
+  font-family: var(--font-heading);
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  color: var(--color-hot);
 }
 
 .step-bar {
