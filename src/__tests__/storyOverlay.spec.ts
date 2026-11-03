@@ -47,6 +47,37 @@ describe('Story-Overlay', () => {
     ])
   })
 
+  it('nimmt die Abschnitte des Trainings für das Profil mit', () => {
+    const withSteps = planned({ durationMinutes: 72, distanceKm: null, tss: 61 } as never)
+    withSteps.workout.steps = [
+      { kind: 'WARMUP', durationSeconds: 600, powerStartPercent: 50, powerEndPercent: 75 },
+      { kind: 'INTERVAL', durationSeconds: 600, powerStartPercent: 83, powerEndPercent: 83 },
+    ]
+    expect(plannedOverlay(withSteps)?.steps).toHaveLength(2)
+    withSteps.workout.steps = []
+    expect(plannedOverlay(withSteps)?.steps).toBeUndefined()
+  })
+
+  it('zeichnet jeden Abschnitt als Balken', () => {
+    const fills: unknown[] = []
+    const ctx = new Proxy(
+      { measureText: (text: string) => ({ width: text.length * 10 }), fill: () => fills.push(1) } as Record<string, unknown>,
+      { get: (target, key: string) => target[key] ?? (() => undefined), set: () => true },
+    ) as unknown as CanvasRenderingContext2D
+    drawOverlay(ctx, {
+      title: 'Tempo',
+      date: '3. NOV 2026',
+      stats: [{ label: 'TSS', value: '63' }],
+      steps: [
+        { kind: 'WARMUP', durationSeconds: 600, powerStartPercent: 50, powerEndPercent: 75 },
+        { kind: 'INTERVAL', durationSeconds: 600, powerStartPercent: 83, powerEndPercent: 83 },
+        { kind: 'RECOVERY', durationSeconds: 180, powerStartPercent: 55, powerEndPercent: 55 },
+      ],
+    })
+    // eine Karte plus drei Balken
+    expect(fills).toHaveLength(4)
+  })
+
   it('gibt es nur für gefahrene Einheiten mit Zahlen', () => {
     expect(plannedOverlay(planned(null))).toBeNull()
     expect(plannedOverlay(planned({ durationMinutes: null, distanceKm: null, tss: null } as never))).toBeNull()

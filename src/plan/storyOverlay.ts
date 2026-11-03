@@ -1,5 +1,7 @@
 import type { ExtraRide, PlannedWorkout } from '../types/plan'
 import { sportLabels } from '../types/plan'
+import type { WorkoutStep } from '../types/workout'
+import { powerZoneFor } from './zones'
 import { formatDuration } from './weeks'
 
 /** Was auf dem Overlay steht: Titel, Datum und bis zu vier Kennzahlen */
@@ -9,6 +11,8 @@ export type OverlayData = {
   stats: { label: string; value: string }[]
   /** z. B. "37 Tage bis Rund um Sachsen" */
   footer?: string
+  /** Abschnitte des Trainings: werden als Profil (Intervallblöcke) über den Zahlen gezeichnet */
+  steps?: WorkoutStep[]
 }
 
 export const OVERLAY_WIDTH = 1080
@@ -45,7 +49,8 @@ export function plannedOverlay(planned: PlannedWorkout, footer?: string): Overla
   }
   if (actual.tss) stats.push({ label: 'TSS', value: tssText(actual.tss, actual.tssFromHeartRate) })
   if (stats.length === 0) return null
-  return { title: planned.workout.title, date: overlayDate(planned.date), stats, footer }
+  const steps = planned.workout.steps?.length ? planned.workout.steps : undefined
+  return { title: planned.workout.title, date: overlayDate(planned.date), stats, footer, steps }
 }
 
 /** Zusatzfahrt oder andere Sportart ohne geplantes Workout */
@@ -89,14 +94,15 @@ export function drawOverlay(ctx: CanvasRenderingContext2D, data: OverlayData): v
   const width = OVERLAY_WIDTH - 2 * left
   const rowHeight = 170
   const header = 230
+  const profile = data.steps && data.steps.length > 0 ? PROFILE_HEIGHT + 20 : 0
   const footer = data.footer ? 90 : 40
-  const height = header + data.stats.length * rowHeight + footer
+  const height = header + profile + data.stats.length * rowHeight + footer
   const top = OVERLAY_HEIGHT - 300 - height
 
   ctx.clearRect(0, 0, OVERLAY_WIDTH, OVERLAY_HEIGHT)
 
   cutCard(ctx, left, top, width, height, 48)
-  ctx.fillStyle = 'rgba(20, 22, 21, 0.58)'
+  ctx.fillStyle = 'rgba(20, 22, 21, 0.68)'
   ctx.fill()
   ctx.lineWidth = 4
   ctx.strokeStyle = 'rgba(220, 186, 247, 0.85)'
@@ -121,8 +127,12 @@ export function drawOverlay(ctx: CanvasRenderingContext2D, data: OverlayData): v
   ctx.font = '400 78px "Saira Stencil One", "Barlow Condensed", sans-serif'
   ctx.fillText(fit(ctx, data.title.toUpperCase(), width - 120), inner, top + 175)
 
+  if (profile > 0 && data.steps) {
+    drawProfile(ctx, data.steps, inner, top + header - 25, width - 120)
+  }
+
   data.stats.forEach((stat, index) => {
-    const y = top + header + index * rowHeight
+    const y = top + header + profile + index * rowHeight
     ctx.fillStyle = '#dcbaf7'
     ctx.font = '500 32px "Space Mono", monospace'
     ctx.fillText(stat.label.toUpperCase(), inner, y + 30)
@@ -143,6 +153,37 @@ export function drawOverlay(ctx: CanvasRenderingContext2D, data: OverlayData): v
   ctx.textAlign = 'right'
   ctx.fillText('QUAELMICH', left + width - 50, top + 80)
   ctx.restore()
+}
+
+/** Höhe des Profils (Intervallblöcke) auf dem Overlay */
+const PROFILE_HEIGHT = 190
+/** 170 % FTP füllen die volle Höhe, wie im Plan */
+const MAX_PERCENT = 170
+
+/** Zeichnet die Abschnitte als farbige Balken in den Farben der Zonen, Rampen als Trapez */
+function drawProfile(ctx: CanvasRenderingContext2D, steps: WorkoutStep[], x: number, y: number, width: number) {
+  const total = steps.reduce((sum, step) => sum + step.durationSeconds, 0)
+  if (total <= 0) return
+  const gap = 3
+  const base = y + PROFILE_HEIGHT
+  const level = (percent: number) => base - (Math.min(percent, MAX_PERCENT) / MAX_PERCENT) * PROFILE_HEIGHT
+  let left = x
+  steps.forEach((step, index) => {
+    const right = index === steps.length - 1 ? x + width : left + (step.durationSeconds / total) * width
+    const barRight = Math.max(left + 2, right - gap)
+    ctx.beginPath()
+    ctx.moveTo(left, base)
+    ctx.lineTo(left, level(step.powerStartPercent))
+    ctx.lineTo(barRight, level(step.powerEndPercent))
+    ctx.lineTo(barRight, base)
+    ctx.closePath()
+    ctx.fillStyle = powerZoneFor((step.powerStartPercent + step.powerEndPercent) / 2).color
+    ctx.fill()
+    left = right
+  })
+  // Grundlinie
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.6)'
+  ctx.fillRect(x, base + 3, width, 3)
 }
 
 /** Kürzt den Text mit "…", bis er in die Breite passt */
