@@ -30,7 +30,9 @@ import WorkoutPicker from '../components/WorkoutPicker.vue'
 import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
-import { formatDuration } from '../plan/weeks'
+import StoryOverlayButton from '../components/StoryOverlayButton.vue'
+import { eventFooter, plannedOverlay } from '../plan/storyOverlay'
+import { formatDuration, toIsoDate } from '../plan/weeks'
 import { exercisesOf } from '../strength/exercises'
 import { heartRateZonesOf } from '../plan/heartRate'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
@@ -51,6 +53,15 @@ const athlete = ref<Athlete | null>(null)
 const ftp = computed(() => athlete.value?.ftp ?? null)
 /** Krafttraining: keine Radeinheit – kein Player, keine .fit-Datei, keine Fahrt zum Zuordnen */
 const isStrength = computed(() => planned.value?.workout.type === 'STRENGTH')
+
+const storyOverlay = computed(() =>
+  planned.value
+    ? plannedOverlay(
+        planned.value,
+        eventFooter(athlete.value?.event?.name, athlete.value?.event?.date, toIsoDate(new Date())),
+      )
+    : null,
+)
 /** Im Puls-Modus Pulsbereiche, sonst null (= nach Watt) */
 const heartRate = computed(() =>
   isHeartRateMode(athlete.value) ? heartRateZonesOf(athlete.value) : null,
@@ -510,6 +521,7 @@ function formatDate(iso: string) {
           </template>
           <template v-else>Übernommen aus intervals.icu.</template>
         </p>
+        <StoryOverlayButton v-if="storyOverlay" :data="storyOverlay" class="story-overlay" />
 
         <RampTestResultPanel
           v-if="rampTest"
