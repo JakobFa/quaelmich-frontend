@@ -236,12 +236,14 @@ async function disconnect() {
             :disabled="busy"
             @change="toggleDescriptions(($event.target as HTMLInputElement).checked)"
           />
-          Training in die Strava-Beschreibung schreiben
+          Training in die Strava-Beschreibung schreiben und den Titel setzen
         </label>
         <p class="hint small">
           Hast du bestätigt, dass eine Fahrt dein geplantes Training war, schreibt quaelmich
-          darunter, was es war, den Ablauf, geplant gegen gefahren und deine Bewertung. Pendel- und
-          Zusatzfahrten bleiben unberührt, dein eigener Text auch.
+          darunter, was es war, den Ablauf, geplant gegen gefahren und deine Bewertung. Hat die
+          Fahrt noch den Standardtitel von Strava ("Radfahrt am Abend"), heißt sie danach wie das
+          Training. Pendel- und Zusatzfahrten bleiben unberührt, dein eigener Text und eigene
+          Titel auch.
           <template v-if="!status.canWriteActivities">
             Beim Einschalten fragt Strava einmal nach der Erlaubnis, Aktivitäten zu bearbeiten.
           </template>

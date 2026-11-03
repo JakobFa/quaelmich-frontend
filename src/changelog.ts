@@ -17,8 +17,18 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-03',
-    version: '0.9.31',
+    version: '0.9.32',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Strava-Titel mit dem Namen des Trainings',
+        text: 'Bestätigst du ein Training, setzt quaelmich den Titel der Strava-Fahrt auf den Namen des Trainings – aber nur, wenn die Fahrt noch den Standardtitel von Strava hat ("Radfahrt am Abend"). Eigene Titel bleiben immer stehen.',
+      },
+      {
+        kind: 'Besser',
+        title: 'Story-Overlay mit Intervallblöcken',
+        text: 'Über den Zahlen zeigt das Overlay jetzt das Profil des Trainings, mit den Blöcken in den Farben der Zonen.',
+      },
       {
         kind: 'Neu',
         title: 'Neuigkeiten-Seite',
