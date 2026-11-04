@@ -151,6 +151,8 @@ export type TrainingPlan = {
   weekAvailability?: Record<string, WeeklyAvailability>
   /** weitere Events, gleich wichtig wie das erste */
   moreEvents?: MoreEvent[]
+  /** krank gemeldet seit diesem Tag (ISO-Datum) – der Plan steht still; null = nicht krank */
+  sickSince?: string | null
 }
 
 /** Ein weiteres Event – gleiche Angaben wie das erste */

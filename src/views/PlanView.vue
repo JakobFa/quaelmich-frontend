@@ -15,6 +15,7 @@ import FtpHint from '../components/FtpHint.vue'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import AssessmentBadge from '../components/AssessmentBadge.vue'
+import SicknessPanel from '../components/SicknessPanel.vue'
 import StoryOverlayButton from '../components/StoryOverlayButton.vue'
 import WeekTimeEditor from '../components/WeekTimeEditor.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
@@ -176,6 +177,13 @@ async function changePause(action: 'pause' | 'resume') {
   }
 }
 
+function onSicknessUpdated(updated: TrainingPlan) {
+  const index = weekIndex.value
+  plan.value = updated
+  weekIndex.value = index
+  loadProgress()
+}
+
 // ---------- Vergangene Tage der aktuellen Woche einklappen ----------
 
 /** In der laufenden Woche steht heute oben; Vergangenes nur auf Wunsch (offene Rückmeldungen zeigt die Erinnerung) */
@@ -294,8 +302,16 @@ onMounted(async () => {
         @select-week="weekIndex = $event"
       />
 
+      <!-- Krank: hält den Plan an (offen) -->
+      <SicknessPanel
+        v-if="plan.sickSince"
+        :plan="plan"
+        :today="today"
+        @updated="onSicknessUpdated"
+      />
+
       <!-- Pause -->
-      <div v-if="pauseUntil" class="panel paused" role="status">
+      <div v-else-if="pauseUntil" class="panel paused" role="status">
         <p class="paused-title">⏸ Plan pausiert bis {{ formatShortDay(pauseUntil) }}</p>
         <button
           type="button"
@@ -480,13 +496,19 @@ onMounted(async () => {
           </template>
         </button>
         <button
-          v-if="!pauseUntil && !pauseFormOpen"
+          v-if="!pauseUntil && !pauseFormOpen && !plan.sickSince"
           type="button"
           class="pause-link"
           @click="pauseFormOpen = true"
         >
           ⏸ Plan pausieren
         </button>
+        <SicknessPanel
+          v-if="!plan.sickSince"
+          :plan="plan"
+          :today="today"
+          @updated="onSicknessUpdated"
+        />
       </div>
 
       <!-- Tage der Woche -->
