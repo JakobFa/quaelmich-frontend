@@ -45,7 +45,7 @@ describe('AiConnections', () => {
 
     const list = wrapper.find('[data-test="connections"]')
     expect(list.text()).toContain('Claude')
-    expect(list.text()).toContain('liest Plan')
+    expect(list.text()).toContain('liest Trainingsplan')
     expect(list.text()).toContain('noch nie')
 
     await list.find('button').trigger('click')
