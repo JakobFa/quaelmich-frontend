@@ -43,6 +43,21 @@ describe('Rückmeldung', () => {
     expect(missing.map((p) => p.date)).toEqual(['2026-10-20'])
   })
 
+  it('erinnert nicht, solange man krank gemeldet ist', () => {
+    const sick = {
+      workouts: [workout('2026-10-20'), workout('2026-10-22', { skipReason: 'SICK' })],
+      sickSince: '2026-10-21',
+    } as unknown as TrainingPlan
+
+    expect(missingFeedback(sick, '2026-10-24')).toEqual([])
+    // wieder gesund: die offenen Tage davor zählen wieder, die kranken Tage nicht
+    expect(
+      missingFeedback({ ...sick, sickSince: null } as TrainingPlan, '2026-10-24').map(
+        (p) => p.date,
+      ),
+    ).toEqual(['2026-10-20'])
+  })
+
   it('findet das Ende einer Pause', () => {
     const p = plan([
       workout('2026-10-22', { skipReason: 'PAUSE' }),
