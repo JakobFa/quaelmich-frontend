@@ -13,7 +13,7 @@ const error = ref('')
 const copied = ref(false)
 
 const scopeLabels: Record<string, string> = {
-  'plan:read': 'liest Plan, Fahrten und Diagnose',
+  'plan:read': 'liest Trainingsplan',
   'plan:write': 'darf den Plan ändern',
 }
 
@@ -78,8 +78,8 @@ async function copy() {
       </button>
     </div>
     <p class="hint">
-      Beim Verbinden fragt quaelmich dich, ob du den Zugriff erlaubst. Die KI sieht nur Zahlen, Daten und Titel, keine
-      Freitexte und keine Strava-Links.
+      Beim Verbinden fragt quaelmich dich, ob du den Zugriff erlaubst. Die KI sieht nur deinen Plan, dein Profil und die
+      Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten und keine Freitexte.
     </p>
 
     <h3 v-if="connections.length" class="sub">Verbundene KI-Apps</h3>
