@@ -18,7 +18,6 @@ import WorkoutBuilderView from '../views/WorkoutBuilderView.vue'
 import WorkoutPlayerView from '../views/WorkoutPlayerView.vue'
 import ProfileView from '../views/ProfileView.vue'
 import StravaCallbackView from '../views/StravaCallbackView.vue'
-import OAuthAuthorizeView from '../views/OAuthAuthorizeView.vue'
 
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
@@ -66,12 +65,7 @@ const router = createRouter({
     { path: '/workouts/:id', name: 'workout', component: WorkoutDetailView },
     { path: '/workouts/:id/fahren', name: 'workout-player', component: WorkoutPlayerView },
     { path: '/profil', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
-    {
-      path: '/oauth/authorize',
-      name: 'oauth-authorize',
-      component: OAuthAuthorizeView,
-      meta: { requiresAuth: true },
-    },
+    // KI-Zugang (OAuthAuthorizeView, AiConnections) vorerst abgeschaltet – das Backend antwortet dort mit 404
     {
       path: '/strava/callback',
       name: 'strava-callback',

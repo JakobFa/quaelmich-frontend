@@ -57,12 +57,8 @@ import { hasImpressum, legal } from '../legal'
           – nur verschlüsselt (AES-256) gespeichert –, dazu Athleten-ID und bei Strava dein Vorname.
         </li>
         <li>
-          <strong>KI-Zugang (nur wenn du ihn selbst einrichtest):</strong> Verbindest du eine KI-App
-          wie Claude mit quaelmich, merkt sich quaelmich diese Verbindung (Name der App, Zeitpunkt,
-          Zugriffsrechte; die Zugangsschlüssel nur als Hash). Die KI liest nur deinen Trainingsplan,
-          dein Profil und die Workout-Bibliothek – keine gefahrenen Einheiten, keine Daten aus Strava
-          und keine Freitexte. Die Verarbeitung dort richtet sich nach den Bedingungen deines
-          KI-Anbieters (bei Claude: Anthropic). Du kannst die Verbindung jederzeit im Profil beenden.
+          <strong>KI-Zugang:</strong> zurzeit abgeschaltet. quaelmich gibt keine Daten an KI-Apps
+          wie Claude weiter.
         </li>
         <li>
           <strong>Feedback (freiwillig):</strong> dein Text, die Seite, auf der du ihn geschrieben
@@ -83,10 +79,9 @@ import { hasImpressum, legal } from '../legal'
           und anzupassen – Art. 6 Abs. 1 lit. b DSGVO (Nutzungsvertrag).
         </li>
         <li>
-          Die Verbindung zu Strava und zu einer KI-App gibt es nur mit deiner Einwilligung – Art. 6
-          Abs. 1 lit. a DSGVO. Du erteilst sie bei Strava bzw. auf der Zustimmungsseite von
-          quaelmich und kannst sie jederzeit widerrufen: Strava im Profil unter „Strava“ mit
-          „Trennen“ (oder in den Einstellungen bei Strava), die KI-App im Profil unter „KI-Zugang“.
+          Die Verbindung zu Strava gibt es nur mit deiner Einwilligung – Art. 6 Abs. 1 lit. a DSGVO.
+          Du erteilst sie bei Strava und kannst sie jederzeit widerrufen: im Profil unter „Strava“
+          mit „Trennen“ (oder in den Einstellungen bei Strava).
           Eine Löschung deiner Daten verlangst du dort oder per Mail an die oben genannte Adresse.
         </li>
         <li>

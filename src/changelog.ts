@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.38',
+    version: '0.9.39',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'KI-Zugang vorerst abgeschaltet',
+        text: 'Die Verbindung zu KI-Apps wie Claude ist bis auf Weiteres abgeschaltet. Dein Plan richtet sich nach deinen gefahrenen Fahrten, auch denen aus Strava – und Strava erlaubt nicht, dass daraus Abgeleitetes an eine KI geht. Bestehende Verbindungen funktionieren nicht mehr.',
+      },
       {
         kind: 'Besser',
         title: 'Dein Plan merkt sich, was du schon konntest',
