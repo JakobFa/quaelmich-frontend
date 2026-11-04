@@ -332,6 +332,52 @@ export function calendarFeedUrl(token: string, scheme: 'https' | 'webcal' = 'htt
   return `${baseUrl.replace(/^https?:/, `${scheme}:`)}/calendar/${token}.ics`
 }
 
+/** KI-Anbindung (MCP): Angaben zur KI-App, die um Zugriff bittet (öffentlich) */
+export type OAuthClientInfo = { name: string; redirectUriRegistered: boolean; redirectHost: string | null }
+
+export function getOAuthClient(clientId: string, redirectUri: string) {
+  const query = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri })
+  return request<OAuthClientInfo>(`/oauth/client?${query.toString()}`)
+}
+
+export type OAuthConsent = {
+  clientId: string
+  redirectUri: string
+  codeChallenge: string
+  codeChallengeMethod: string
+  scope: string
+  state: string
+}
+
+/** Der Nutzer erlaubt der KI-App den Zugriff: liefert die Adresse, zu der der Browser zurückgeleitet wird */
+export function oauthConsent(consent: OAuthConsent) {
+  return request<{ redirectUrl: string }>('/oauth/consent', {
+    method: 'POST',
+    body: JSON.stringify(consent),
+  })
+}
+
+export type AiConnection = {
+  id: number
+  clientName: string
+  scope: string
+  createdAt: string
+  lastUsedAt: string | null
+}
+
+export function listAiConnections() {
+  return request<AiConnection[]>('/me/ai-connections')
+}
+
+export function revokeAiConnection(id: number) {
+  return request<void>(`/me/ai-connections/${id}`, { method: 'DELETE' })
+}
+
+/** Die Adresse des MCP-Servers, die man in der KI-App als Konnektor einträgt */
+export function mcpUrl() {
+  return `${baseUrl}/mcp`
+}
+
 /** Heute ein anderes Workout aus der Bibliothek fahren (409 = geht gerade nicht) */
 export function replacePlannedWorkout(id: number, workoutId: number, durationMinutes?: number) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/workout`, {
