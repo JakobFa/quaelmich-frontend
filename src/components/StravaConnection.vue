@@ -271,9 +271,12 @@ async function disconnect() {
       </div>
 
       <p class="hint">
-        Deine Radfahrten der letzten 14 Tage werden beim Öffnen des Plans und jede Nacht übernommen
-        – auch Pendelfahrten von der Apple Watch. Gibt es eine Fahrt auch in intervals.icu, zählt
-        sie nur einmal. Beim Trennen werden alle von Strava übernommenen Fahrten gelöscht.
+        Deine Radfahrten der letzten 42 Tage werden beim Öffnen des Plans und jede Nacht von Strava
+        geholt – auch Pendelfahrten von der Apple Watch. Gibt es eine Fahrt auch in intervals.icu,
+        zählt sie nur einmal. Strava erlaubt höchstens 7 Tage Zwischenspeicher: quaelmich behält die
+        Werte höchstens 6 Tage und holt sie danach neu. Beim Trennen (oder wenn du den Zugriff bei
+        Strava entziehst) werden alle von Strava übernommenen Daten gelöscht, du bekommst eine
+        Bestätigung per E-Mail.
       </p>
       <button type="button" class="button button-ghost" :disabled="busy" @click="disconnect">
         Trennen
@@ -283,8 +286,10 @@ async function disconnect() {
     <template v-else-if="status">
       <p class="hint">
         Übernimmt gefahrene Einheiten direkt von Strava, z. B. von der Apple Watch oder der
-        Strava-App – und auf Wunsch FTP, Gewicht und Maximalpuls. Noch im Test: höchstens 10
-        Personen können sich verbinden.
+        Strava-App – und auf Wunsch FTP, Gewicht und Maximalpuls. Gelesen werden Datum, Sportart,
+        Dauer, Distanz sowie Leistungs- und Pulswerte deiner Fahrten, keine GPS-Strecken. Du kannst
+        die Verbindung jederzeit trennen; dann wird alles gelöscht und du bekommst eine Bestätigung
+        per E-Mail. Noch im Test: höchstens 10 Personen können sich verbinden.
       </p>
       <button type="button" class="strava-button" @click="connect()">Connect with Strava</button>
     </template>

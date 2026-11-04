@@ -3,6 +3,7 @@ import { createRouter, createWebHistory } from 'vue-router'
 import { auth } from '../auth'
 import HomeView from '../views/HomeView.vue'
 import DatenschutzView from '../views/DatenschutzView.vue'
+import NutzungsbedingungenView from '../views/NutzungsbedingungenView.vue'
 import ForgotPasswordView from '../views/ForgotPasswordView.vue'
 import ImpressumView from '../views/ImpressumView.vue'
 import NewsView from '../views/NewsView.vue'
@@ -26,6 +27,7 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/impressum', name: 'impressum', component: ImpressumView },
     { path: '/datenschutz', name: 'datenschutz', component: DatenschutzView },
+    { path: '/nutzungsbedingungen', name: 'nutzungsbedingungen', component: NutzungsbedingungenView },
     { path: '/neuigkeiten', name: 'news', component: NewsView },
     { path: '/passwort-vergessen', name: 'forgot-password', component: ForgotPasswordView },
     { path: '/passwort-zuruecksetzen', name: 'reset-password', component: ResetPasswordView },
