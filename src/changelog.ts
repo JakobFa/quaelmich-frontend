@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.42',
+    version: '0.9.43',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Erholung auch kurz vor dem Event',
+        text: 'Liegt dein Event nur noch wenige Wochen entfernt, fällt die letzte Erholungswoche davor nicht mehr weg – sonst kämen zu viele Belastungswochen am Stück bis zum Tapering. Und es gibt nie mehr als zwei Erholungswochen hintereinander.',
+      },
       {
         kind: 'Besser',
         title: 'Erholungswochen kommen zuverlässiger',
