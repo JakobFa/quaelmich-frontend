@@ -313,7 +313,7 @@ onMounted(async () => {
 
       <!-- Pause -->
       <div v-else-if="pauseUntil" class="panel paused" role="status">
-        <p class="paused-title">⏸ Plan pausiert bis {{ formatShortDay(pauseUntil) }}</p>
+        <p class="paused-title">Plan pausiert bis {{ formatShortDay(pauseUntil) }}</p>
         <button
           type="button"
           class="button button-ghost"
@@ -388,7 +388,7 @@ onMounted(async () => {
       <!-- Erinnerung: vergangene Tage ohne Rückmeldung -->
       <div v-if="missing.length" class="panel reminder" role="status">
         <p class="reminder-title">
-          ⚠ Noch keine Rückmeldung für {{ missing.length }}
+          Noch keine Rückmeldung für {{ missing.length }}
           {{ missing.length === 1 ? 'Tag' : 'Tage' }}
         </p>
         <p class="hint">Gefahren, etwas anderes gemacht oder ausgefallen? Tipp auf den Tag.</p>
@@ -482,7 +482,6 @@ onMounted(async () => {
           class="pause-link"
           @click="openWeekTime"
         >
-          🕒
           <template v-if="weekTimeRolling">
             {{
               weekTimeAdjusted ? 'Zeit angepasst – ändern' : 'Zeit für die nächsten 10 Tage ändern'
@@ -502,7 +501,7 @@ onMounted(async () => {
           class="pause-link"
           @click="pauseFormOpen = true"
         >
-          ⏸ Plan pausieren
+          Plan pausieren
         </button>
         <SicknessPanel
           v-if="!plan.sickSince"
@@ -543,7 +542,7 @@ onMounted(async () => {
             <span class="date">{{ formatDay(day.date).date }}</span>
           </div>
 
-          <div v-if="day.isEvent" class="event">🏁 {{ day.eventName }}</div>
+          <div v-if="day.isEvent" class="event">{{ day.eventName }}</div>
 
           <RouterLink
             v-for="planned in day.workouts"
@@ -562,7 +561,7 @@ onMounted(async () => {
                 <span v-if="planned.completed" class="done-badge">
                   ✓ erledigt<template v-if="planned.rating"> · {{ planned.rating }}/10</template>
                 </span>
-                <span v-else-if="planned.skipReason === 'PAUSE'" class="skip-badge">⏸ Pause</span>
+                <span v-else-if="planned.skipReason === 'PAUSE'" class="skip-badge">Pause</span>
                 <span v-else-if="planned.skipReason" class="skip-badge">
                   ✗ nicht {{ planned.workout.type === 'STRENGTH' ? 'gemacht' : 'gefahren' }} ·
                   {{ skipReasonLabels[planned.skipReason] }}

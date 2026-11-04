@@ -83,7 +83,7 @@ onMounted(async () => {
 
       <div class="download">
         <RouterLink :to="`/workouts/${workout.id}/fahren`" class="button"
-          >▶ In der App fahren</RouterLink
+          >In der App fahren</RouterLink
         >
         <RouterLink
           v-if="custom"

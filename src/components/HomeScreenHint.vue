@@ -5,7 +5,7 @@ const isIos = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(naviga
 
 <template>
   <details class="panel home-screen" :open="isIos">
-    <summary class="panel-title">📱 quaelmich als App aufs Handy</summary>
+    <summary class="panel-title">quaelmich als App aufs Handy</summary>
     <p class="hint">
       Auf dem Home-Bildschirm öffnet sich quaelmich wie eine App – ohne Browserleiste, mit eigenem
       Symbol.

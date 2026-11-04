@@ -81,7 +81,7 @@ function formatDate(iso: string) {
     <ul v-if="events.length" class="list">
       <li v-for="event in events" :key="event.id">
         <div>
-          <strong>🏁 {{ event.name }}</strong>
+          <strong>{{ event.name }}</strong>
           <span class="facts">
             {{ formatDate(event.date) }} · {{ event.distanceKm }} km ·
             {{ event.elevationMeters }} Hm

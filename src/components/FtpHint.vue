@@ -70,14 +70,14 @@ async function dismiss() {
 <template>
   <div v-if="visible" class="panel ftp-hint" role="status">
     <template v-if="fromTest">
-      <p class="title">🎯 Neue FTP aus deinem Rampentest</p>
+      <p class="title">Neue FTP aus deinem Rampentest</p>
       <p>
         {{ athlete.suggestedFtpNote }} Bisher sind {{ athlete.ftp }} W eingetragen – soll quaelmich
         ab jetzt mit <strong>{{ athlete.suggestedFtp }} W</strong> rechnen?
       </p>
     </template>
     <template v-else>
-      <p class="title">💡 Deine FTP ist wahrscheinlich zu niedrig</p>
+      <p class="title">Deine FTP ist wahrscheinlich zu niedrig</p>
       <p>
         {{ athlete.suggestedFtpNote }} Mit {{ athlete.ftp }} W FTP ist das über diese Dauer
         eigentlich nicht möglich – geschätzt liegt sie bei mindestens
