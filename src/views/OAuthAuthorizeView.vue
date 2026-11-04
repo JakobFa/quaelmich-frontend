@@ -20,7 +20,7 @@ const params = computed(() => ({
 }))
 
 const scopeLabels: Record<string, string> = {
-  'plan:read': 'Deinen Plan, deine Fahrten und die Diagnose lesen',
+  'plan:read': 'Deinen Trainingsplan lesen',
   'plan:write': 'Deinen Plan ändern (jede Änderung wird geprüft)',
 }
 
@@ -92,7 +92,7 @@ function deny() {
       <p class="hint">
         Nach deiner Erlaubnis leitet quaelmich dich zurück zu
         <strong data-test="host">{{ client.redirectHost }}</strong
-        >. Die KI sieht nur Zahlen, Daten und Titel deines Plans, keine Freitexte und keine Strava-Links. Du kannst die
+        >. Die KI sieht nur deinen Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten und keine Freitexte. Du kannst die
         Verbindung jederzeit im Profil beenden.
       </p>
       <div class="actions">
