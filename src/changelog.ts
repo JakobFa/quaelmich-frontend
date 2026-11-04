@@ -17,8 +17,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.35',
+    version: '0.9.37',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Strava: klarere Regeln für deine Daten',
+        text: 'Von Strava übernommene Fahrten bleiben höchstens 6 Tage gespeichert und werden dann neu geholt. Wenn du Strava trennst oder dein Konto löschst, bekommst du eine Bestätigung per E-Mail. Neu sind die Nutzungsbedingungen, die Datenschutzerklärung ist ausführlicher.',
+      },
       {
         kind: 'Neu',
         title: 'Claude kann deinen Plan lesen',
