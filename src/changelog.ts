@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.41',
+    version: '0.9.42',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Erholungswochen kommen zuverlässiger',
+        text: 'Wer unter der Woche oft nicht zum Fahren kommt, bekommt trotzdem regelmäßig eine Erholungswoche – sie wird höchstens einmal verschoben. Und fällt eine Erholungswoche in einen Urlaub, in dem du viel fährst, zählt sie nicht als erledigt: Danach wird es wieder ruhiger.',
+      },
       {
         kind: 'Besser',
         title: 'Nach einer ausgefallenen Erholungswoche passt der Rhythmus wieder',
