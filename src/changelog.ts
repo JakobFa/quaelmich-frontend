@@ -16,6 +16,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-04',
+    version: '0.9.34',
+    changes: [
+      {
+        kind: 'Neu',
+        title: 'Dein Plan als Kalender-Abo',
+        text: 'Im Profil unter "Kalender" bekommst du einen geheimen Link, den du in Apple Kalender, Google Kalender oder Outlook abonnierst. Deine Einheiten stehen dann als ganztägige Einträge im Kalender und aktualisieren sich von selbst, wenn sich dein Plan ändert (je nach App nach einigen Minuten bis einem Tag).',
+      },
+    ],
+  },
+  {
     date: '2026-11-03',
     version: '0.9.33',
     changes: [
