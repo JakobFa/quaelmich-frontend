@@ -21,6 +21,16 @@ export const changelog: Release[] = [
     changes: [
       {
         kind: 'Neu',
+        title: 'Krank melden – in beide Richtungen',
+        text: 'Mit "Krank melden" hältst du deinen Plan an, bis du "Wieder gesund" sagst – er steht dann komplett still, auch für die kommenden Wochen. Hast du die App erst nach Krankheitsbeginn geöffnet, trägst du den Beginn einfach rückwirkend ein. Eine schon vorbeigegangene Krankheit kannst du ebenfalls nachtragen. Nach über einer Woche Krankheit startet eine lockere Einstiegswoche ohne harte Einheiten.',
+      },
+      {
+        kind: 'Besser',
+        title: 'Der Plan richtet sich nach dem, was du wirklich gefahren bist',
+        text: 'Der Umfang der nächsten Wochen baut auf deinen gefahrenen Minuten auf, nicht nur auf dem Plan. Hast du eine Belastungswoche zu weniger als 70 % geschafft, entfällt die Erholungswoche danach – du hast dich ja nicht überlastet. Erholungswochen sind außerdem nicht mehr so leer: bei wenig Zeit mit etwas Grundlage und einer kurzen, leichten Einheit.',
+      },
+      {
+        kind: 'Neu',
         title: 'Dein Plan als Kalender-Abo',
         text: 'Im Profil unter "Kalender" bekommst du einen geheimen Link, den du in Apple Kalender, Google Kalender oder Outlook abonnierst. Deine Einheiten stehen dann als ganztägige Einträge im Kalender und aktualisieren sich von selbst, wenn sich dein Plan ändert (je nach App nach einigen Minuten bis einem Tag).',
       },

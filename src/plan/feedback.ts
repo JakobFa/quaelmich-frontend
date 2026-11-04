@@ -5,7 +5,12 @@ export function needsFeedback(planned: PlannedWorkout, today: string): boolean {
   return planned.date < today && !planned.completed && !planned.actual && !planned.skipReason
 }
 
+/**
+ * Tage ohne Rückmeldung, an die die App erinnert. Wer krank gemeldet ist, wird nicht ans Nachtragen erinnert –
+ * die Tage ab Krankheitsbeginn sind ohnehin ausgesetzt, und davor kann das warten, bis man wieder fit ist.
+ */
 export function missingFeedback(plan: TrainingPlan, today: string): PlannedWorkout[] {
+  if (plan.sickSince) return []
   return plan.workouts.filter((planned) => needsFeedback(planned, today))
 }
 
