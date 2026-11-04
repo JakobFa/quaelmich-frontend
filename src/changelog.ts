@@ -29,6 +29,11 @@ export const changelog: Release[] = [
         title: 'Der Plan richtet sich nach dem, was du wirklich gefahren bist',
         text: 'Der Umfang der nächsten Wochen baut auf deinen gefahrenen Minuten auf, nicht nur auf dem Plan. Hast du eine Belastungswoche zu weniger als 70 % geschafft, entfällt die Erholungswoche danach – du hast dich ja nicht überlastet. Erholungswochen sind außerdem nicht mehr so leer: bei wenig Zeit mit etwas Grundlage und einer kurzen, leichten Einheit.',
       },
+      {
+        kind: 'Neu',
+        title: 'Dein Plan als Kalender-Abo',
+        text: 'Im Profil unter "Kalender" bekommst du einen geheimen Link, den du in Apple Kalender, Google Kalender oder Outlook abonnierst. Deine Einheiten stehen dann als ganztägige Einträge im Kalender und aktualisieren sich von selbst, wenn sich dein Plan ändert (je nach App nach einigen Minuten bis einem Tag).',
+      },
     ],
   },
   {
