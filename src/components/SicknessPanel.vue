@@ -25,6 +25,22 @@ const error = ref('')
 
 const sickSince = computed(() => props.plan.sickSince ?? null)
 
+/**
+ * Erste Fahrt (zugeordnet, abgehakt oder zusätzlich) seit Krankheitsbeginn: ein Zeichen, dass man wieder fit ist
+ * und nur vergessen hat, "wieder gesund" zu drücken.
+ */
+const firstRide = computed(() => {
+  const since = sickSince.value
+  if (!since) return null
+  const dates = [
+    ...props.plan.workouts
+      .filter((planned) => planned.actual || planned.completed)
+      .map((planned) => planned.date),
+    ...(props.plan.extraRides ?? []).map((ride) => ride.date),
+  ].filter((date) => date >= since && date <= props.today)
+  return dates.sort()[0] ?? null
+})
+
 function formatDay(iso: string) {
   return new Date(`${iso}T12:00:00`).toLocaleDateString('de-DE', {
     weekday: 'short',
@@ -61,10 +77,11 @@ function submit() {
 }
 
 function recovered() {
-  return run(
-    () => endSickness(earlierOpen.value ? healthyFrom.value : undefined),
-    'Das hat nicht geklappt. Bitte versuch es nochmal.',
-  )
+  return recoveredSince(earlierOpen.value ? healthyFrom.value : undefined)
+}
+
+function recoveredSince(since?: string) {
+  return run(() => endSickness(since), 'Das hat nicht geklappt. Bitte versuch es nochmal.')
 }
 
 const canSubmit = computed(() =>
@@ -79,6 +96,15 @@ const canSubmit = computed(() =>
       Alles ab diesem Tag ist ausgesetzt, auch die kommenden Wochen. Wenn du wieder fit bist, geht es
       sanft weiter – nach über einer Woche mit einer lockeren Einstiegswoche.
     </p>
+    <div v-if="firstRide" class="ride-hint" role="note" data-test="ride-hint">
+      <p>
+        🚴 Du bist am {{ formatDay(firstRide) }} gefahren – bist du wieder gesund? Dann gilt dein Plan
+        ab diesem Tag wieder.
+      </p>
+      <button type="button" class="button" :disabled="busy" @click="recoveredSince(firstRide)">
+        Ja, gesund seit {{ formatDay(firstRide) }}
+      </button>
+    </div>
     <div class="actions">
       <button type="button" class="button" :disabled="busy" @click="recovered">
         Wieder gesund – Plan fortsetzen
@@ -198,6 +224,18 @@ const canSubmit = computed(() =>
 
 .earlier {
   margin-top: 12px;
+}
+
+.ride-hint {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border-left: 3px solid var(--color-hot);
+  background: var(--color-panel-raised);
+}
+
+.ride-hint p {
+  margin: 0 0 8px;
+  font-size: 0.9rem;
 }
 
 .actions {

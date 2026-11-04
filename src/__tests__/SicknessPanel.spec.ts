@@ -70,6 +70,33 @@ describe('SicknessPanel', () => {
     expect(wrapper.emitted('updated')).toHaveLength(1)
   })
 
+  it('fragt nach, wenn seit Krankheitsbeginn eine Fahrt da ist, und meldet gesund ab diesem Tag', async () => {
+    endSickness.mockResolvedValue(planWith(null))
+    const sick = {
+      ...planWith('2026-11-01'),
+      extraRides: [{ id: 1, date: '2026-11-03' }, { id: 2, date: '2026-11-04' }],
+    } as unknown as TrainingPlan
+    const wrapper = mount(SicknessPanel, { props: { plan: sick, today } })
+
+    const hint = wrapper.find('[data-test="ride-hint"]')
+    expect(hint.exists()).toBe(true)
+    expect(hint.text()).toContain('wieder gesund')
+    await hint.find('button').trigger('click')
+    await flushPromises()
+
+    expect(endSickness).toHaveBeenCalledWith('2026-11-03')
+  })
+
+  it('fragt nicht nach, solange es keine Fahrt seit Krankheitsbeginn gibt', () => {
+    const sick = {
+      ...planWith('2026-11-02'),
+      extraRides: [{ id: 1, date: '2026-10-30' }],
+    } as unknown as TrainingPlan
+    const wrapper = mount(SicknessPanel, { props: { plan: sick, today } })
+
+    expect(wrapper.find('[data-test="ride-hint"]').exists()).toBe(false)
+  })
+
   it('kann rückwirkend "schon seit" gesund melden', async () => {
     endSickness.mockResolvedValue(planWith(null))
     const wrapper = mount(SicknessPanel, { props: { plan: planWith('2026-11-01'), today } })
