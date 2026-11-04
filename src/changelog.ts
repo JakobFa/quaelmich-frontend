@@ -17,8 +17,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.34',
+    version: '0.9.35',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Claude kann deinen Plan lesen',
+        text: 'Im Profil unter "KI-Zugang" findest du die Adresse, mit der du Claude als Konnektor mit quaelmich verbindest. Danach kann Claude deinen Plan, deine Fahrten und die Diagnose lesen und dir erklären, warum dein Plan so aussieht. Das läuft über dein eigenes Claude-Konto, du erlaubst jede Verbindung selbst und kannst sie jederzeit beenden. Änderungen am Plan kommen später.',
+      },
       {
         kind: 'Neu',
         title: 'Krank melden – in beide Richtungen',
