@@ -294,6 +294,44 @@ export function resumePlan() {
   return request<TrainingPlan>('/me/plan/pause', { method: 'DELETE' })
 }
 
+/**
+ * Krank melden. Ohne until: Der Plan steht still, bis man "wieder gesund" meldet; from darf in der
+ * Vergangenheit liegen. Mit until: ein abgeschlossener Zeitraum (auch rückwirkend). 409 = geht nicht.
+ */
+export function startSickness(from: string, until?: string) {
+  return request<TrainingPlan>('/me/plan/sickness', {
+    method: 'PUT',
+    body: JSON.stringify(until ? { from, until } : { from }),
+  })
+}
+
+/** Wieder gesund – optional schon seit einem früheren Tag (409 = niemand krank gemeldet) */
+export function endSickness(since?: string) {
+  const query = since ? `?since=${encodeURIComponent(since)}` : ''
+  return request<TrainingPlan>(`/me/plan/sickness${query}`, { method: 'DELETE' })
+}
+
+/** Kalender-Abo (iCal): token = null, solange keins eingerichtet ist */
+export type CalendarSubscription = { token: string | null }
+
+export function getCalendarSubscription() {
+  return request<CalendarSubscription>('/me/calendar')
+}
+
+/** Einrichten oder einen neuen Link erzeugen (der alte wird ungültig) */
+export function renewCalendarSubscription() {
+  return request<CalendarSubscription>('/me/calendar', { method: 'POST' })
+}
+
+export function endCalendarSubscription() {
+  return request<void>('/me/calendar', { method: 'DELETE' })
+}
+
+/** Die Adresse des Feeds – mit webcal:// öffnet ein Klick direkt die Kalender-App */
+export function calendarFeedUrl(token: string, scheme: 'https' | 'webcal' = 'https') {
+  return `${baseUrl.replace(/^https?:/, `${scheme}:`)}/calendar/${token}.ics`
+}
+
 /** Heute ein anderes Workout aus der Bibliothek fahren (409 = geht gerade nicht) */
 export function replacePlannedWorkout(id: number, workoutId: number, durationMinutes?: number) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/workout`, {
