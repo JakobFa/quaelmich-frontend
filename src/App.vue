@@ -97,6 +97,7 @@ function logout() {
     <RouterLink to="/neuigkeiten">Neuigkeiten</RouterLink>
     <RouterLink v-if="hasImpressum" to="/impressum">Impressum</RouterLink>
     <RouterLink to="/datenschutz">Datenschutz</RouterLink>
+    <RouterLink to="/nutzungsbedingungen">Nutzungsbedingungen</RouterLink>
   </footer>
 </template>
 
