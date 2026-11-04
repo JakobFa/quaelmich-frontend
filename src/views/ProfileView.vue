@@ -6,7 +6,6 @@ import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
 import AccountPanel from '../components/AccountPanel.vue'
 import HomeScreenHint from '../components/HomeScreenHint.vue'
 import MoreEventsPanel from '../components/MoreEventsPanel.vue'
-import AiConnections from '../components/AiConnections.vue'
 import CalendarSubscription from '../components/CalendarSubscription.vue'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
@@ -376,7 +375,6 @@ function hourOptions(current: number | undefined): number[] {
     <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
     <IntervalsConnection />
     <CalendarSubscription />
-    <AiConnections />
 
     <HomeScreenHint />
 

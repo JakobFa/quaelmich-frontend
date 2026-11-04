@@ -1,6 +1,9 @@
 /**
- * Neuigkeiten für die Nutzer: nur Änderungen, die man in der App merkt – keine reine Technik.
- * Neueste zuerst. Bei jedem Feature, das Nutzer interessiert, hier einen Eintrag ergänzen.
+ * Neuigkeiten für die Nutzer, neueste zuerst. Jede neue Version bekommt hier einen Eintrag.
+ * Änderungen, die man in der App merkt, werden aus Nutzersicht beschrieben.
+ * Rein technische Änderungen nicht im Detail erklären, nur kurz erwähnen, damit klar ist,
+ * warum die Version gestiegen ist, z. B.:
+ *   { kind: 'Besser', title: 'Technische Verbesserungen', text: 'Kleinere technische Verbesserungen im Hintergrund.' }
  */
 export type ChangeKind = 'Neu' | 'Besser'
 
@@ -17,8 +20,28 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.37',
+    version: '0.9.40',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Erholungswochen richten sich nach dem, was du gefahren bist',
+        text: 'Waren die letzten Wochen ohnehin ruhiger als davor – etwa nach einem Rennen oder Urlaub –, entfällt die nächste Erholungswoche und du trainierst normal weiter. Bist du in den letzten zwei Wochen deutlich mehr gefahren als sonst, kommt sie dafür eine Woche früher. Und in Erholungswochen mit vielen Trainingstagen bleibt der Tag nach dem Wochenende frei, ein lockerer Tag bekommt ein paar kurze Antritte – statt jeden Tag dieselbe kurze Grundlage.',
+      },
+      {
+        kind: 'Besser',
+        title: 'KI-Zugang vorerst abgeschaltet',
+        text: 'Die Verbindung zu KI-Apps wie Claude ist bis auf Weiteres abgeschaltet. Dein Plan richtet sich nach deinen gefahrenen Fahrten, auch denen aus Strava – und Strava erlaubt nicht, dass daraus Abgeleitetes an eine KI geht. Bestehende Verbindungen funktionieren nicht mehr.',
+      },
+      {
+        kind: 'Besser',
+        title: 'Dein Plan merkt sich, was du schon konntest',
+        text: 'Nach einer Pause startet der Plan nicht mehr bei null, sondern berücksichtigt deine besten vier Wochen der letzten zwei Monate – nach Krankheit oder Verletzung gilt das nicht. Harte Einheiten liegen nicht mehr am Tag nach einer langen Ausfahrt, und Tempo, Sweet Spot und Schwelle steigern sich länger, mit längeren Blöcken. Trainierst du auf eine gute Zeit in einem Ultra, bekommt jede zweite lange Ausfahrt Tempo-Blöcke.',
+      },
+      {
+        kind: 'Besser',
+        title: 'Ruhetage bleiben Ruhetage',
+        text: 'Ein Tag ohne geplantes Training ist jetzt immer als Ruhetag markiert – auch wenn du an dem Tag frei gefahren bist.',
+      },
       {
         kind: 'Besser',
         title: 'Strava: klarere Regeln für deine Daten',
