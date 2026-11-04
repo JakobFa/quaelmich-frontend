@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.39',
+    version: '0.9.40',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Erholungswochen richten sich nach dem, was du gefahren bist',
+        text: 'Waren die letzten Wochen ohnehin ruhiger als davor – etwa nach einem Rennen oder Urlaub –, entfällt die nächste Erholungswoche und du trainierst normal weiter. Bist du in den letzten zwei Wochen deutlich mehr gefahren als sonst, kommt sie dafür eine Woche früher. Und in Erholungswochen mit vielen Trainingstagen bleibt der Tag nach dem Wochenende frei, ein lockerer Tag bekommt ein paar kurze Antritte – statt jeden Tag dieselbe kurze Grundlage.',
+      },
       {
         kind: 'Besser',
         title: 'KI-Zugang vorerst abgeschaltet',
