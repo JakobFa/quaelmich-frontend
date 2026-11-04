@@ -42,7 +42,7 @@ const busy = (status: DeviceStatus) => status === 'connecting' || status === 're
 
     <template v-else>
       <div class="device">
-        <span class="device-label">🚲 Trainer</span>
+        <span class="device-label">Trainer</span>
         <template v-if="state.trainerStatus === 'none'">
           <button type="button" class="link" @click="trainer.connectTrainer()">verbinden</button>
         </template>
@@ -71,7 +71,7 @@ const busy = (status: DeviceStatus) => status === 'connecting' || status === 're
       </div>
 
       <div class="device">
-        <span class="device-label">❤ Pulsgurt</span>
+        <span class="device-label">Pulsgurt</span>
         <template v-if="state.heartRateStatus === 'none'">
           <button type="button" class="link" @click="trainer.connectHeartRate()">verbinden</button>
         </template>

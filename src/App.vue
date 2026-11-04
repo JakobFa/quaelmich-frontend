@@ -32,7 +32,7 @@ function logout() {
 
 <template>
   <p v-if="isStaging" class="staging-banner" role="note">
-    ⚠ Test-Seite – Daten sind simuliert und werden regelmäßig gelöscht.
+    Test-Seite – Daten sind simuliert und werden regelmäßig gelöscht.
     <a href="https://quaelmich.com">Zur echten App →</a>
   </p>
   <header class="masthead">

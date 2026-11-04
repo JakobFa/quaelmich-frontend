@@ -53,7 +53,7 @@ function formatTarget(low: number, high: number | null) {
     </div>
     <p v-if="accuracy.tip" class="tip">{{ accuracy.tip }}</p>
     <p v-if="accuracy.uncertain" class="uncertain">
-      ⚠ Die Intervalle waren in der Fahrt nicht klar zu erkennen – nimm den Wert mit Vorsicht.
+      Die Intervalle waren in der Fahrt nicht klar zu erkennen – nimm den Wert mit Vorsicht.
     </p>
     <IntervalOverlayChart :accuracy="accuracy" />
     <ol class="blocks">

@@ -326,7 +326,7 @@ function formatDate(iso: string) {
         <p class="skipped-title">
           {{
             planned.skipReason === 'PAUSE'
-              ? '⏸ Pausiert'
+              ? 'Pausiert'
               : `✗ Nicht gemacht – ${skipReasonLabels[planned.skipReason]}`
           }}
         </p>
@@ -371,7 +371,7 @@ function formatDate(iso: string) {
             title="Zufällig ein anderes Workout, das in deine Zeit an diesem Tag passt"
             @click="shuffle"
           >
-            🎲 Überrasch mich
+            Überrasch mich
           </button>
         </div>
         <p class="hint shuffle-hint">
@@ -427,7 +427,7 @@ function formatDate(iso: string) {
         :to="`/plan/${planned.id}/fahren`"
         class="button play-link"
       >
-        ▶ Jetzt in der App fahren
+        Jetzt in der App fahren
       </RouterLink>
 
       <!-- Fahrt des Tages selbst zuordnen, wenn sie nicht automatisch erkannt wurde -->

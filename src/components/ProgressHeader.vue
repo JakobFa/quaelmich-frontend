@@ -138,7 +138,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
       </div>
       <div v-if="progress.streakWeeks > 0" class="streak">
         <dt>Serie</dt>
-        <dd>🔥 {{ progress.streakWeeks }}<small> Wo.</small></dd>
+        <dd>{{ progress.streakWeeks }}<small> Wo.</small></dd>
       </div>
     </dl>
     <p v-if="load" class="load-hint">{{ loadLabels[load.status].hint }}</p>

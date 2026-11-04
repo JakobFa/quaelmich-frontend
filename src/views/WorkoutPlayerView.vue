@@ -645,10 +645,10 @@ onBeforeUnmount(() => {
           aria-label="Zurück zum Anfang des Abschnitts"
           @click="jumpTo(previousStepStart(steps, elapsed))"
         >
-          ⏮
+          Abschnitt zurück
         </button>
         <button type="button" class="button play" @click="toggle">
-          {{ running ? '⏸ Pause' : elapsed > 0 ? '▶ Weiter' : '▶ Los' }}
+          {{ running ? 'Pause' : elapsed > 0 ? 'Weiter' : 'Los' }}
         </button>
         <button
           type="button"
@@ -656,7 +656,7 @@ onBeforeUnmount(() => {
           aria-label="Zum nächsten Abschnitt"
           @click="jumpTo(nextStepStart(steps, elapsed))"
         >
-          ⏭
+          Abschnitt vor
         </button>
       </div>
 
@@ -679,7 +679,7 @@ onBeforeUnmount(() => {
           :aria-pressed="ergOn"
           @click="ergOn = !ergOn"
         >
-          {{ ergOn ? '⚡ ERG an' : '⚡ ERG aus – frei fahren' }}
+          {{ ergOn ? 'ERG an' : 'ERG aus – frei fahren' }}
         </button>
         <span class="intensity">
           Intensität
@@ -695,10 +695,10 @@ onBeforeUnmount(() => {
 
       <div v-if="!finished" class="extras">
         <button type="button" class="link" :aria-pressed="soundOn" @click="soundOn = !soundOn">
-          {{ soundOn ? '🔊 Ton an' : '🔇 Ton aus' }}
+          {{ soundOn ? 'Ton an' : 'Ton aus' }}
         </button>
         <button v-if="canFullscreen" type="button" class="link" @click="toggleFullscreen">
-          ⛶ Vollbild
+          Vollbild
         </button>
         <button v-if="elapsed > 0 && !running" type="button" class="link" @click="restart">
           ↺ Von vorn
