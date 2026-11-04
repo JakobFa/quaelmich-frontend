@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-04',
-    version: '0.9.40',
+    version: '0.9.41',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Nach einer ausgefallenen Erholungswoche passt der Rhythmus wieder',
+        text: 'Entfällt eine Erholungswoche, weil du ohnehin ruhiger gefahren bist, zählt dein Plan ab der letzten Woche, die so ruhig war wie eine Erholungswoche – die nächste kommt dann nach einem normalen Block statt erst Wochen später. Warst du nur etwas weniger unterwegs, rückt sie einfach eine Woche nach hinten. Die Phasen bis zu deinem Event bleiben dabei, wo sie sind.',
+      },
       {
         kind: 'Besser',
         title: 'Erholungswochen richten sich nach dem, was du gefahren bist',
