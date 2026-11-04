@@ -560,6 +560,9 @@ onMounted(async () => {
             <WorkoutProfile :steps="planned.workout.steps" class="profile" />
           </RouterLink>
 
+          <!-- auch mit Zusatzfahrt bleibt es ein (geplanter) Ruhetag -->
+          <p v-if="!day.isEvent && day.workouts.length === 0" class="rest">Ruhetag</p>
+
           <div v-for="ride in day.extraRides" :key="`extra-${ride.id}`" class="extra">
             <div>
               <span class="type">+ {{ sportLabels[ride.sport ?? 'RIDE'] }}</span>
@@ -589,12 +592,6 @@ onMounted(async () => {
             <span v-else class="source-tag">intervals.icu</span>
           </div>
 
-          <p
-            v-if="!day.isEvent && day.workouts.length === 0 && day.extraRides.length === 0"
-            class="rest"
-          >
-            Ruhetag
-          </p>
         </li>
       </ol>
     </template>
