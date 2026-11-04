@@ -43,7 +43,7 @@ async function adopt() {
     </p>
     <p v-if="difference !== null && !same" class="change">
       Bisher {{ current }} W –
-      {{ difference > 0 ? `${difference} W mehr 💪` : `${-difference} W weniger` }}
+      {{ difference > 0 ? `${difference} W mehr` : `${-difference} W weniger` }}
     </p>
     <p v-else-if="same" class="change">Genau deine eingetragene FTP – passt.</p>
     <div v-if="athlete && !same && !adopted" class="actions">

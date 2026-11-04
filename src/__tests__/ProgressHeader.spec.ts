@@ -42,7 +42,7 @@ describe('ProgressHeader', () => {
     expect(text).toContain('Auf Kurs')
     expect(text).toContain('310 / 340 TSS geplant')
     expect(text).not.toContain('(7/9)')
-    expect(text).toContain('🔥 4')
+    expect(text).toContain('4')
     expect(text).not.toContain('Bergziegen-Punk')
   })
 

@@ -91,14 +91,14 @@ const canSubmit = computed(() =>
 
 <template>
   <div v-if="sickSince" class="panel sick" role="status">
-    <p class="title">🤒 Krank seit {{ formatDay(sickSince) }} – dein Plan ist angehalten</p>
+    <p class="title">Krank seit {{ formatDay(sickSince) }} – dein Plan ist angehalten</p>
     <p class="hint">
       Alles ab diesem Tag ist ausgesetzt, auch die kommenden Wochen. Wenn du wieder fit bist, geht es
       sanft weiter – nach über einer Woche mit einer lockeren Einstiegswoche.
     </p>
     <div v-if="firstRide" class="ride-hint" role="note" data-test="ride-hint">
       <p>
-        🚴 Du bist am {{ formatDay(firstRide) }} gefahren – bist du wieder gesund? Dann gilt dein Plan
+        Du bist am {{ formatDay(firstRide) }} gefahren – bist du wieder gesund? Dann gilt dein Plan
         ab diesem Tag wieder.
       </p>
       <button type="button" class="button" :disabled="busy" @click="recoveredSince(firstRide)">
@@ -172,7 +172,7 @@ const canSubmit = computed(() =>
     <p v-if="error" class="error" role="alert">{{ error }}</p>
   </div>
 
-  <button v-else type="button" class="open-link" @click="open = true">🤒 Krank melden</button>
+  <button v-else type="button" class="open-link" @click="open = true">Krank melden</button>
 </template>
 
 <style scoped>

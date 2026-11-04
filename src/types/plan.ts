@@ -83,13 +83,13 @@ export type AdjustOptions = {
 export type Sport = 'RIDE' | 'RUN' | 'SWIM' | 'WALK' | 'HIKE' | 'STRENGTH' | 'OTHER'
 
 export const sportLabels: Record<Sport, string> = {
-  RIDE: '🚴 Zusatzfahrt',
-  RUN: '🏃 Laufen',
-  SWIM: '🏊 Schwimmen',
-  WALK: '🚶 Gehen',
-  HIKE: '🥾 Wandern',
-  STRENGTH: '🏋️ Kraft',
-  OTHER: '⚡ Sonstiges',
+  RIDE: 'Zusatzfahrt',
+  RUN: 'Laufen',
+  SWIM: 'Schwimmen',
+  WALK: 'Gehen',
+  HIKE: 'Wandern',
+  STRENGTH: 'Kraft',
+  OTHER: 'Sonstiges',
 }
 
 /** Einheit ohne geplantes Workout: Zusatzfahrt oder andere Sportart, zählt als Belastung */

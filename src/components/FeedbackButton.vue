@@ -48,7 +48,7 @@ async function submit() {
   <div class="feedback">
     <div v-if="open" class="panel sheet" role="dialog" aria-label="Feedback">
       <template v-if="sent">
-        <p class="title">Danke! 🙌</p>
+        <p class="title">Danke!</p>
         <p class="hint">Dein Feedback ist angekommen.</p>
         <div class="actions">
           <button type="button" class="button button-ghost" @click="sent = false">
