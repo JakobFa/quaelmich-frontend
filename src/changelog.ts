@@ -20,8 +20,18 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-05',
-    version: '0.9.45',
+    version: '0.9.46',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Im Player gefahren = erledigt',
+        text: 'Fährst du ein Workout aus deinem Plan im Player, ist es danach automatisch abgehakt. Die Fahrt bei Strava oder intervals.icu wird über die Startzeit zugeordnet, ohne dass du noch bestätigen musst – und wenn du es eingeschaltet hast, steht das Training gleich in der Strava-Beschreibung.',
+      },
+      {
+        kind: 'Besser',
+        title: 'Neue FTP direkt bei Strava',
+        text: 'Hast du die Strava-Beschreibung eingeschaltet, steht nach einem Rampentest deine neue FTP ganz oben in der Beschreibung und im Titel der Fahrt, z. B. „Rampentest · FTP 305 W“.',
+      },
       {
         kind: 'Besser',
         title: 'Plan rechnet mit deiner Belastung, nicht nur mit Minuten',

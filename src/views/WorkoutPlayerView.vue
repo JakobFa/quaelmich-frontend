@@ -8,6 +8,7 @@ import {
   getPlannedWorkout,
   getStravaStatus,
   getWorkout,
+  markRiddenInPlayer,
   updateProgress,
   uploadRecordingToStrava,
 } from '../api'
@@ -461,6 +462,23 @@ function keepGoing() {
 
 const marking = ref(false)
 const markError = ref(false)
+/** Im Plan als erledigt eingetragen, weil die Fahrt im Player aufgezeichnet wurde */
+const riddenSaved = ref(false)
+
+/**
+ * Aus dem Plan gefahren und aufgezeichnet: Dann ist klar, dass es dieses Training war – kein Abhaken nötig, die
+ * Fahrt bei Strava bzw. intervals.icu wird später ohne Nachfrage zugeordnet.
+ */
+async function saveRideInPlan() {
+  const recording = recorder.toJSON()
+  if (!fromPlan || !auth.isLoggedIn.value || !recording) return
+  try {
+    await markRiddenInPlayer(id, recording.startedAt)
+    riddenSaved.value = true
+  } catch {
+    // dann bleibt das Abhaken per Knopf
+  }
+}
 
 function finish() {
   pause()
@@ -474,6 +492,7 @@ function finish() {
     )
   }
   setTimeout(() => beep(1320, 0.6), 450)
+  void saveRideInPlan()
   void uploadAfterRide()
 }
 
@@ -594,9 +613,13 @@ onBeforeUnmount(() => {
             jede andere zu.
           </p>
         </template>
+        <p v-if="riddenSaved" class="save-hint" role="status">
+          ✓ Im Plan als erledigt eingetragen. Die Fahrt wird automatisch zugeordnet, sobald sie bei
+          Strava oder intervals.icu ist – ohne Nachfrage.
+        </p>
         <div class="done-actions">
           <button
-            v-if="fromPlan"
+            v-if="fromPlan && !riddenSaved"
             type="button"
             class="button"
             :disabled="marking"
