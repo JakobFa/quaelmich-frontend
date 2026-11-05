@@ -16,6 +16,7 @@ import LoadingNotice from '../components/LoadingNotice.vue'
 import RampTestResultPanel from '../components/RampTestResult.vue'
 import TrainerPanel from '../components/TrainerPanel.vue'
 import { RAMP_TEST_DONE, rampTestCheer } from '../plan/cheer'
+import { RampFailureWatch, type RampFailureState } from '../plan/rampFailure'
 import { evaluateRampTest, type RampTestResult } from '../plan/rampTest'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { formatRange, heartRateZonesOf, targetForStep } from '../plan/heartRate'
@@ -27,7 +28,7 @@ import {
   previousStepStart,
 } from '../plan/player'
 import { powerZoneFor } from '../plan/zones'
-import { trainer } from '../trainer/connection'
+import { trainer, type TrainerValues } from '../trainer/connection'
 import { RideRecorder, summarize, type Recording, type RideSummary } from '../trainer/recording'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
 import type { StepKind, Workout, WorkoutStep } from '../types/workout'
@@ -82,8 +83,10 @@ function tick() {
     position.value.totalSeconds,
   )
   if (deviceConnected.value) {
-    recorder.record(Date.now(), trainer.values())
+    const values = trainer.values()
+    recorder.record(Date.now(), values)
     recordedSeconds.value = recorder.samples.length
+    watchRampFailure(values)
   }
 }
 
@@ -100,6 +103,7 @@ function start() {
 
 function pause() {
   running.value = false
+  resetRampFailure()
   clearInterval(timer)
   releaseScreen()
   trainer.pauseTrainer()
@@ -117,6 +121,7 @@ function jumpTo(seconds: number) {
   startedAt = performance.now()
   elapsedAtStart = elapsed.value
   lastSecond = Infinity
+  resetRampFailure()
   if (position.value.finished) finish()
   else remember()
 }
@@ -424,6 +429,36 @@ const cheer = computed(() =>
       })
     : '',
 )
+
+/** Rampentest: Stufe nicht mehr geschafft? Erst fragen, ohne Antwort endet der Test von selbst */
+const rampFailure = new RampFailureWatch()
+const rampFailureState = ref<RampFailureState>({ kind: 'ok' })
+
+function watchRampFailure(values: TrainerValues) {
+  if (!isRampTest.value || finished.value) return
+  const state = rampFailure.update({
+    now: performance.now(),
+    inRamp: running.value && current.value?.kind === 'INTERVAL',
+    stepElapsed: position.value.stepElapsed,
+    target: heartRate.value ? null : ergWatts.value,
+    power: values.power,
+    cadence: values.cadence,
+  })
+  if (state.kind === 'asking' && rampFailureState.value.kind !== 'asking') beep(440, 0.5)
+  rampFailureState.value = state
+  if (state.kind === 'over') finish()
+}
+
+function resetRampFailure() {
+  rampFailure.reset()
+  rampFailureState.value = { kind: 'ok' }
+}
+
+function keepGoing() {
+  rampFailure.dismiss(performance.now())
+  rampFailureState.value = { kind: 'ok' }
+}
+
 const marking = ref(false)
 const markError = ref(false)
 
@@ -615,6 +650,18 @@ onBeforeUnmount(() => {
           </p>
           <p class="countdown" aria-live="off">{{ formatClock(position.stepRemaining) }}</p>
           <p v-if="cheer" class="cheer" aria-live="off">{{ cheer }}</p>
+          <div v-if="rampFailureState.kind === 'asking'" class="ramp-failure" role="alert">
+            <p>
+              Stufe nicht mehr geschafft? Der Test endet in
+              <strong>{{ rampFailureState.secondsLeft }} s</strong>.
+            </p>
+            <div class="ramp-failure-actions">
+              <button type="button" class="button" @click="finish">Test beenden</button>
+              <button type="button" class="button button-ghost" @click="keepGoing">
+                Weiterfahren
+              </button>
+            </div>
+          </div>
           <div class="step-bar" aria-hidden="true">
             <span :style="{ width: `${stepPercent}%` }"></span>
           </div>
@@ -830,7 +877,14 @@ onBeforeUnmount(() => {
   text-transform: uppercase;
   color: var(--color-ink);
   background: var(--color-hot);
-  clip-path: polygon(12px 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 0 100%, 0 12px);
+  clip-path: polygon(
+    12px 0,
+    100% 0,
+    100% calc(100% - 12px),
+    calc(100% - 12px) 100%,
+    0 100%,
+    0 12px
+  );
 }
 
 .cheer-done {
@@ -961,6 +1015,27 @@ onBeforeUnmount(() => {
 .error {
   margin: 12px 0 0;
   color: var(--color-hot);
+}
+
+.ramp-failure {
+  margin: 0 0 12px;
+  padding: 12px;
+  border: 2px solid var(--color-hot);
+  background: var(--color-panel-raised);
+}
+
+.ramp-failure p {
+  margin: 0 0 10px;
+  font-size: 1.15rem;
+}
+
+.ramp-failure-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.ramp-failure-actions .button {
+  flex: 1;
 }
 
 .stop-test {

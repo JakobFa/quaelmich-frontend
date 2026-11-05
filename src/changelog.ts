@@ -19,6 +19,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-05',
+    version: '0.9.44',
+    changes: [
+      {
+        kind: 'Neu',
+        title: 'Rampentest erkennt, wenn nichts mehr geht',
+        text: 'Fährst du den Rampentest im Player mit Watt vom Trainer, merkt quaelmich, wenn du eine Stufe nicht mehr schaffst – die Leistung bleibt deutlich unter dem Ziel oder die Trittfrequenz bricht ein. Dann fragt der Player, ob der Test endet. Trittst du wieder an, läuft er weiter; sonst endet er nach ein paar Sekunden von selbst und zeigt dir deine neue FTP.',
+      },
+    ],
+  },
+  {
     date: '2026-11-04',
     version: '0.9.43',
     changes: [
