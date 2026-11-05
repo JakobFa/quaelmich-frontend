@@ -34,6 +34,11 @@ export const changelog: Release[] = [
       },
       {
         kind: 'Besser',
+        title: 'Pendeln nimmt dir keine Einheiten mehr weg',
+        text: 'Für Pendelfahrten wird im Plan nichts mehr im Voraus freigehalten. Sie zählen, sobald sie gefahren und eingetragen sind – dann richtet sich der Plan der nächsten Tage danach.',
+      },
+      {
+        kind: 'Besser',
         title: 'Plan rechnet mit deiner Belastung, nicht nur mit Minuten',
         text: 'Dein Wochenumfang richtet sich jetzt auch nach der Belastung (TSS) deiner letzten Wochen – eine Stunde Schwelle zählt mehr als eine Stunde locker rollen. Fährst du regelmäßig zusätzlich, etwa zur Arbeit, plant quaelmich dafür Platz ein: Eine kurze lockere Einheit an so einem Tag entfällt, statt dich zusätzlich zu ermüden. Und in einer Woche werden höchstens zwei lockere Fahrten auf das Minimum gekürzt – die übrigen Minuten kommen auf deine anderen Tage.',
       },
