@@ -262,6 +262,14 @@ export function updateProgress(id: number, completed: boolean, rating: number | 
   })
 }
 
+/** Im Player gefahren: gilt als erledigt; die Fahrt dazu wird später über die Startzeit ohne Nachfrage zugeordnet */
+export function markRiddenInPlayer(id: number, startedAt: string) {
+  return request<PlannedWorkout>(`/planned-workouts/${id}/player-ride`, {
+    method: 'PUT',
+    body: JSON.stringify({ startedAt }),
+  })
+}
+
 /** Workout für heute anpassen: leichter, härter, kürzer oder länger (409 = geht gerade nicht) */
 export function adjustPlannedWorkout(id: number, direction: AdjustDirection) {
   return request<PlannedWorkout>(`/planned-workouts/${id}/adjustment`, {
@@ -333,7 +341,11 @@ export function calendarFeedUrl(token: string, scheme: 'https' | 'webcal' = 'htt
 }
 
 /** KI-Anbindung (MCP): Angaben zur KI-App, die um Zugriff bittet (öffentlich) */
-export type OAuthClientInfo = { name: string; redirectUriRegistered: boolean; redirectHost: string | null }
+export type OAuthClientInfo = {
+  name: string
+  redirectUriRegistered: boolean
+  redirectHost: string | null
+}
 
 export function getOAuthClient(clientId: string, redirectUri: string) {
   const query = new URLSearchParams({ client_id: clientId, redirect_uri: redirectUri })
