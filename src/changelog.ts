@@ -27,12 +27,6 @@ export const changelog: Release[] = [
         title: 'Plan rechnet mit deiner Belastung, nicht nur mit Minuten',
         text: 'Dein Wochenumfang richtet sich jetzt auch nach der Belastung (TSS) deiner letzten Wochen – eine Stunde Schwelle zählt mehr als eine Stunde locker rollen. Fährst du regelmäßig zusätzlich, etwa zur Arbeit, plant quaelmich dafür Platz ein: Eine kurze lockere Einheit an so einem Tag entfällt, statt dich zusätzlich zu ermüden. Und in einer Woche werden höchstens zwei lockere Fahrten auf das Minimum gekürzt – die übrigen Minuten kommen auf deine anderen Tage.',
       },
-    ],
-  },
-  {
-    date: '2026-11-05',
-    version: '0.9.44',
-    changes: [
       {
         kind: 'Neu',
         title: 'Rampentest erkennt, wenn nichts mehr geht',
