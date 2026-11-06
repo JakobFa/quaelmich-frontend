@@ -19,6 +19,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-06',
+    version: '0.9.47',
+    changes: [
+      {
+        kind: 'Besser',
+        title: 'Kurze Fahrt kostet keinen Trainingstag',
+        text: 'Eine kurze Fahrt an deinem Ruhetag, zum Beispiel zur Arbeit, zählt nicht mehr als Trainingstag. Der Plan streicht deshalb keinen anderen Tag dieser Woche.',
+      },
+    ],
+  },
+  {
     date: '2026-11-05',
     version: '0.9.46',
     changes: [
