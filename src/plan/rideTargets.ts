@@ -177,7 +177,6 @@ const EASY_KINDS: StepKind[] = ['RECOVERY', 'COOLDOWN']
  */
 export function targetSummary(segments: TargetSegment[], trace: (number | null)[]): TargetSummary | null {
   let counted = 0
-  let inZone = 0
   let above = 0
   let below = 0
   trace.forEach((value, index) => {
@@ -189,7 +188,6 @@ export function targetSummary(segments: TargetSegment[], trace: (number | null)[
     const { low, high } = bandAt(seg, second)
     if (high !== null && value > high) above++
     else if (value < low && !EASY_KINDS.includes(seg.kind)) below++
-    else inZone++
   })
   if (counted * TRACE_SECONDS < 5 * 60) return null
   const percentAbove = Math.round((100 * above) / counted)
