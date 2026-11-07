@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, ref, watch } from 'vue'
 import { useRoute } from 'vue-router'
 
 import {
@@ -30,7 +30,7 @@ import WorkoutPurpose from '../components/WorkoutPurpose.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import WorkoutSteps from '../components/WorkoutSteps.vue'
 import StoryOverlayButton from '../components/StoryOverlayButton.vue'
-import { eventFooter, plannedOverlay } from '../plan/storyOverlay'
+import { eventFooter, plannedOverlay, rideChart } from '../plan/storyOverlay'
 import { formatDuration, toIsoDate } from '../plan/weeks'
 import { heartRateZonesOf } from '../plan/heartRate'
 import { isHeartRateMode, type Athlete } from '../types/athlete'
@@ -41,7 +41,9 @@ import {
   type SkipReason,
   type AdjustOptions,
   type ExtraRide,
+  type IntervalAccuracy,
   type PlannedWorkout,
+  type SteadyHold,
 } from '../types/plan'
 import { workoutTypeLabels } from '../types/workout'
 
@@ -50,14 +52,24 @@ const planned = ref<PlannedWorkout | null>(null)
 const athlete = ref<Athlete | null>(null)
 const ftp = computed(() => athlete.value?.ftp ?? null)
 
-const storyOverlay = computed(() =>
-  planned.value
-    ? plannedOverlay(
-        planned.value,
-        eventFooter(athlete.value?.event?.name, athlete.value?.event?.date, toIsoDate(new Date())),
-      )
-    : null,
+/** Auswertung der Fahrt (aus den Panels), für Soll gegen Ist im Story-Overlay */
+const rideAnalysis = ref<{ accuracy: IntervalAccuracy } | { hold: SteadyHold } | null>(null)
+// andere oder keine Fahrt zugeordnet: die alte Auswertung gilt nicht mehr (die Panels laden neu)
+watch(
+  () => planned.value?.actual,
+  () => {
+    rideAnalysis.value = null
+  },
 )
+const storyOverlay = computed(() => {
+  if (!planned.value) return null
+  const overlay = plannedOverlay(
+    planned.value,
+    eventFooter(athlete.value?.event?.name, athlete.value?.event?.date, toIsoDate(new Date())),
+  )
+  if (!overlay || !rideAnalysis.value) return overlay
+  return { ...overlay, ride: rideChart(planned.value.workout.steps ?? [], rideAnalysis.value) }
+})
 /** Im Puls-Modus Pulsbereiche, sonst null (= nach Watt) */
 const heartRate = computed(() =>
   isHeartRateMode(athlete.value) ? heartRateZonesOf(athlete.value) : null,
@@ -532,11 +544,14 @@ function formatDate(iso: string) {
           "
           :key="planned.actual.durationMinutes ?? 0"
           :planned-id="planned.id"
+          :steps="planned.workout.steps"
+          @loaded="rideAnalysis = { accuracy: $event }"
         />
         <SteadyHoldPanel
           v-else-if="planned.workout.type !== 'FTP_TEST'"
           :key="`hold-${planned.actual.durationMinutes ?? 0}`"
           :planned-id="planned.id"
+          @loaded="rideAnalysis = { hold: $event }"
         />
 
         <div v-if="planned.actual.confirmed == null" class="confirm">

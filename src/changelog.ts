@@ -19,6 +19,22 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-07',
+    version: '0.9.48',
+    changes: [
+      {
+        kind: 'Besser',
+        title: 'Soll gegen Ist über die ganze Einheit',
+        text: 'Bei Intervall-Einheiten zeigt der Graph jetzt die ganze Fahrt mit den Zielbereichen für Einrollen, Pausen und Ausrollen. Dazu steht, wie viel der Zeit du insgesamt im Zielbereich warst.',
+      },
+      {
+        kind: 'Neu',
+        title: 'Story-Overlay mit deiner Wattkurve',
+        text: 'Beim Story-Overlay kannst du jetzt wählen: wie bisher mit dem Profil des Trainings oder als „Soll & Ist“ mit deiner gefahrenen Kurve über den Zielbereichen.',
+      },
+    ],
+  },
+  {
     date: '2026-11-06',
     version: '0.9.47',
     changes: [

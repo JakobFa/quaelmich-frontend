@@ -1,19 +1,17 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
+import { smoothTrace, targetSegments, TRACE_SECONDS } from '../plan/rideTargets'
 import type { IntervalAccuracy } from '../types/plan'
+import type { WorkoutStep } from '../types/workout'
 
 /**
- * Deine Kurve über den Zielbereichen der Intervalle – wie die Trainingsanalyse bei Strava, aber die Ziele
- * stehen dort, wo quaelmich die Intervalle in der Fahrt gefunden hat, nicht nach Plan-Zeit. So passt es auch
- * mit Anfahrt, übersprungenem Einrollen oder Ampelstopps.
+ * Deine Kurve über den Zielbereichen der ganzen Einheit – wie die Trainingsanalyse bei Strava, aber die Ziele
+ * stehen dort, wo quaelmich die Intervalle in der Fahrt gefunden hat, nicht nach Plan-Zeit. Einrollen, Pausen und
+ * Ausrollen hängen davor, dazwischen und dahinter. So passt es auch mit Anfahrt, übersprungenem Einrollen oder
+ * Ampelstopps. Ohne Abschnitte (oder nach Puls) nur die Intervalle.
  */
-const props = defineProps<{ accuracy: IntervalAccuracy }>()
-
-/** Sekunden je Punkt der Kurve (wie im Backend) */
-const TRACE_SECONDS = 10
-/** so viel vor dem ersten und nach dem letzten Intervall wird noch gezeigt */
-const MARGIN_SECONDS = 8 * 60
+const props = defineProps<{ accuracy: IntervalAccuracy; steps?: WorkoutStep[] }>()
 
 const WIDTH = 600
 const HEIGHT = 220
@@ -22,15 +20,15 @@ const PAD = { left: 40, right: 8, top: 18, bottom: 24 }
 const unit = computed(() => (props.accuracy.basis === 'HEART_RATE' ? 'bpm' : 'W'))
 const trace = computed(() => props.accuracy.trace ?? [])
 
-const range = computed(() => {
-  const blocks = props.accuracy.blocks
-  const first = Math.min(...blocks.map((b) => b.startSecond))
-  const last = Math.max(...blocks.map((b) => b.startSecond + b.durationSeconds))
-  return {
-    from: Math.max(0, first - MARGIN_SECONDS),
-    to: Math.min(trace.value.length * TRACE_SECONDS, last + MARGIN_SECONDS),
-  }
-})
+/** die ganze Fahrt */
+const range = computed(() => ({ from: 0, to: trace.value.length * TRACE_SECONDS }))
+
+/** Ziele der Abschnitte ohne Intervalle (die Intervalle zeichnen die Bänder unten, mit Urteil) */
+const stepSegments = computed(() =>
+  props.steps
+    ? targetSegments(props.steps, props.accuracy, range.value.to).filter((seg) => seg.kind !== 'INTERVAL')
+    : [],
+)
 
 const visible = computed(() => {
   const { from, to } = range.value
@@ -40,15 +38,7 @@ const visible = computed(() => {
 })
 
 /** Für die Anzeige auf 30 s geglättet (Nachbarpunkte), Stillstand bleibt eine Lücke */
-const smoothed = computed(() =>
-  trace.value.map((value, index) => {
-    if (value === null) return null
-    const around = [trace.value[index - 1], value, trace.value[index + 1]].filter(
-      (v): v is number => v !== null && v !== undefined,
-    )
-    return Math.round(around.reduce((sum, v) => sum + v, 0) / around.length)
-  }),
-)
+const smoothed = computed(() => smoothTrace(trace.value))
 
 /** Oben genug Platz für Ziele und Spitzen, aber einzelne Sprints sollen die Skala nicht plattdrücken */
 const yMax = computed(() => {
@@ -58,7 +48,8 @@ const yMax = computed(() => {
     .sort((a, b) => a - b)
   const p95 = values[Math.floor(values.length * 0.95)] ?? 0
   const targets = props.accuracy.blocks.map((b) => b.targetHigh ?? b.targetLow * 1.2)
-  return Math.ceil((Math.max(p95, ...targets) * 1.1) / 50) * 50
+  const steps = stepSegments.value.map((seg) => Math.max(seg.highStart ?? 0, seg.highEnd ?? 0))
+  return Math.ceil((Math.max(p95, ...targets, ...steps) * 1.1) / 50) * 50
 })
 const yMin = computed(() => (props.accuracy.basis === 'HEART_RATE' ? 80 : 0))
 
@@ -104,6 +95,33 @@ const bands = computed(() =>
   }),
 )
 
+/** Rampen als Trapez: oben das Ende des Zielbereichs, unten der Anfang */
+const stepBands = computed(() =>
+  stepSegments.value.map((seg) => {
+    const left = x(seg.start)
+    const right = Math.max(left + 1, x(seg.end))
+    const top = (value: number | null) => y(value ?? yMax.value)
+    return {
+      key: `${seg.start}-${seg.kind}`,
+      kind: seg.kind,
+      points: [
+        `${left.toFixed(1)},${top(seg.highStart).toFixed(1)}`,
+        `${right.toFixed(1)},${top(seg.highEnd).toFixed(1)}`,
+        `${right.toFixed(1)},${y(seg.lowEnd).toFixed(1)}`,
+        `${left.toFixed(1)},${y(seg.lowStart).toFixed(1)}`,
+      ].join(' '),
+      title: `${stepLabels[seg.kind]}: Ziel ${seg.lowStart}–${seg.highStart ?? ''} ${unit.value}`,
+    }
+  }),
+)
+
+const stepLabels: Record<string, string> = {
+  WARMUP: 'Einrollen',
+  STEADY: 'Grundlage',
+  RECOVERY: 'Pause',
+  COOLDOWN: 'Ausrollen',
+}
+
 const ticks = computed(() => {
   const step = yMax.value - yMin.value > 300 ? 100 : 50
   const result: number[] = []
@@ -137,6 +155,10 @@ const label = computed(
         <text :x="PAD.left - 6" :y="PAD.top - 6" text-anchor="end">{{ unit }}</text>
       </g>
 
+      <polygon v-for="band in stepBands" :key="band.key" :points="band.points" class="step-band">
+        <title>{{ band.title }}</title>
+      </polygon>
+
       <g v-for="band in bands" :key="band.number" class="band" :class="band.verdict.toLowerCase()">
         <rect :x="band.x" :y="band.y" :width="band.width" :height="band.height">
           <title>
@@ -157,9 +179,12 @@ const label = computed(
       <polyline v-for="(points, index) in segments" :key="index" :points="points" class="trace" />
     </svg>
     <figcaption>
-      <span class="key key-band"></span> Zielbereich, dort eingezeichnet, wo du das Intervall
-      gefahren bist · <span class="key key-trace"></span> deine {{ unit === 'W' ? 'Watt' : 'Puls' }}
-      (30-s-Schnitt) · Minuten seit Start
+      <span class="key key-band"></span> Zielbereich der Intervalle, dort eingezeichnet, wo du sie
+      gefahren bist<template v-if="stepBands.length">
+        · <span class="key key-step"></span> Einrollen, Pausen, Ausrollen</template
+      >
+      · <span class="key key-trace"></span> deine {{ unit === 'W' ? 'Watt' : 'Puls' }} (30-s-Schnitt) ·
+      Minuten seit Start
     </figcaption>
   </figure>
 </template>
@@ -195,6 +220,14 @@ svg {
   stroke-width: 1;
 }
 
+.step-band {
+  fill: var(--color-lilac);
+  fill-opacity: 0.12;
+  stroke: var(--color-lilac);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+}
+
 .band-label {
   font-family: var(--font-mono);
   font-size: 11px;
@@ -202,17 +235,41 @@ svg {
   fill: var(--color-lilac);
 }
 
-.band.on_target .band-label {
+.band.on_target .step-band {
+  fill: var(--color-lilac);
+  fill-opacity: 0.12;
+  stroke: var(--color-lilac);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+}
+
+.band-label {
   fill: #35b86b;
 }
 
 .band.hard .band-label,
-.band.easy .band-label {
+.band.easy .step-band {
+  fill: var(--color-lilac);
+  fill-opacity: 0.12;
+  stroke: var(--color-lilac);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+}
+
+.band-label {
   fill: var(--color-hot);
 }
 
 .band.slightly_hard .band-label,
-.band.slightly_easy .band-label {
+.band.slightly_easy .step-band {
+  fill: var(--color-lilac);
+  fill-opacity: 0.12;
+  stroke: var(--color-lilac);
+  stroke-opacity: 0.35;
+  stroke-width: 1;
+}
+
+.band-label {
   fill: #f4c430;
 }
 
@@ -240,6 +297,11 @@ figcaption {
 .key-band {
   background: var(--color-lilac);
   opacity: 0.6;
+}
+
+.key-step {
+  background: var(--color-lilac);
+  opacity: 0.25;
 }
 
 .key-trace {
