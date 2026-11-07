@@ -7,6 +7,8 @@ import SteadyHoldChart from './SteadyHoldChart.vue'
 
 /** Einschätzung einer lockeren Fahrt – lädt die Auswertung zur zugeordneten Fahrt; ohne Daten unsichtbar */
 const props = defineProps<{ plannedId: number }>()
+/** die geladene Auswertung, z. B. für das Story-Overlay */
+const emit = defineEmits<{ loaded: [hold: SteadyHold] }>()
 
 const hold = ref<SteadyHold | null>(null)
 const loading = ref(true)
@@ -14,6 +16,7 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     hold.value = await getSteadyHold(props.plannedId)
+    if (hold.value) emit('loaded', hold.value)
   } catch {
     hold.value = null // nicht schlimm – dann eben ohne Auswertung
   } finally {

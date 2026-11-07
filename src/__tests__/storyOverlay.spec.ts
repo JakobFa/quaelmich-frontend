@@ -9,8 +9,10 @@ import {
   overlayDate,
   overlayFilename,
   plannedOverlay,
+  rideChart,
 } from '../plan/storyOverlay'
-import type { ExtraRide, PlannedWorkout } from '../types/plan'
+import type { ExtraRide, IntervalAccuracy, PlannedWorkout, SteadyHold } from '../types/plan'
+import type { WorkoutStep } from '../types/workout'
 
 function planned(actual: PlannedWorkout['actual']): PlannedWorkout {
   return {
@@ -145,5 +147,97 @@ describe('Story-Overlay', () => {
     expect(texts).toEqual(
       expect.arrayContaining(['3. NOV 2026', 'TEMPO 4 × 10', 'DAUER', '1:12 h', 'TSS', '63', 'QUAELMICH']),
     )
+  })
+})
+
+describe('Story-Overlay: Soll & Ist', () => {
+  const steps: WorkoutStep[] = [
+    { kind: 'WARMUP', durationSeconds: 600, powerStartPercent: 50, powerEndPercent: 65 },
+    { kind: 'INTERVAL', durationSeconds: 300, powerStartPercent: 100, powerEndPercent: 100 },
+    { kind: 'COOLDOWN', durationSeconds: 600, powerStartPercent: 50, powerEndPercent: 50 },
+  ]
+  const accuracy: IntervalAccuracy = {
+    basis: 'POWER',
+    score: 100,
+    onTarget: 1,
+    uncertain: false,
+    tip: null,
+    blocks: [
+      {
+        number: 1,
+        startSecond: 600,
+        durationSeconds: 300,
+        targetLow: 285,
+        targetHigh: 315,
+        actual: 300,
+        verdict: 'ON_TARGET',
+        score: 100,
+      },
+    ],
+    trace: Array<number>(150).fill(200),
+  }
+
+  it('nimmt bei Intervallen alle Abschnitte mit, an ihrem Platz in der Fahrt', () => {
+    const chart = rideChart(steps, { accuracy })!
+
+    expect(chart.unit).toBe('W')
+    expect(chart.bands.map((band) => [band.start, band.end])).toEqual([
+      [0, 600],
+      [600, 900],
+      [900, 1500],
+    ])
+  })
+
+  it('nimmt bei lockeren Fahrten den Zielbereich über die ganze Fahrt', () => {
+    const hold: SteadyHold = {
+      basis: 'POWER',
+      targetLow: 180,
+      targetHigh: 230,
+      average: 200,
+      percentBelow: 0,
+      percentInZone: 100,
+      percentAbove: 0,
+      hold: 'STEADY',
+      tip: '',
+      trace: Array<number>(360).fill(200),
+    }
+    const chart = rideChart([{ kind: 'STEADY', durationSeconds: 3600, powerStartPercent: 68, powerEndPercent: 68 }], {
+      hold,
+    })!
+
+    expect(chart.bands).toEqual([
+      { start: 0, end: 3600, lowStart: 180, lowEnd: 180, highStart: 230, highEnd: 230, percent: 68 },
+    ])
+  })
+
+  it('ohne Kurve keine Variante', () => {
+    expect(rideChart(steps, { accuracy: { ...accuracy, trace: [] } })).toBeUndefined()
+  })
+
+  it('zeichnet in der Variante die Kurve statt des Profils', () => {
+    const calls: string[] = []
+    const ctx = new Proxy({ measureText: () => ({ width: 10 }) } as Record<string, unknown>, {
+      get: (target, key: string) =>
+        target[key] ??
+        ((...args: unknown[]) => {
+          calls.push(`${key}:${args.length}`)
+        }),
+      set: () => true,
+    }) as unknown as CanvasRenderingContext2D
+    const data = {
+      title: 'Schwelle',
+      date: '3. NOV 2026',
+      stats: [{ label: 'TSS', value: '63' }],
+      steps,
+      ride: rideChart(steps, { accuracy }),
+    }
+
+    drawOverlay(ctx, data, 'actual')
+    const strokes = calls.filter((call) => call.startsWith('stroke:')).length
+    calls.length = 0
+    drawOverlay(ctx, data, 'profile')
+
+    // die Kurve ist ein Strich mehr als die Karte allein
+    expect(strokes).toBe(calls.filter((call) => call.startsWith('stroke:')).length + 1)
   })
 })
