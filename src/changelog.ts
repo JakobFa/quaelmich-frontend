@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-07',
-    version: '0.9.48',
+    version: '0.9.49',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Erholungswoche wirklich leichter',
+        text: 'Bei wenig Zeit pro Woche war die Erholungswoche manchmal so anstrengend wie die Wochen davor. Jetzt ist sie immer leichter: kürzere, lockerere Fahrten und, wenn nötig, ohne die kurze Qualitätseinheit.',
+      },
       {
         kind: 'Besser',
         title: 'Soll gegen Ist über die ganze Einheit',
