@@ -6,11 +6,14 @@ import {
   renderOverlayBlob,
   shareOverlay,
   type OverlayData,
+  type OverlayVariant,
 } from '../plan/storyOverlay'
 
 const props = defineProps<{ data: OverlayData }>()
 
 const open = ref(false)
+/** Profil des Trainings (wie bisher) oder Soll gegen Ist, wenn die Fahrt ausgewertet ist */
+const variant = ref<OverlayVariant>('profile')
 const busy = ref(false)
 const error = ref('')
 const message = ref('')
@@ -24,11 +27,22 @@ function revoke() {
 
 async function show() {
   open.value = true
+  if (!props.data.ride) variant.value = 'profile'
+  await render()
+}
+
+async function choose(next: OverlayVariant) {
+  if (variant.value === next || busy.value) return
+  variant.value = next
+  await render()
+}
+
+async function render() {
   busy.value = true
   error.value = ''
   message.value = ''
   try {
-    blob = await renderOverlayBlob(props.data)
+    blob = await renderOverlayBlob(props.data, variant.value)
     revoke()
     previewUrl.value = URL.createObjectURL(blob)
   } catch {
@@ -63,9 +77,27 @@ onBeforeUnmount(revoke)
     <div v-if="open" class="backdrop" @click.self="close">
       <div class="dialog" role="dialog" aria-label="Story-Overlay">
         <p class="kicker">Instagram-Story</p>
-        <p v-if="busy" class="hint">Wird erstellt …</p>
+        <div v-if="data.ride" class="variants" role="group" aria-label="Variante">
+          <button
+            type="button"
+            :class="{ active: variant === 'profile' }"
+            :aria-pressed="variant === 'profile'"
+            @click="choose('profile')"
+          >
+            Profil
+          </button>
+          <button
+            type="button"
+            :class="{ active: variant === 'actual' }"
+            :aria-pressed="variant === 'actual'"
+            @click="choose('actual')"
+          >
+            Soll &amp; Ist
+          </button>
+        </div>
+        <p v-if="busy && !previewUrl" class="hint">Wird erstellt …</p>
         <p v-else-if="error" class="error" role="alert">{{ error }}</p>
-        <div v-else class="preview">
+        <div v-else class="preview" :aria-busy="busy">
           <img :src="previewUrl" alt="Vorschau des Overlays" />
         </div>
         <p class="hint">
@@ -119,6 +151,31 @@ onBeforeUnmount(revoke)
   padding: 1.1rem;
   background: var(--color-panel);
   border: 1px solid var(--color-plum);
+}
+
+.variants {
+  display: flex;
+  gap: 0.4rem;
+  margin: 0.5rem 0 0;
+}
+
+.variants button {
+  flex: 1;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  padding: 0.45rem 0.5rem;
+  cursor: pointer;
+  color: var(--color-lilac);
+  background: transparent;
+  border: 1px solid var(--color-lilac);
+}
+
+.variants button.active {
+  color: var(--color-ink);
+  background: var(--color-lilac);
 }
 
 .preview {

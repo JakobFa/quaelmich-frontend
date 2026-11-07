@@ -3,10 +3,14 @@ import { computed, onMounted, ref } from 'vue'
 
 import { getIntervalAccuracy } from '../api'
 import IntervalOverlayChart from './IntervalOverlayChart.vue'
+import { targetSegments, targetSummary, TRACE_SECONDS } from '../plan/rideTargets'
 import { accuracyVerdictLabels, type IntervalAccuracy } from '../types/plan'
+import type { WorkoutStep } from '../types/workout'
 
 /** "Wie genau getroffen?" – lädt die Auswertung zur zugeordneten Fahrt; ohne Daten bleibt es unsichtbar */
-const props = defineProps<{ plannedId: number }>()
+const props = defineProps<{ plannedId: number; steps?: WorkoutStep[] }>()
+/** die geladene Auswertung, z. B. für das Story-Overlay */
+const emit = defineEmits<{ loaded: [accuracy: IntervalAccuracy] }>()
 
 const accuracy = ref<IntervalAccuracy | null>(null)
 const loading = ref(true)
@@ -14,11 +18,20 @@ const loading = ref(true)
 onMounted(async () => {
   try {
     accuracy.value = await getIntervalAccuracy(props.plannedId)
+    if (accuracy.value) emit('loaded', accuracy.value)
   } catch {
     accuracy.value = null // nicht schlimm – dann eben ohne Auswertung
   } finally {
     loading.value = false
   }
+})
+
+/** Die ganze Einheit: wie viel der Zeit mit Ziel (auch Einrollen, Pausen, Ausrollen) im Zielbereich lag */
+const whole = computed(() => {
+  const value = accuracy.value
+  if (!value?.trace?.length || !props.steps) return null
+  const segments = targetSegments(props.steps, value, value.trace.length * TRACE_SECONDS)
+  return segments.length ? targetSummary(segments, value.trace) : null
 })
 
 const unit = computed(() => (accuracy.value?.basis === 'HEART_RATE' ? 'bpm' : 'W'))
@@ -55,7 +68,12 @@ function formatTarget(low: number, high: number | null) {
     <p v-if="accuracy.uncertain" class="uncertain">
       Die Intervalle waren in der Fahrt nicht klar zu erkennen – nimm den Wert mit Vorsicht.
     </p>
-    <IntervalOverlayChart :accuracy="accuracy" />
+    <p v-if="whole" class="whole">
+      Ganze Einheit: <strong>{{ whole.percentInZone }} %</strong> der Zeit im Zielbereich
+      <template v-if="whole.percentAbove"> · {{ whole.percentAbove }} % darüber</template>
+      <template v-if="whole.percentBelow"> · {{ whole.percentBelow }} % darunter</template>
+    </p>
+    <IntervalOverlayChart :accuracy="accuracy" :steps="steps" />
     <ol class="blocks">
       <li v-for="block in accuracy.blocks" :key="block.number" :class="block.verdict.toLowerCase()">
         <span class="nr">#{{ block.number }}</span>
@@ -68,6 +86,10 @@ function formatTarget(low: number, high: number | null) {
     <p class="note">
       Richtwert: quaelmich sucht die Intervalle selbst in deiner Fahrt und vergleicht den Schnitt
       mit dem Ziel (±5 % gilt als getroffen).
+      <template v-if="whole">
+        Bei der ganzen Einheit zählen Einrollen und Grundlage mit ±12 %, in Pausen und beim Ausrollen
+        ist lockerer immer richtig.
+      </template>
     </p>
   </div>
 </template>
@@ -138,6 +160,11 @@ function formatTarget(low: number, high: number | null) {
   margin: 8px 0 0;
   font-size: 0.85rem;
   color: #f4c430;
+}
+
+.whole {
+  margin: 10px 0 0;
+  font-size: 0.9rem;
 }
 
 .blocks {
