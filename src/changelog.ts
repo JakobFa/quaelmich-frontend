@@ -19,6 +19,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-09',
+    version: '0.9.50',
+    changes: [
+      {
+        kind: 'Neu',
+        title: 'Neues App-Icon',
+        text: 'Das Icon zeigt jetzt das Q aus unserem Schriftzug, damit es sich klar von anderen Rad-Apps unterscheidet. Du siehst es im Browser-Tab und auf dem Startbildschirm. Falls noch das alte Icon angezeigt wird, hilft ein Neuladen oder erneutes Hinzufügen zum Startbildschirm.',
+      },
+    ],
+  },
+  {
     date: '2026-11-07',
     version: '0.9.49',
     changes: [
