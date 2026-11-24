@@ -7,11 +7,12 @@ import type { OAuthClientInfo, OAuthConsent } from '../api'
 const query: Record<string, string> = {}
 vi.mock('vue-router', () => ({ useRoute: () => ({ query }) }))
 
-const { getOAuthClient, oauthConsent } = vi.hoisted(() => ({
+const { getOAuthClient, oauthConsent, getAiMode } = vi.hoisted(() => ({
   getOAuthClient: vi.fn<(id: string, uri: string) => Promise<OAuthClientInfo>>(),
   oauthConsent: vi.fn<(consent: OAuthConsent) => Promise<{ redirectUrl: string }>>(),
+  getAiMode: vi.fn<() => Promise<{ enabled: boolean }>>(),
 }))
-vi.mock('../api', () => ({ getOAuthClient, oauthConsent }))
+vi.mock('../api', () => ({ getOAuthClient, oauthConsent, getAiMode }))
 
 const assign = vi.fn<(url: string) => void>()
 
@@ -33,6 +34,8 @@ describe('OAuthAuthorizeView', () => {
   beforeEach(() => {
     getOAuthClient.mockReset()
     oauthConsent.mockReset()
+    getAiMode.mockReset()
+    getAiMode.mockResolvedValue({ enabled: true })
     assign.mockReset()
     vi.stubGlobal('location', { ...window.location, assign })
     setQuery(valid)
@@ -97,6 +100,17 @@ describe('OAuthAuthorizeView', () => {
     wrapper = mount(OAuthAuthorizeView)
     await flushPromises()
     expect(wrapper.findAll('button').some((b) => b.text() === 'Erlauben')).toBe(false)
+  })
+
+  it('erlaubt nichts, solange der KI-Modus aus ist, und führt zum Profil', async () => {
+    getOAuthClient.mockResolvedValue({ name: 'Claude', redirectUriRegistered: true, redirectHost: 'claude.ai' })
+    getAiMode.mockResolvedValue({ enabled: false })
+    const wrapper = mount(OAuthAuthorizeView, { global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } })
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="ai-mode-off"]').text()).toContain('KI-Modus')
+    expect(wrapper.findAll('button').some((b) => b.text() === 'Erlauben')).toBe(false)
+    expect(oauthConsent).not.toHaveBeenCalled()
   })
 
   it('zeigt eine Fehlermeldung bei unbekannter KI-App', async () => {

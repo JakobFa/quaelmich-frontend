@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 
-import { listAiConnections, mcpUrl, revokeAiConnection, type AiConnection } from '../api'
+import {
+  getAiMode,
+  listAiConnections,
+  mcpUrl,
+  revokeAiConnection,
+  setAiMode,
+  type AiConnection,
+} from '../api'
 
 /**
- * KI-Zugang: Adresse für den Konnektor (z. B. in Claude) und die KI-Apps, die schon auf das Konto zugreifen dürfen.
+ * KI-Modus: Nur wenn er an ist, kann man eine eigene KI-App (z. B. Claude) verbinden. Dann gibt es die Adresse für den
+ * Konnektor und die Liste der KI-Apps, die auf das Konto zugreifen dürfen. Ausschalten beendet alle Zugänge sofort.
  */
+const enabled = ref(false)
 const connections = ref<AiConnection[]>([])
 const loaded = ref(false)
 const busy = ref(false)
@@ -30,7 +39,8 @@ function formatDay(iso: string | null) {
 
 async function load() {
   try {
-    connections.value = await listAiConnections()
+    enabled.value = (await getAiMode()).enabled
+    connections.value = enabled.value ? await listAiConnections() : []
   } catch {
     error.value = 'Die Liste konnte nicht geladen werden.'
   } finally {
@@ -39,6 +49,19 @@ async function load() {
 }
 
 onMounted(load)
+
+async function toggle() {
+  busy.value = true
+  error.value = ''
+  try {
+    enabled.value = (await setAiMode(!enabled.value)).enabled
+    connections.value = enabled.value ? await listAiConnections() : []
+  } catch {
+    error.value = 'Das hat nicht geklappt. Bitte versuch es nochmal.'
+  } finally {
+    busy.value = false
+  }
+}
 
 async function end(connection: AiConnection) {
   busy.value = true
@@ -65,35 +88,61 @@ async function copy() {
 
 <template>
   <section class="panel ai" aria-labelledby="ai-title">
-    <h2 id="ai-title" class="panel-title">KI-Zugang</h2>
+    <h2 id="ai-title" class="panel-title">KI-Modus</h2>
     <p class="hint">
-      Verbinde Claude mit quaelmich, dann kann es deinen Plan lesen und dir erklären, warum er so aussieht. Das läuft
-      über dein eigenes Claude-Konto. In Claude fügst du unter "Konnektoren" einen eigenen Konnektor hinzu und trägst
-      diese Adresse ein:
+      Mit dem KI-Modus kannst du deine eigene KI, zum Beispiel Claude, mit quaelmich verbinden. Sie
+      liest deinen Plan und erklärt dir, warum er so aussieht. Das läuft über dein eigenes Konto bei
+      der KI, quaelmich hat keine eigene KI. Standardmäßig ist der KI-Modus aus.
     </p>
-    <p class="url" data-test="mcp-url">{{ mcpUrl() }}</p>
     <div class="actions">
-      <button type="button" class="button button-ghost" @click="copy">
-        {{ copied ? 'Kopiert' : 'Adresse kopieren' }}
+      <button
+        type="button"
+        class="button"
+        :class="{ 'button-ghost': enabled }"
+        :disabled="busy || !loaded"
+        data-test="ai-mode-toggle"
+        @click="toggle"
+      >
+        {{ enabled ? 'KI-Modus ausschalten' : 'KI-Modus einschalten' }}
       </button>
     </div>
-    <p class="hint">
-      Beim Verbinden fragt quaelmich dich, ob du den Zugriff erlaubst. Die KI sieht nur deinen Plan, dein Profil und die
-      Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten und keine Freitexte.
+    <p v-if="enabled" class="hint" data-test="ai-mode-on">
+      Der KI-Modus ist an. Ausschalten beendet alle verbundenen KI-Apps sofort.
     </p>
 
-    <h3 v-if="connections.length" class="sub">Verbundene KI-Apps</h3>
-    <ul v-if="connections.length" class="list" data-test="connections">
-      <li v-for="connection in connections" :key="connection.id">
-        <span class="name">{{ connection.clientName }}</span>
-        <span class="meta">
-          {{ describeScope(connection.scope) }} · verbunden am {{ formatDay(connection.createdAt) }} · zuletzt
-          benutzt: {{ formatDay(connection.lastUsedAt) }}
-        </span>
-        <button type="button" class="link" :disabled="busy" @click="end(connection)">Beenden</button>
-      </li>
-    </ul>
-    <p v-else-if="loaded" class="hint">Noch keine KI-App verbunden.</p>
+    <template v-if="enabled">
+      <p class="hint">
+        In Claude fügst du unter "Konnektoren" einen eigenen Konnektor hinzu und trägst diese
+        Adresse ein:
+      </p>
+      <p class="url" data-test="mcp-url">{{ mcpUrl() }}</p>
+      <div class="actions">
+        <button type="button" class="button button-ghost" @click="copy">
+          {{ copied ? 'Kopiert' : 'Adresse kopieren' }}
+        </button>
+      </div>
+      <p class="hint">
+        Beim Verbinden fragt quaelmich dich, ob du den Zugriff erlaubst. Die KI sieht nur deinen
+        Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten
+        und keine Freitexte.
+      </p>
+
+      <h3 v-if="connections.length" class="sub">Verbundene KI-Apps</h3>
+      <ul v-if="connections.length" class="list" data-test="connections">
+        <li v-for="connection in connections" :key="connection.id">
+          <span class="name">{{ connection.clientName }}</span>
+          <span class="meta">
+            {{ describeScope(connection.scope) }} · verbunden am
+            {{ formatDay(connection.createdAt) }} · zuletzt benutzt:
+            {{ formatDay(connection.lastUsedAt) }}
+          </span>
+          <button type="button" class="link" :disabled="busy" @click="end(connection)">
+            Beenden
+          </button>
+        </li>
+      </ul>
+      <p v-else-if="loaded" class="hint">Noch keine KI-App verbunden.</p>
+    </template>
 
     <p v-if="error" class="error" role="alert">{{ error }}</p>
   </section>
