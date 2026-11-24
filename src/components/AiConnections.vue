@@ -110,6 +110,11 @@ async function copy() {
     <p v-if="enabled" class="hint" data-test="ai-mode-on">
       Der KI-Modus ist an. Ausschalten beendet alle verbundenen KI-Apps sofort.
     </p>
+    <p v-if="enabled" class="hint" data-test="ai-mode-frozen">
+      Solange er an ist, ändert quaelmich deinen Plan nicht mehr von selbst: Er passt sich nicht an
+      deine Fahrten an, wird nicht jede Woche neu gerechnet und wächst bei einem Ziel ohne Event
+      nicht mit. Was du selbst in der App änderst, und was deine KI ändert, gilt weiter.
+    </p>
 
     <template v-if="enabled">
       <p class="hint">
