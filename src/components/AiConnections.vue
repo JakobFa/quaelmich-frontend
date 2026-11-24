@@ -127,6 +127,10 @@ async function copy() {
         Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten
         und keine Freitexte. Änderungen bestätigst du in deiner KI-App, bevor sie gemacht werden.
       </p>
+      <p class="hint" data-test="ai-rides-hint">
+        Deine gefahrenen Fahrten sieht die KI hier nicht. Wenn sie sie braucht, gibst du sie ihr
+        selbst, zum Beispiel über den Strava-Konnektor in Claude.
+      </p>
 
       <h3 v-if="connections.length" class="sub">Verbundene KI-Apps</h3>
       <ul v-if="connections.length" class="list" data-test="connections">
