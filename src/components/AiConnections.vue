@@ -23,7 +23,7 @@ const copied = ref(false)
 
 const scopeLabels: Record<string, string> = {
   'plan:read': 'liest Trainingsplan',
-  'plan:write': 'darf den Plan ändern',
+  'plan:write': 'darf Plan und Profil ändern',
 }
 
 function describeScope(scope: string) {
@@ -91,8 +91,9 @@ async function copy() {
     <h2 id="ai-title" class="panel-title">KI-Modus</h2>
     <p class="hint">
       Mit dem KI-Modus kannst du deine eigene KI, zum Beispiel Claude, mit quaelmich verbinden. Sie
-      liest deinen Plan und erklärt dir, warum er so aussieht. Das läuft über dein eigenes Konto bei
-      der KI, quaelmich hat keine eigene KI. Standardmäßig ist der KI-Modus aus.
+      liest deinen Plan, erklärt dir, warum er so aussieht, und kann ihn auf Wunsch ändern, bis hin
+      zu deinem sportlichen Ziel. Das läuft über dein eigenes Konto bei der KI, quaelmich hat keine
+      eigene KI. Standardmäßig ist der KI-Modus aus.
     </p>
     <div class="actions">
       <button
@@ -124,7 +125,7 @@ async function copy() {
       <p class="hint">
         Beim Verbinden fragt quaelmich dich, ob du den Zugriff erlaubst. Die KI sieht nur deinen
         Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten
-        und keine Freitexte.
+        und keine Freitexte. Änderungen bestätigst du in deiner KI-App, bevor sie gemacht werden.
       </p>
 
       <h3 v-if="connections.length" class="sub">Verbundene KI-Apps</h3>

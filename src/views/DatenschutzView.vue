@@ -60,8 +60,10 @@ import { hasImpressum, legal } from '../legal'
           <strong>KI-Modus (nur wenn du ihn selbst einschaltest):</strong> Schaltest du den KI-Modus
           im Profil ein und verbindest eine KI-App wie Claude, merkt sich quaelmich den Schalter und
           die Verbindung (Name der App, Zeitpunkt, Zugriffsrechte; die Zugangsschlüssel nur als
-          Hash). Die KI liest nur deinen Trainingsplan, dein Profil und die Workout-Bibliothek –
-          keine gefahrenen Einheiten, keine Daten aus Strava und keine Freitexte. Die Verarbeitung
+          Hash). Die KI liest deinen Trainingsplan, dein Profil und die Workout-Bibliothek –
+          keine gefahrenen Einheiten, keine Daten aus Strava und keine Freitexte – und kann, wenn du
+          es erlaubst, Plan und Profil ändern, auch dein sportliches Ziel. Änderungen bestätigst du
+          in deiner KI-App, quaelmich führt sie dann aus. Die Verarbeitung
           dort richtet sich nach den Bedingungen deines KI-Anbieters (bei Claude: Anthropic).
           Ausschalten des KI-Modus beendet alle Verbindungen sofort.
         </li>

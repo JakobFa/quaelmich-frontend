@@ -15,13 +15,13 @@ const params = computed(() => ({
   redirectUri: String(route.query.redirect_uri ?? ''),
   codeChallenge: String(route.query.code_challenge ?? ''),
   codeChallengeMethod: String(route.query.code_challenge_method ?? ''),
-  scope: String(route.query.scope ?? '').trim() || 'plan:read',
+  scope: String(route.query.scope ?? '').trim() || 'plan:read plan:write',
   state: String(route.query.state ?? ''),
 }))
 
 const scopeLabels: Record<string, string> = {
   'plan:read': 'Deinen Trainingsplan lesen',
-  'plan:write': 'Deinen Plan ändern (jede Änderung wird geprüft)',
+  'plan:write': 'Deinen Plan und dein Profil ändern, auch dein sportliches Ziel (die KI-App fragt dich vorher)',
 }
 
 const scopes = computed(() => params.value.scope.split(/\s+/).filter(Boolean))
