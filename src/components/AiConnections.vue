@@ -76,6 +76,27 @@ async function end(connection: AiConnection) {
   }
 }
 
+/** Ein allgemeiner Start-Auftrag für jede KI-App, auch wenn sie keine fertigen Prompts des Konnektors anzeigt */
+const setupPrompt = `Ich habe dich mit quaelmich verbunden, meinem Trainingsplan für Radfahrer. Ruf zuerst get_overview auf und erkläre mir kurz, was du in quaelmich lesen und ändern kannst (Plan, Profil, sportliches Ziel, Krankheit, Pause, eigene Workouts). Dann frag mich, was ich als Erstes möchte.
+
+So gehst du vor:
+- Ruf vor jeder Änderung get_plan noch einmal auf, denn die planId einer Einheit wechselt, wenn der Plan neu gerechnet wird.
+- Sag mir vorher, was du ändern willst, und ändere nur, was ich möchte.
+- quaelmich zeigt dir keine gefahrenen Fahrten und keine Strava-Daten. Brauchst du sie, frag mich oder nutze meinen Strava-Konnektor.
+- Solange der KI-Modus an ist, ändert quaelmich den Plan nicht mehr von selbst. Neue Wochen und Anpassungen planst du (zum Beispiel mit regenerate_plan).
+- Erfinde nichts, was nicht in den Ergebnissen steht.`
+
+const promptCopied = ref(false)
+
+async function copyPrompt() {
+  try {
+    await navigator.clipboard.writeText(setupPrompt)
+    promptCopied.value = true
+  } catch {
+    error.value = 'Kopieren geht hier nicht.'
+  }
+}
+
 async function copy() {
   try {
     await navigator.clipboard.writeText(mcpUrl())
@@ -136,6 +157,21 @@ async function copy() {
         Deine gefahrenen Fahrten sieht die KI hier nicht. Wenn sie sie braucht, gibst du sie ihr
         selbst, zum Beispiel über den Strava-Konnektor in Claude.
       </p>
+
+      <p class="hint">
+        Zum Start kannst du deiner KI diesen Auftrag geben. Er erklärt ihr, wie sie mit quaelmich
+        arbeiten soll:
+      </p>
+      <div class="actions">
+        <button
+          type="button"
+          class="button button-ghost"
+          data-test="copy-setup-prompt"
+          @click="copyPrompt"
+        >
+          {{ promptCopied ? 'Kopiert' : 'Start-Auftrag kopieren' }}
+        </button>
+      </div>
 
       <h3 v-if="connections.length" class="sub">Verbundene KI-Apps</h3>
       <ul v-if="connections.length" class="list" data-test="connections">
