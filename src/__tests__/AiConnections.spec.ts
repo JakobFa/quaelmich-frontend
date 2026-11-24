@@ -113,6 +113,7 @@ describe('AiConnections', () => {
     await wrapper.find('[data-test="copy-setup-prompt"]').trigger('click')
     await flushPromises()
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('get_overview'))
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('tägliche Aufgabe'))
     expect(wrapper.find('[data-test="copy-setup-prompt"]').text()).toBe('Kopiert')
   })
 })
