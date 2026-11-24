@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.54',
+    version: '0.9.55',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'KI-Modus: dein Plan bleibt, wie er ist',
+        text: 'Solange der KI-Modus an ist, ändert quaelmich deinen Plan nicht mehr von selbst: keine automatische Anpassung an deine Fahrten, keine Neuberechnung pro Woche, keine automatische Verlängerung bei einem Ziel ohne Event. Deine eigenen Änderungen in der App und die deiner KI gelten weiter. Schaltest du den KI-Modus aus, läuft die Automatik wieder.',
+      },
       {
         kind: 'Besser',
         title: 'KI-Modus: Hinweis zu deinen Fahrten',
