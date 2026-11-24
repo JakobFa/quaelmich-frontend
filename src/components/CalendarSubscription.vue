@@ -71,7 +71,7 @@ async function copy() {
     <p class="hint">
       Abonniere deinen Plan in Apple Kalender, Google Kalender oder Outlook. Änderungen kommen von
       selbst an – je nach App nach einigen Minuten bis zu einem Tag. Die Einheiten stehen als
-      ganztägige Einträge im Kalender; Ausfälle (krank, Pause) verschwinden.
+      ganztägige Einträge im Kalender. Erledigtes steht als "Erledigt", vergangene Ausfälle mit dem Grund (zum Beispiel "Krank"), so bleibt der Kalender dein Trainingstagebuch. Dein Kalender reicht ein Jahr zurück.
     </p>
 
     <template v-if="loaded && token">
