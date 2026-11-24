@@ -319,6 +319,17 @@ export function endSickness(since?: string) {
   return request<TrainingPlan>(`/me/plan/sickness${query}`, { method: 'DELETE' })
 }
 
+/**
+ * "Ab diesem Tag war ich wieder gesund" – auch für eine schon beendete Krankheit. Die Tage davor bleiben krank,
+ * ab dem Tag gilt der Plan wieder (409 = der Tag liegt in keiner Krankheit, in der Zukunft oder zu weit zurück).
+ */
+export function healthySince(since: string) {
+  return request<TrainingPlan>('/me/plan/sickness/healthy-since', {
+    method: 'PUT',
+    body: JSON.stringify({ since }),
+  })
+}
+
 /** Kalender-Abo (iCal): token = null, solange keins eingerichtet ist */
 export type CalendarSubscription = { token: string | null }
 
