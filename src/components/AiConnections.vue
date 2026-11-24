@@ -77,13 +77,17 @@ async function end(connection: AiConnection) {
 }
 
 /** Ein allgemeiner Start-Auftrag für jede KI-App, auch wenn sie keine fertigen Prompts des Konnektors anzeigt */
-const setupPrompt = `Ich habe dich mit quaelmich verbunden, meinem Trainingsplan für Radfahrer. Ruf zuerst get_overview auf und erkläre mir kurz, was du in quaelmich lesen und ändern kannst (Plan, Profil, sportliches Ziel, Krankheit, Pause, eigene Workouts). Dann frag mich, was ich als Erstes möchte.
+const setupPrompt = `Ich habe dich mit quaelmich verbunden, meinem Trainingsplan für Radfahrer. Du bist mein Trainer.
+
+1. Ruf get_overview auf: mein Ziel, Event, Level, FTP und die Zeit, die ich pro Wochentag eingetragen habe. Fehlt etwas, frag mich, statt etwas zu erfinden.
+2. Erstelle auf dieser Basis den optimalen sportlichen Plan für mein Ziel. Sag mir kurz, was du vorhast, und setze es nach meinem Ja mit den Werkzeugen um (zum Beispiel regenerate_plan, add_workout, replace_workout, create_workout).
+3. Richte danach eine tägliche Prüfung ein: Wenn du wiederkehrende Aufgaben oder Agenten anlegen kannst, lege eine tägliche Aufgabe an. Sie holt meine gefahrenen Fahrten aus meinem Strava-Konnektor, vergleicht sie mit dem Plan und steuert die Belastung. War ich deutlich härter oder schwächer gefahren als geplant, oder gar nicht, entscheidest du als Trainer, ob und wie du den Plan anpasst. Kannst du das nicht, sag mir, wie ich die Prüfung regelmäßig selbst starte.
 
 So gehst du vor:
 - Ruf vor jeder Änderung get_plan noch einmal auf, denn die planId einer Einheit wechselt, wenn der Plan neu gerechnet wird.
-- Sag mir vorher, was du ändern willst, und ändere nur, was ich möchte.
-- quaelmich zeigt dir keine gefahrenen Fahrten und keine Strava-Daten. Brauchst du sie, frag mich oder nutze meinen Strava-Konnektor.
-- Solange der KI-Modus an ist, ändert quaelmich den Plan nicht mehr von selbst. Neue Wochen und Anpassungen planst du (zum Beispiel mit regenerate_plan).
+- Sag mir vorher, was du ändern willst.
+- quaelmich zeigt dir keine gefahrenen Fahrten und keine Strava-Daten. Nutze meinen Strava-Konnektor.
+- Solange der KI-Modus an ist, ändert quaelmich den Plan nicht mehr von selbst. Neue Wochen und Anpassungen planst du.
 - Erfinde nichts, was nicht in den Ergebnissen steht.`
 
 const promptCopied = ref(false)

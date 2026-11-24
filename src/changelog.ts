@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.56',
+    version: '0.9.57',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Deine KI als Trainer',
+        text: 'Im KI-Modus darf deine KI jetzt alles am Plan ändern: Einheiten an jedem Tag setzen, verschieben, entfernen und tauschen, eigene Workouts bauen und ändern und weitere Events verwalten. Der Start-Auftrag im Profil (und der neue Auftrag "Plan erstellen und täglich prüfen" in deiner KI-App) lässt sie aus deiner eingetragenen Zeit den passenden Plan für dein Ziel bauen und, wenn deine KI-App das kann, täglich mit deinen Fahrten abgleichen.',
+      },
       {
         kind: 'Neu',
         title: 'KI-Modus im Plan sichtbar',
