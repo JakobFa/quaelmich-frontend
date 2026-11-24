@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.53',
+    version: '0.9.54',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'KI-Modus: Hinweis zu deinen Fahrten',
+        text: 'Im Profil und beim Verbinden steht jetzt, dass deine KI deine gefahrenen Fahrten nicht von quaelmich bekommt. Wenn sie diese braucht, gibst du sie ihr selbst, zum Beispiel über den Strava-Konnektor in Claude. Auch die Anleitung für die KI sagt das jetzt, damit sie nichts erfindet.',
+      },
       {
         kind: 'Neu',
         title: 'Deine KI kann deinen Plan ändern',

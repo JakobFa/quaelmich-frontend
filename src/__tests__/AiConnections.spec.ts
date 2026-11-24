@@ -81,6 +81,7 @@ describe('AiConnections', () => {
     await flushPromises()
 
     expect(wrapper.find('[data-test="mcp-url"]').text()).toBe('https://api.example.test/mcp')
+    expect(wrapper.find('[data-test="ai-rides-hint"]').text()).toContain('Strava-Konnektor')
     expect(wrapper.text()).toContain('Noch keine KI-App verbunden')
   })
 

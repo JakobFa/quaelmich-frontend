@@ -107,8 +107,9 @@ function deny() {
         Nach deiner Erlaubnis leitet quaelmich dich zurück zu
         <strong data-test="host">{{ client.redirectHost }}</strong
         >. Die KI sieht nur deinen Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen
-        Fahrten, keine Strava-Daten und keine Freitexte. Du kannst die Verbindung jederzeit im
-        Profil beenden.
+        Fahrten, keine Strava-Daten und keine Freitexte. Wenn die KI Fahrten braucht, gibst du sie
+        ihr selbst, zum Beispiel über den Strava-Konnektor in Claude. Du kannst die Verbindung
+        jederzeit im Profil beenden.
       </p>
       <div class="actions">
         <button type="button" class="button" :disabled="busy" @click="allow">Erlauben</button>
