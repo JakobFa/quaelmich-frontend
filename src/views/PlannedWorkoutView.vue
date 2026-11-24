@@ -12,6 +12,7 @@ import {
   getMyAthlete,
   getRampTest,
   getPlannedWorkout,
+  healthySince,
   replacePlannedWorkout,
   shufflePlannedWorkout,
   resetPlannedWorkout,
@@ -298,6 +299,30 @@ async function skip(reason: SkipReason | null) {
   }
 }
 
+/** An einem vergangenen Krankheitstag: "Ab diesem Tag war ich wieder gesund" */
+const canHealthySince = computed(
+  () =>
+    planned.value?.skipReason === 'SICK' &&
+    !planned.value.actual &&
+    planned.value.date <= toIsoDate(new Date()),
+)
+const healthyBusy = ref(false)
+const healthyError = ref(false)
+
+async function recoveredFromHere() {
+  if (!planned.value) return
+  healthyBusy.value = true
+  healthyError.value = false
+  try {
+    await healthySince(planned.value.date)
+    planned.value = await getPlannedWorkout(planned.value.id)
+  } catch {
+    healthyError.value = true
+  } finally {
+    healthyBusy.value = false
+  }
+}
+
 function toggleCompleted() {
   if (!planned.value) return
   save(!planned.value.completed, planned.value.rating)
@@ -349,6 +374,18 @@ function formatDate(iso: string) {
         <p v-if="planned.skipReason === 'SICK' || planned.skipReason === 'INJURED'" class="hint">
           Gute Besserung! Das nächste harte Training in den Tagen danach wird sanfter.
         </p>
+        <div v-if="canHealthySince" class="healthy" data-test="healthy-since">
+          <button type="button" class="button" :disabled="healthyBusy" @click="recoveredFromHere">
+            Ab diesem Tag war ich wieder gesund
+          </button>
+          <p class="hint">
+            Dieser Tag und die folgenden Krankheitstage werden wieder normale Trainingstage. Die Tage
+            davor bleiben als krank markiert.
+          </p>
+          <p v-if="healthyError" class="error" role="alert">
+            Das hat nicht geklappt. Bitte versuch es nochmal.
+          </p>
+        </div>
         <button type="button" class="link" :disabled="saving" @click="skip(null)">
           ↺ Doch nicht – Rückmeldung zurücknehmen
         </button>
@@ -948,6 +985,10 @@ function formatDate(iso: string) {
   font-family: var(--font-mono);
   font-weight: 700;
   text-transform: uppercase;
+}
+
+.healthy {
+  margin: 10px 0;
 }
 
 .skipped .hint {

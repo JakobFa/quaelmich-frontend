@@ -1,6 +1,6 @@
 {
   "name": "quaelmich-frontend",
-  "version": "0.9.50",
+  "version": "0.9.53",
   "private": true,
   "type": "module",
   "scripts": {
