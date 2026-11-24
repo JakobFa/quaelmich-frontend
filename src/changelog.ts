@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.52',
+    version: '0.9.53',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Deine KI kann deinen Plan ändern',
+        text: 'Mit eingeschaltetem KI-Modus kann deine eigene KI, zum Beispiel Claude, jetzt auch etwas ändern: Einheiten überspringen, tauschen oder anpassen, dich krank oder gesund melden, den Urlaub eintragen, dein sportliches Ziel und das Event ändern und den ganzen Plan neu erstellen. Jede Änderung bestätigst du in deiner KI-App, bevor sie gemacht wird. Beim Verbinden siehst du, was die KI darf.',
+      },
       {
         kind: 'Neu',
         title: 'KI-Modus',

@@ -51,6 +51,18 @@ describe('OAuthAuthorizeView', () => {
     expect(wrapper.find('[data-test="host"]').text()).toBe('claude.ai')
   })
 
+  it('nennt das Ändern von Plan und Profil, wenn die KI-App plan:write will', async () => {
+    getOAuthClient.mockResolvedValue({ name: 'Claude', redirectUriRegistered: true, redirectHost: 'claude.ai' })
+    setQuery({ ...valid, scope: 'plan:read plan:write' })
+    const wrapper = mount(OAuthAuthorizeView)
+    await flushPromises()
+
+    const permissions = wrapper.find('[data-test="permissions"]').text()
+    expect(permissions).toContain('lesen')
+    expect(permissions).toContain('Plan und dein Profil ändern')
+    expect(permissions).toContain('sportliches Ziel')
+  })
+
   it('erlaubt und leitet mit dem Code zurück zur KI-App', async () => {
     getOAuthClient.mockResolvedValue({ name: 'Claude', redirectUriRegistered: true, redirectHost: 'claude.ai' })
     oauthConsent.mockResolvedValue({ redirectUrl: 'https://claude.ai/api/mcp/auth_callback?code=c&state=xyz' })
