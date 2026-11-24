@@ -2,7 +2,7 @@
 import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
-import { getOAuthClient, oauthConsent, type OAuthClientInfo } from '../api'
+import { getAiMode, getOAuthClient, oauthConsent, type OAuthClientInfo } from '../api'
 
 /**
  * Erlaubnis-Seite für KI-Apps (z. B. Claude): Die App hat den Nutzer hierher geschickt. Er sieht, wer was darf, und
@@ -28,6 +28,8 @@ const scopes = computed(() => params.value.scope.split(/\s+/).filter(Boolean))
 const knownScopes = computed(() => scopes.value.every((scope) => scope in scopeLabels))
 
 const client = ref<OAuthClientInfo | null>(null)
+/** KI-Modus im Profil an? Ohne ihn gibt es keine Erlaubnis */
+const aiMode = ref(true)
 const loading = ref(true)
 const busy = ref(false)
 const error = ref('')
@@ -45,6 +47,7 @@ const valid = computed(
 onMounted(async () => {
   try {
     client.value = await getOAuthClient(params.value.clientId, params.value.redirectUri)
+    aiMode.value = (await getAiMode()).enabled
   } catch {
     error.value = 'Diese Anfrage ist ungültig oder die KI-App ist unbekannt.'
   } finally {
@@ -82,6 +85,17 @@ function deny() {
 
     <p v-if="loading">Einen Moment ...</p>
 
+    <template v-else-if="valid && client && !aiMode">
+      <p class="lead" data-test="ai-mode-off">
+        Der KI-Modus ist noch aus. Schalte ihn im Profil ein, dann kannst du
+        <strong>{{ client.name }}</strong> verbinden.
+      </p>
+      <div class="actions">
+        <RouterLink to="/profil" class="button">Zum Profil</RouterLink>
+        <button type="button" class="button button-ghost" @click="deny">Ablehnen</button>
+      </div>
+    </template>
+
     <template v-else-if="valid && client">
       <p class="lead">
         <strong>{{ client.name }}</strong> möchte auf deinen quaelmich-Account zugreifen.
@@ -92,8 +106,9 @@ function deny() {
       <p class="hint">
         Nach deiner Erlaubnis leitet quaelmich dich zurück zu
         <strong data-test="host">{{ client.redirectHost }}</strong
-        >. Die KI sieht nur deinen Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen Fahrten, keine Strava-Daten und keine Freitexte. Du kannst die
-        Verbindung jederzeit im Profil beenden.
+        >. Die KI sieht nur deinen Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen
+        Fahrten, keine Strava-Daten und keine Freitexte. Du kannst die Verbindung jederzeit im
+        Profil beenden.
       </p>
       <div class="actions">
         <button type="button" class="button" :disabled="busy" @click="allow">Erlauben</button>

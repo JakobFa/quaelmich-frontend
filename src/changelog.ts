@@ -24,6 +24,11 @@ export const changelog: Release[] = [
     changes: [
       {
         kind: 'Neu',
+        title: 'KI-Modus',
+        text: 'Im Profil kannst du jetzt den KI-Modus einschalten und deine eigene KI, zum Beispiel Claude, mit quaelmich verbinden. Sie liest deinen Plan, dein Profil und die Workout-Bibliothek und erklärt dir, warum dein Training so aussieht. Keine gefahrenen Fahrten, keine Strava-Daten, keine Freitexte. Der KI-Modus ist standardmäßig aus, und wenn du ihn ausschaltest, enden alle Verbindungen sofort.',
+      },
+      {
+        kind: 'Neu',
         title: 'Krankheit rückwirkend beenden',
         text: 'Du warst schon früher wieder gesund, als du es gemeldet hast? Öffne im Kalender einen vergangenen Krankheitstag und tippe auf "Ab diesem Tag war ich wieder gesund". Ab dort gilt dein Plan wieder, die Tage davor bleiben als krank markiert.',
       },
