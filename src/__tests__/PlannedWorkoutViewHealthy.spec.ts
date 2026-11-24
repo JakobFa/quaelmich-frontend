@@ -9,7 +9,7 @@ vi.mock('vue-router', () => ({ useRoute: () => ({ params: { id: '7' } }) }))
 
 const { getPlannedWorkout, getMyAthlete, healthySince } = vi.hoisted(() => ({
   getPlannedWorkout: vi.fn<(id: number) => Promise<PlannedWorkout>>(),
-  getMyAthlete: vi.fn(),
+  getMyAthlete: vi.fn<() => Promise<null>>(),
   healthySince: vi.fn<(since: string) => Promise<unknown>>(),
 }))
 vi.mock('../api', async (importOriginal) => ({
@@ -17,9 +17,9 @@ vi.mock('../api', async (importOriginal) => ({
   getPlannedWorkout,
   getMyAthlete,
   healthySince,
-  listExtraRidesOfDay: vi.fn().mockResolvedValue([]),
-  getRampTestResult: vi.fn().mockResolvedValue(null),
-  getIntervalAccuracy: vi.fn().mockResolvedValue(null),
+  listExtraRidesOfDay: vi.fn<() => Promise<unknown[]>>().mockResolvedValue([]),
+  getRampTestResult: vi.fn<() => Promise<null>>().mockResolvedValue(null),
+  getIntervalAccuracy: vi.fn<() => Promise<null>>().mockResolvedValue(null),
 }))
 
 function sickWorkout(date: string, extra: Partial<PlannedWorkout> = {}): PlannedWorkout {
