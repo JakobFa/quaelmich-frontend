@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.57',
+    version: '0.9.58',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Längere eigene Workouts und weniger Sperren für deine KI',
+        text: 'Eigene Workouts dürfen jetzt bis zu 12 Stunden lang sein, zum Beispiel für einen 300-km-Tag. Deine KI kann außerdem einzelne Tage fest freihalten, Grundlage ab 30 Minuten wählen und einen von dir gewählten Tag ersetzen, wenn sie es so plant.',
+      },
       {
         kind: 'Neu',
         title: 'Deine KI als Trainer',

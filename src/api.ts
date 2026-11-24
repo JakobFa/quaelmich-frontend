@@ -136,7 +136,7 @@ export function getMyWorkouts() {
   return request<Workout[]>('/me/workouts')
 }
 
-/** id null = neu anlegen (400 mit Text, z. B. "Höchstens 6 Stunden.") */
+/** id null = neu anlegen (400 mit Text, z. B. "Höchstens 12 Stunden.") */
 export function saveMyWorkout(id: number | null, draft: WorkoutDraft) {
   return request<Workout>(id === null ? '/me/workouts' : `/me/workouts/${id}`, {
     method: id === null ? 'POST' : 'PUT',
