@@ -377,6 +377,19 @@ export type AiConnection = {
   lastUsedAt: string | null
 }
 
+/** KI-Modus: nur wenn er an ist, darf eine eigene KI-App (z. B. Claude) auf das Konto zugreifen */
+export function getAiMode() {
+  return request<{ enabled: boolean }>('/me/ai-mode')
+}
+
+/** Aus: alle KI-Zugänge enden sofort */
+export function setAiMode(enabled: boolean) {
+  return request<{ enabled: boolean }>('/me/ai-mode', {
+    method: 'PUT',
+    body: JSON.stringify({ enabled }),
+  })
+}
+
 export function listAiConnections() {
   return request<AiConnection[]>('/me/ai-connections')
 }
