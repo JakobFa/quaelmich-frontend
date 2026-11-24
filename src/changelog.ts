@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.55',
+    version: '0.9.56',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'KI-Modus im Plan sichtbar',
+        text: 'Ist der KI-Modus an, siehst du es jetzt oben in deinem Plan, mit Link zum Profil zum Ausschalten. Dein Plan passt sich dann nicht mehr von selbst an. Außerdem bietet quaelmich deiner KI jetzt fertige Aufträge an, zum Beispiel Plan prüfen, Woche umplanen oder eigenes Workout bauen, und im Profil gibt es einen Start-Auftrag zum Kopieren, der deiner KI erklärt, wie sie mit quaelmich arbeitet.',
+      },
       {
         kind: 'Neu',
         title: 'KI-Modus: dein Plan bleibt, wie er ist',

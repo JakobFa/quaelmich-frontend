@@ -103,4 +103,16 @@ describe('AiConnections', () => {
     expect(revokeAiConnection).toHaveBeenCalledWith(4)
     expect(wrapper.find('[data-test="connections"]').exists()).toBe(false)
   })
+
+  it('kopiert den Start-Auftrag für die KI', async () => {
+    listAiConnections.mockResolvedValue([])
+    const writeText = vi.fn<(text: string) => Promise<void>>().mockResolvedValue(undefined)
+    Object.assign(navigator, { clipboard: { writeText } })
+    const wrapper = mount(AiConnections)
+    await flushPromises()
+    await wrapper.find('[data-test="copy-setup-prompt"]').trigger('click')
+    await flushPromises()
+    expect(writeText).toHaveBeenCalledWith(expect.stringContaining('get_overview'))
+    expect(wrapper.find('[data-test="copy-setup-prompt"]').text()).toBe('Kopiert')
+  })
 })

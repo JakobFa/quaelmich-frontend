@@ -11,6 +11,7 @@ import {
   resumePlan,
   type Progress,
 } from '../api'
+import AiModeBanner from '../components/AiModeBanner.vue'
 import FtpHint from '../components/FtpHint.vue'
 import ProgressHeader from '../components/ProgressHeader.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -268,6 +269,8 @@ onMounted(async () => {
 <template>
   <section>
     <p class="kicker">// Dein Plan</p>
+
+    <AiModeBanner />
 
     <LoadingNotice v-if="loading" label="Lädt deinen Plan …" />
 
