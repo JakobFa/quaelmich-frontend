@@ -175,7 +175,7 @@ const valid = computed(
         step.powerEndPercent >= 30 &&
         step.powerEndPercent <= 250,
     ) &&
-    totalSeconds.value <= 6 * 3600,
+    totalSeconds.value <= 12 * 3600,
 )
 
 async function save() {
@@ -314,7 +314,7 @@ async function remove() {
           <div class="step-fields">
             <label>
               <small>min</small>
-              <input v-model.number="step.minutes" type="number" min="0" max="240" />
+              <input v-model.number="step.minutes" type="number" min="0" max="720" />
             </label>
             <label>
               <small>s</small>
@@ -377,7 +377,7 @@ async function remove() {
         <button type="button" class="button" @click="addBlock">Block einfügen</button>
       </div>
 
-      <p v-if="totalSeconds > 6 * 3600" class="error">Höchstens 6 Stunden.</p>
+      <p v-if="totalSeconds > 12 * 3600" class="error">Höchstens 12 Stunden.</p>
       <p v-if="error" class="error" role="alert">{{ error }}</p>
 
       <div class="save">
