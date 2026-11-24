@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-24',
-    version: '0.9.58',
+    version: '0.9.59',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Trainingstagebuch im Kalender',
+        text: 'In deinem abonnierten Kalender steht jetzt auch, warum eine Einheit ausgefallen ist: "Krank", "Verletzt", "Pause" oder "Nicht gemacht" mit dem Grund, mit der geplanten Einheit in der Beschreibung. Der Kalender zeigt das letzte Jahr. Kommende Tage zeigen weiter nur, was ansteht.',
+      },
       {
         kind: 'Besser',
         title: 'Längere eigene Workouts und weniger Sperren für deine KI',
