@@ -19,6 +19,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-26',
+    version: '0.9.60',
+    changes: [
+      {
+        kind: 'Neu',
+        title: 'Krafttraining zum Mitmachen',
+        text: 'Bei Krafteinheiten wählst du, ob du ohne Geräte, mit Kurzhanteln oder mit einer Kettlebell trainierst. quaelmich merkt sich die Wahl. Jede Übung macht dir eine Figur flüssig vor, dazu gibt es Hinweise zur Ausführung, den typischen Fehler und eine leichtere Variante.',
+      },
+    ],
+  },
+  {
     date: '2026-11-24',
     version: '0.9.59',
     changes: [

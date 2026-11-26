@@ -1,14 +1,43 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 import ExerciseAnimation from './ExerciseAnimation.vue'
-import { blockLabels, exercisesOf, strengthPhaseNotes } from '../strength/exercises'
+import {
+  blockLabels,
+  equipmentLabels,
+  equipmentNotes,
+  exercisesOf,
+  strengthPhaseNotes,
+  type Equipment,
+} from '../strength/exercises'
 import type { Phase } from '../types/plan'
 
-/** Die Übungen einer Krafteinheit, jede mit animierter Figur und Hinweisen zur Ausführung */
+/**
+ * Die Übungen einer Krafteinheit, jede mit animierter Figur und Hinweisen zur Ausführung. Ob ohne Geräte, mit
+ * Kurzhanteln oder mit Kettlebell trainiert wird, merkt sich das Gerät (gilt dann für alle Krafteinheiten).
+ */
 const props = defineProps<{ workoutId: number; phase: Phase }>()
 
-const items = computed(() => exercisesOf(props.workoutId))
+const EQUIPMENT_KEY = 'quaelmich.kraft.ausruestung'
+const choices = Object.keys(equipmentLabels) as Equipment[]
+function savedEquipment(): Equipment {
+  try {
+    const saved = localStorage.getItem(EQUIPMENT_KEY)
+    return choices.includes(saved as Equipment) ? (saved as Equipment) : 'none'
+  } catch {
+    return 'none'
+  }
+}
+const equipment = ref<Equipment>(savedEquipment())
+watch(equipment, (value) => {
+  try {
+    localStorage.setItem(EQUIPMENT_KEY, value)
+  } catch {
+    // ohne Speicher gilt die Wahl nur bis zum Neuladen
+  }
+})
+
+const items = computed(() => exercisesOf(props.workoutId, equipment.value))
 /** Überschrift nur über der ersten Übung eines Abschnitts (Mobilisieren, Kraft, Dehnen) */
 const startsBlock = (index: number) =>
   index === 0 || items.value[index]!.block !== items.value[index - 1]!.block
@@ -18,6 +47,15 @@ const cues = ref<Record<string, string>>({})
 
 <template>
   <div class="strength">
+    <fieldset class="equipment">
+      <legend>Zu Hause mit</legend>
+      <label v-for="choice in choices" :key="choice" :class="{ active: equipment === choice }">
+        <input v-model="equipment" type="radio" name="equipment" :value="choice" />
+        {{ equipmentLabels[choice] }}
+      </label>
+    </fieldset>
+    <p class="equipment-note">{{ equipmentNotes[equipment] }}</p>
+
     <div class="strength-head">
       <p v-if="strengthPhaseNotes[phase]" class="phase-note">{{ strengthPhaseNotes[phase] }}</p>
       <button type="button" class="link" @click="smooth = !smooth">
@@ -60,6 +98,55 @@ const cues = ref<Record<string, string>>({})
 </template>
 
 <style scoped>
+.equipment {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding: 0;
+  border: 0;
+}
+
+.equipment legend {
+  width: 100%;
+  margin: 0 0 6px;
+  padding: 0;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+
+.equipment label {
+  padding: 6px 12px;
+  border: 2px solid var(--color-lilac-dim);
+  border-radius: 999px;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.equipment label.active {
+  border-color: var(--color-hot);
+  color: var(--color-hot);
+}
+
+.equipment input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.equipment label:has(input:focus-visible) {
+  outline: 2px solid var(--color-lilac);
+  outline-offset: 2px;
+}
+
+.equipment-note {
+  margin: 0 0 12px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
 .strength-head {
   display: flex;
   flex-wrap: wrap;
