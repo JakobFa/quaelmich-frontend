@@ -99,11 +99,8 @@ export function withBackArm(pose: Pose): Required<Pick<Pose, 'elbow2' | 'hand2'>
   }
 }
 
-/**
- * Haltung zum Zeitpunkt t (0 = Start, 1 = Endposition). armT: eigener Zeitpunkt für freie Arme, die dem
- * Körper ein wenig nachschwingen (Hände am Boden folgen immer t).
- */
-export function poseAt(exercise: Exercise, t: number, armT = t): Required<Pose> {
+/** Haltung zum Zeitpunkt t (0 = Start, 1 = Endposition) */
+export function poseAt(exercise: Exercise, t: number): Required<Pose> {
   const start = withBackArm(exercise.start)
   const end = withBackArm(exercise.end)
   const hip = mix(start.hip, end.hip, t)
@@ -121,27 +118,21 @@ export function poseAt(exercise: Exercise, t: number, armT = t): Required<Pose> 
     t,
   )
 
-  const armAt = (key: keyof Pose) => {
-    const planted = onGround(start, end, key)
-    return { planted, t: planted ? t : armT }
-  }
-  const front = armAt('hand')
-  const rear = armAt('hand2')
   const [elbow, hand] = limb(
     start,
     end,
     shoulder,
     { root: 'shoulder', middle: 'elbow', end: 'hand' },
-    front.t,
-    front.planted,
+    t,
+    onGround(start, end, 'hand'),
   )
   const [elbow2, hand2] = limb(
     start,
     end,
     shoulder,
     { root: 'shoulder', middle: 'elbow2', end: 'hand2' },
-    rear.t,
-    rear.planted,
+    t,
+    onGround(start, end, 'hand2'),
   )
 
   const leg = (knee: keyof Pose, ankle: keyof Pose, toe: keyof Pose) => {
