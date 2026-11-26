@@ -1,14 +1,17 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
-import type { Exercise, Point, Pose, Tempo } from '../strength/exercises'
+import type { Exercise, Point, Tempo } from '../strength/exercises'
+import { figure, type Group } from '../strength/figure'
 import { loadCenter, mainMover, poseAt } from '../strength/motion'
 
 /**
- * Figur, die eine Übung vormacht. Die Körperteile drehen sich um ihre Gelenke (siehe motion.ts), Gewichte
- * bewegen sich mit den Händen, eine gestrichelte Linie zeigt die Bahn des Teils, das sich am meisten
- * bewegt. smooth = false springt nur zwischen den beiden Posen. Wer weniger Bewegung eingestellt hat, sieht
- * die Startposition und die Endposition als Umriss. still = fester Zeitpunkt (0 bis 1) ohne Animation.
+ * Ein Mensch, der eine Übung vormacht: Körperformen, Kleidung und Kopf kommen aus figure.ts, die Bewegung
+ * aus motion.ts. Die Bewegung folgt dem Verlauf, mit dem Menschen sich bewegen (sanft anlaufen, sanft
+ * abbremsen), freie Arme schwingen ein wenig nach, die Brust hebt sich beim Atmen. Gewichte bewegen sich
+ * mit den Händen, eine gestrichelte Linie zeigt die Bahn des Teils, das sich am meisten bewegt.
+ * smooth = false springt nur zwischen den beiden Posen. Wer weniger Bewegung eingestellt hat, sieht die
+ * Startposition und die Endposition als Schatten. still = fester Zeitpunkt (0 bis 1) ohne Animation.
  */
 const props = withDefaults(
   defineProps<{ exercise: Exercise; smooth?: boolean; still?: number }>(),
@@ -17,9 +20,15 @@ const props = withDefaults(
 const emit = defineEmits<{ cue: [text: string] }>()
 
 const progress = ref(props.still ?? 0)
+/** Zeitpunkt der freien Arme: folgt progress wie an einer Feder, mit etwas Nachschwingen */
+const armProgress = ref(progress.value)
+/** Atmung von -1 bis 1 */
+const breath = ref(0)
 const cue = ref(props.exercise.cueTowardsEnd)
 let frame = 0
 let startedAt = 0
+let lastTick = 0
+let armSpeed = 0
 
 /** hin, kurz halten, zurück, kurz halten (Stütz: langsames Atmen, Mobility: ruhig im Atemrhythmus) */
 const timing = computed<Tempo>(() => {
@@ -30,7 +39,12 @@ const timing = computed<Tempo>(() => {
   return { towards: 1400, holdEnd: 300, back: 1200, holdStart: 300 }
 })
 
-const ease = (t: number) => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2)
+/** Verlauf mit geringstem Ruck: so beschleunigen und bremsen Menschen eine Bewegung */
+const ease = (t: number) => t * t * t * (10 - 15 * t + 6 * t * t)
+
+/** Feder für die Arme: etwas weicher als kritisch gedämpft, damit sie kurz nachschwingen */
+const SPRING = 90
+const DAMPING = 2 * Math.sqrt(SPRING) * 0.62
 
 function tick(now: number) {
   const { towards, holdEnd, back, holdStart } = timing.value
@@ -43,6 +57,18 @@ function tick(now: number) {
   else t = 0
   if (!props.smooth) t = ms < towards / 2 || ms >= towards + holdEnd + back ? 0 : 1
   progress.value = t
+
+  const dt = Math.min(0.05, (now - lastTick) / 1000)
+  lastTick = now
+  if (props.smooth) {
+    armSpeed += (SPRING * (t - armProgress.value) - DAMPING * armSpeed) * dt
+    armProgress.value = Math.min(1.08, Math.max(-0.08, armProgress.value + armSpeed * dt))
+  } else {
+    armProgress.value = t
+    armSpeed = 0
+  }
+  breath.value = Math.sin(((now - startedAt) / 4200) * 2 * Math.PI)
+
   const text = ms < towards + holdEnd ? props.exercise.cueTowardsEnd : props.exercise.cueBack
   if (text !== cue.value) {
     cue.value = text
@@ -58,14 +84,27 @@ onMounted(() => {
   if (props.still !== undefined || reducedMotion || typeof requestAnimationFrame === 'undefined')
     return
   startedAt = performance.now()
+  lastTick = startedAt
   frame = requestAnimationFrame(tick)
 })
 onBeforeUnmount(() => cancelAnimationFrame(frame))
 
-const pose = computed(() => poseAt(props.exercise, progress.value))
+const pose = computed(() => poseAt(props.exercise, progress.value, armProgress.value))
+const grip = computed(() => !!props.exercise.load)
+const shapes = computed(() => figure(pose.value, { breath: breath.value, grip: grip.value }))
 
-/** Umriss der Position, auf die sich die Figur gerade zubewegt */
-const ghost = computed(() => poseAt(props.exercise, progress.value > 0.5 ? 0 : 1))
+/** Schatten der Position, auf die sich die Figur gerade zubewegt */
+const ghost = computed(() => {
+  const target = figure(poseAt(props.exercise, progress.value > 0.5 ? 0 : 1), { grip: grip.value })
+  return [target.body, target.frontLeg, target.frontArm].flatMap((group) => group.shapes)
+})
+
+/** Hinten das zweite Bein und der zweite Arm, davor Rumpf und vorderes Bein; der vordere Arm kommt zuletzt */
+const layers = computed<{ back: Group[]; front: Group[]; arm: Group }>(() => ({
+  back: [shapes.value.backLeg, shapes.value.backArm],
+  front: [shapes.value.body, shapes.value.frontLeg],
+  arm: shapes.value.frontArm,
+}))
 
 /** Bahn des Körperteils, das sich am meisten bewegt (bei Stütz-Übungen keine) */
 const path = computed(() => {
@@ -98,27 +137,6 @@ const shadow = computed(() => {
 const line = (...points: Point[]) =>
   points.map((p) => p.map((n) => n.toFixed(1)).join(',')).join(' ')
 
-function body(p: Required<Pose>) {
-  const torso = props.exercise.start.spine ? [p.hip, p.spine, p.shoulder] : [p.hip, p.shoulder]
-  return {
-    torso: line(...torso),
-    neck: line(p.shoulder, p.head),
-    thigh: line(p.hip, p.knee),
-    shin: line(p.knee, p.ankle),
-    foot: line(p.ankle, p.toe),
-    thigh2: line(p.hip, p.knee2),
-    shin2: line(p.knee2, p.ankle2),
-    foot2: line(p.ankle2, p.toe2),
-    upperArm: line(p.shoulder, p.elbow),
-    forearm: line(p.elbow, p.hand),
-    upperArm2: line(p.shoulder, p.elbow2),
-    forearm2: line(p.elbow2, p.hand2),
-  }
-}
-
-const parts = computed(() => body(pose.value))
-const ghostParts = computed(() => body(ghost.value))
-
 /** Gewichte: vorn das in der vorderen Hand, hinten das zweite (bei zwei Kurzhanteln) */
 const weights = computed(() => {
   const load = props.exercise.load
@@ -148,21 +166,24 @@ const frontWeights = computed(() => weights.value.filter((weight) => !weight.bac
     <polyline v-if="path" :points="path" class="path" />
 
     <g class="ghost">
-      <polyline :points="ghostParts.torso" />
-      <polyline :points="`${ghostParts.thigh} ${ghostParts.shin.split(' ')[1]}`" />
-      <polyline :points="`${ghostParts.upperArm} ${ghostParts.forearm.split(' ')[1]}`" />
-      <circle :cx="ghost.head[0]" :cy="ghost.head[1]" r="13" />
+      <path v-for="(shape, i) in ghost" :key="i" :d="shape.d" />
     </g>
 
     <!-- hinten: zweites Bein, zweiter Arm und was er hält -->
-    <g class="back">
-      <polyline :points="parts.thigh2" class="thigh" />
-      <polyline :points="parts.shin2" class="shin" />
-      <polyline :points="parts.foot2" class="foot" />
-      <polyline :points="parts.upperArm2" class="upper-arm" />
-      <polyline :points="parts.forearm2" class="forearm" />
-    </g>
-    <template v-for="(weight, i) in backWeights" :key="`b${i}`">
+    <template v-for="(group, g) in layers.back" :key="`b${g}`">
+      <g class="outline">
+        <path v-for="(shape, i) in group.shapes" :key="i" :d="shape.d" />
+      </g>
+      <g class="back">
+        <path
+          v-for="(shape, i) in [...group.shapes, ...group.details]"
+          :key="i"
+          :d="shape.d"
+          :class="[shape.part, shape.name]"
+        />
+      </g>
+    </template>
+    <template v-for="(weight, i) in backWeights" :key="`bw${i}`">
       <g
         :transform="`translate(${weight.center[0].toFixed(1)} ${weight.center[1].toFixed(1)}) rotate(${weight.rotate.toFixed(1)})`"
         class="weight back"
@@ -181,16 +202,21 @@ const frontWeights = computed(() => weights.value.filter((weight) => !weight.bac
       </g>
     </template>
 
-    <!-- vorn: Oberkörper, Kopf, vorderes Bein, vorderer Arm -->
-    <g class="front">
-      <polyline :points="parts.thigh" class="thigh" />
-      <polyline :points="parts.shin" class="shin" />
-      <polyline :points="parts.foot" class="foot" />
-      <polyline :points="parts.torso" class="torso" />
-      <polyline :points="parts.neck" class="neck" />
-      <circle :cx="pose.head[0]" :cy="pose.head[1]" r="13" class="head" />
-    </g>
-    <template v-for="(weight, i) in frontWeights" :key="`f${i}`">
+    <!-- vorn: Rumpf mit Kopf, vorderes Bein -->
+    <template v-for="(group, g) in layers.front" :key="`f${g}`">
+      <g class="outline">
+        <path v-for="(shape, i) in group.shapes" :key="i" :d="shape.d" />
+      </g>
+      <g class="front">
+        <path
+          v-for="(shape, i) in [...group.shapes, ...group.details]"
+          :key="i"
+          :d="shape.d"
+          :class="[shape.part, shape.name]"
+        />
+      </g>
+    </template>
+    <template v-for="(weight, i) in frontWeights" :key="`fw${i}`">
       <g
         :transform="`translate(${weight.center[0].toFixed(1)} ${weight.center[1].toFixed(1)}) rotate(${weight.rotate.toFixed(1)})`"
         class="weight"
@@ -208,19 +234,35 @@ const frontWeights = computed(() => weights.value.filter((weight) => !weight.bac
         </template>
       </g>
     </template>
-    <g class="front">
-      <polyline :points="parts.upperArm" class="upper-arm" />
-      <polyline :points="parts.forearm" class="forearm" />
+
+    <!-- ganz vorn: der vordere Arm, die Hand greift über das Gewicht -->
+    <g class="outline">
+      <path v-for="(shape, i) in layers.arm.shapes" :key="i" :d="shape.d" />
     </g>
-    <circle :cx="pose.knee[0]" :cy="pose.knee[1]" r="3" class="joint" />
-    <circle :cx="pose.hip[0]" :cy="pose.hip[1]" r="3.5" class="joint" />
+    <g class="front">
+      <path
+        v-for="(shape, i) in [...layers.arm.shapes, ...layers.arm.details]"
+        :key="i"
+        :d="shape.d"
+        :class="[shape.part, shape.name]"
+      />
+    </g>
   </svg>
 </template>
 
 <style scoped>
 .figure {
-  --front: var(--color-hot);
-  --back: color-mix(in srgb, var(--color-hot) 48%, var(--color-ink));
+  --skin: #e6ad8f;
+  --skin-back: #a9765f;
+  --ear: #cf9175;
+  --hair: #4b3128;
+  --shirt: var(--color-hot);
+  --shirt-back: color-mix(in srgb, var(--color-hot) 55%, var(--color-ink));
+  --shorts: var(--color-lilac-dim);
+  --shorts-back: color-mix(in srgb, var(--color-lilac-dim) 55%, var(--color-ink));
+  --shoe: var(--color-text);
+  --shoe-back: color-mix(in srgb, var(--color-text) 55%, var(--color-ink));
+  --sole: var(--color-lilac);
   --metal: var(--color-lilac);
   --metal-back: var(--color-lilac-dim);
   display: block;
@@ -254,63 +296,57 @@ const frontWeights = computed(() => weights.value.filter((weight) => !weight.bac
   stroke-linecap: round;
 }
 
-.ghost polyline,
-.ghost circle {
-  fill: none;
-  stroke: var(--color-lilac);
-  stroke-opacity: 0.16;
-  stroke-width: 6;
-  stroke-linecap: round;
-  stroke-linejoin: round;
+.ghost path {
+  fill: var(--color-lilac);
+  fill-opacity: 0.1;
 }
 
-.front polyline,
-.back polyline {
-  fill: none;
-  stroke: var(--front);
-  stroke-linecap: round;
-  stroke-linejoin: round;
-}
-
-.back polyline {
-  stroke: var(--back);
-}
-
-.torso {
-  stroke-width: 17;
-}
-
-.neck {
-  stroke-width: 8;
-}
-
-.thigh {
-  stroke-width: 13;
-}
-
-.shin {
-  stroke-width: 10;
-}
-
-.foot {
-  stroke-width: 7;
-}
-
-.upper-arm {
-  stroke-width: 9;
-}
-
-.forearm {
-  stroke-width: 7.5;
-}
-
-.head {
-  fill: var(--front);
-}
-
-.joint {
+/* gemeinsamer Umriss je Gruppe: trennt Arm vom Rumpf und vorderes vom hinteren Bein */
+.outline path {
   fill: var(--color-ink);
-  opacity: 0.55;
+  stroke: var(--color-ink);
+  stroke-width: 3.4;
+  stroke-linejoin: round;
+}
+
+.front .skin {
+  fill: var(--skin);
+}
+.back .skin {
+  fill: var(--skin-back);
+}
+.front .shirt {
+  fill: var(--shirt);
+}
+.back .shirt {
+  fill: var(--shirt-back);
+}
+.front .shorts {
+  fill: var(--shorts);
+}
+.back .shorts {
+  fill: var(--shorts-back);
+}
+.front .shoe {
+  fill: var(--shoe);
+}
+.back .shoe {
+  fill: var(--shoe-back);
+}
+.sole {
+  fill: var(--sole);
+}
+.back .sole {
+  fill: var(--metal-back);
+}
+.hair {
+  fill: var(--hair);
+}
+.ear {
+  fill: var(--ear);
+}
+.eye {
+  fill: var(--color-ink);
 }
 
 .weight rect,

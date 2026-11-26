@@ -10,6 +10,7 @@ import {
   type Equipment,
   type Pose,
 } from '../strength/exercises'
+import { figure, torsoAxis } from '../strength/figure'
 import { poseAt } from '../strength/motion'
 
 const EQUIPMENT: Equipment[] = ['none', 'dumbbells', 'kettlebell']
@@ -163,15 +164,49 @@ describe('Krafttraining', () => {
   })
 
   it('rundet bei Katze-Kuh den Rücken über einen Punkt in der Wirbelsäule', () => {
-    const catCow = mount(ExerciseAnimation, { props: { exercise: exercises.catCow! } })
-    const body = catCow.find('.torso').attributes('points')!
-    expect(body.split(' ')).toHaveLength(3) // Hüfte, Wirbelsäule, Schulter
+    const catCow = exercises.catCow!
+    const cow = poseAt(catCow, 0)
+    const cat = poseAt(catCow, 1)
+    expect(gap(torsoAxis(cow)(0.5).p, cow.spine)).toBeLessThan(0.01)
+    expect(gap(torsoAxis(cat)(0.5).p, cat.spine)).toBeLessThan(0.01)
+    // Kuh: Bauch sinkt unter die Linie Hüfte–Schulter, Katze: Rücken rund darüber
+    expect(torsoAxis(cow)(0.5).p[1]).toBeGreaterThan(cow.hip[1])
+    expect(torsoAxis(cat)(0.5).p[1]).toBeLessThan(cat.hip[1])
   })
 
-  it('zeichnet die Figur mit Kopf und allen Gliedmaßen', () => {
+  it('jede Figur hat geschlossene Umrisse, in jeder Phase der Bewegung', () => {
+    for (const exercise of Object.values(exercises)) {
+      for (const t of [0, 0.3, 0.7, 1]) {
+        const shapes = Object.values(figure(poseAt(exercise, t), { breath: 1 })).flatMap(
+          (group) => [...group.shapes, ...group.details],
+        )
+        for (const shape of shapes) {
+          expect(shape.d, `${exercise.id} ${shape.name} bei ${t}`).toMatch(/^M[-\d. ]+C[-\d. C]+Z$/)
+        }
+      }
+    }
+  })
+
+  it('freie Arme schwingen nach, Hände am Boden bleiben stehen', () => {
+    const swing = exercises.kettlebellSwing!
+    expect(gap(poseAt(swing, 0.5, 0.3).hand, poseAt(swing, 0.5).hand)).toBeGreaterThan(5)
+    const plank = exercises.plank!
+    expect(gap(poseAt(plank, 0.5, 0.9).hand, poseAt(plank, 0.5).hand)).toBeLessThan(0.01)
+  })
+
+  it('zeichnet einen Menschen mit Kopf, Kleidung und allen Gliedmaßen', () => {
     const squat = mount(ExerciseAnimation, { props: { exercise: exercises.squat! } })
-    expect(squat.findAll('.front polyline, .back polyline')).toHaveLength(12)
-    expect(squat.find('.head').exists()).toBe(true)
+    for (const part of ['thigh', 'shin', 'shoe', 'upper-arm', 'forearm', 'hand', 'sleeve']) {
+      expect({ part, count: squat.findAll(`.front .${part}, .back .${part}`).length }).toEqual({
+        part,
+        count: 2,
+      })
+    }
+    for (const part of ['torso', 'pelvis', 'neck', 'head', 'hair', 'ear', 'eye']) {
+      expect({ part, count: squat.findAll(`.front .${part}`).length }).toEqual({ part, count: 1 })
+    }
+    expect(squat.find('.shirt.torso').exists()).toBe(true)
+    expect(squat.find('.shorts.pelvis').exists()).toBe(true)
     expect(squat.attributes('aria-label')).toContain('Kniebeuge')
   })
 
