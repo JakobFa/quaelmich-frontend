@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.64',
+    version: '0.9.65',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Schlaf & Erholung für deine KI',
+        text: 'Im KI-Modus kann deine KI jetzt auch Schlaf, Ruhepuls, HRV und Schritte aus intervals.icu lesen und in ihre Einschätzung und Planung einbeziehen – nur wenn du es in den Einstellungen unter „Schlaf & Erholung“ extra freigibst. Die Freigabe nimmst du dort jederzeit zurück.',
+      },
       {
         kind: 'Neu',
         title: 'KI-Zeichen im Plan',

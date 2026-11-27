@@ -9,10 +9,11 @@ const api = vi.hoisted(() => ({
   enableHealthImport: vi.fn<() => Promise<HealthStatus>>(),
   importHealthNow: vi.fn<() => Promise<HealthStatus>>(),
   disableHealthImport: vi.fn<() => Promise<void>>(),
+  shareHealthWithAi: vi.fn<(share: boolean) => Promise<HealthStatus>>(),
 }))
 vi.mock('../api', () => api)
 
-const base = { consentAt: null, lastImportAt: null, days: [] }
+const base = { consentAt: null, lastImportAt: null, sharedWithAi: false, days: [] }
 const noIntervals: HealthStatus = { ...base, intervalsConnected: false, importEnabled: false }
 const off: HealthStatus = { ...base, intervalsConnected: true, importEnabled: false }
 const on: HealthStatus = {
@@ -20,6 +21,7 @@ const on: HealthStatus = {
   importEnabled: true,
   consentAt: '2026-11-27T09:00:00Z',
   lastImportAt: '2026-11-27T09:00:00Z',
+  sharedWithAi: false,
   days: [
     {
       date: '2026-11-27',
@@ -83,5 +85,21 @@ describe('HealthPanel', () => {
 
     expect(api.disableHealthImport).toHaveBeenCalled()
     expect(wrapper.find('[data-test="health-consent"]').exists()).toBe(true)
+  })
+
+  it('gibt Schlaf & Erholung erst nach eigener Einwilligung für die KI frei', async () => {
+    api.getHealthStatus.mockResolvedValue(on)
+    api.shareHealthWithAi.mockResolvedValue({ ...on, sharedWithAi: true })
+    const wrapper = mount(HealthPanel)
+    await flushPromises()
+
+    const button = wrapper.findAll('button').find((b) => b.text() === 'Für meine KI freigeben')!
+    expect(button.attributes('disabled')).toBeDefined()
+    await wrapper.find('[data-test="health-ai-consent"]').setValue(true)
+    await button.trigger('click')
+    await flushPromises()
+
+    expect(api.shareHealthWithAi).toHaveBeenCalledWith(true)
+    expect(wrapper.find('[data-test="health-ai"]').text()).toContain('Für deine KI freigegeben')
   })
 })

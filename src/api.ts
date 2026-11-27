@@ -370,6 +370,8 @@ export type HealthStatus = {
   importEnabled: boolean
   consentAt: string | null
   lastImportAt: string | null
+  /** auch der KI im KI-Modus freigegeben (Werkzeug get_wellness) */
+  sharedWithAi: boolean
   days: HealthDay[]
 }
 
@@ -388,6 +390,14 @@ export function enableHealthImport() {
 
 export function importHealthNow() {
   return request<HealthStatus>('/me/health/intervals/import', { method: 'POST' })
+}
+
+/** Schlaf & Erholung auch der KI zeigen (eigene Einwilligung) oder das zurücknehmen */
+export function shareHealthWithAi(share: boolean) {
+  return request<HealthStatus>('/me/health/ai', {
+    method: 'PUT',
+    body: JSON.stringify({ share }),
+  })
 }
 
 /** Ausschalten – löscht alle Gesundheitsdaten bei quaelmich */
