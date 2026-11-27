@@ -6,9 +6,12 @@ import {
   getMyAthlete,
   getPlan,
   importActivities,
+  getAiAssessment,
+  getAiMode,
   getProgress,
   pausePlan,
   resumePlan,
+  type AiAssessment,
   type Progress,
 } from '../api'
 import AiModeBanner from '../components/AiModeBanner.vue'
@@ -55,12 +58,23 @@ async function loadAthlete() {
 }
 const progress = ref<Progress | null>(null)
 
+/** Im KI-Modus: die Einschätzung der KI für den Kopf (null = keine; dann die eigene Rechnung) */
+const aiMode = ref(false)
+const aiAssessment = ref<AiAssessment | null>(null)
+
 /** Level & Co. – ohne geht es auch, dann zeigt der Plan den einfachen Überblick */
 async function loadProgress() {
   try {
     progress.value = await getProgress()
   } catch {
     progress.value = null
+  }
+  try {
+    aiMode.value = (await getAiMode()).enabled
+    aiAssessment.value = aiMode.value ? await getAiAssessment() : null
+  } catch {
+    aiMode.value = false
+    aiAssessment.value = null
   }
 }
 const loading = ref(true)
@@ -299,6 +313,8 @@ onMounted(async () => {
       <ProgressHeader
         v-if="progress"
         :progress="progress"
+        :ai-mode="aiMode"
+        :ai-assessment="aiAssessment"
         :weeks="weeks"
         :today="today"
         :selected-week="weekIndex"

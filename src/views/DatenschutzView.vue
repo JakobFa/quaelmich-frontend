@@ -64,8 +64,10 @@ import { hasImpressum, legal } from '../legal'
           keine gefahrenen Einheiten, keine Daten aus Strava und keine Freitexte – und kann, wenn du
           es erlaubst, Plan und Profil ändern, auch dein sportliches Ziel. Änderungen bestätigst du
           in deiner KI-App, quaelmich führt sie dann aus. Die Verarbeitung dort richtet sich nach
-          den Bedingungen deines KI-Anbieters (bei Claude: Anthropic). Ausschalten des KI-Modus
-          beendet alle Verbindungen sofort.
+          den Bedingungen deines KI-Anbieters (bei Claude: Anthropic). Deine KI kann außerdem eine
+          kurze Einschätzung deines Trainings setzen (Stufe und ein, zwei Sätze), die quaelmich mit
+          Zeitpunkt speichert und auf der Planseite zeigt. Ausschalten des KI-Modus beendet alle
+          Verbindungen sofort.
         </li>
         <li>
           <strong>Schlaf &amp; Erholung (nur wenn du es selbst einschaltest):</strong> Schaltest du

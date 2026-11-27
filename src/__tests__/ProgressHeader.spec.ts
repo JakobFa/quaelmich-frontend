@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest'
 import { mount } from '@vue/test-utils'
 
 import ProgressHeader from '../components/ProgressHeader.vue'
-import type { Progress } from '../api'
+import type { AiAssessment, Progress } from '../api'
 import type { PlanWeek } from '../plan/weeks'
 import type { Phase } from '../types/plan'
 
@@ -70,5 +70,57 @@ describe('ProgressHeader', () => {
     const wrapper = mountHeader()
     await wrapper.findAll('.segment')[1]!.trigger('click')
     expect(wrapper.emitted('select-week')).toEqual([[1]])
+  })
+
+  describe('im KI-Modus', () => {
+    const fresh: AiAssessment = {
+      status: 'A_BIT_MUCH',
+      note: 'Zwei harte Tage, morgen locker.',
+      updatedAt: '2026-10-21T05:12:00Z',
+      fresh: true,
+    }
+
+    function mountAi(aiAssessment: AiAssessment | null, load = progress.load) {
+      return mount(ProgressHeader, {
+        props: {
+          progress: { ...progress, load },
+          weeks,
+          today: '2026-10-21',
+          selectedWeek: 2,
+          aiMode: true,
+          aiAssessment,
+        },
+      })
+    }
+
+    it('zeigt die frische Einschätzung der KI statt der eigenen Rechnung', () => {
+      const wrapper = mountAi(fresh)
+
+      expect(wrapper.find('[data-test="ai-assessment"]').text()).toContain('Etwas viel')
+      expect(wrapper.text()).toContain('Einschätzung deiner KI')
+      expect(wrapper.text()).toContain('Zwei harte Tage, morgen locker.')
+      expect(wrapper.text()).not.toContain('Letzte 7 Tage')
+    })
+
+    it('fällt bei alter Einschätzung auf die eigene Rechnung zurück und sagt das', () => {
+      const wrapper = mountAi({ ...fresh, fresh: false })
+
+      expect(wrapper.find('[data-test="ai-assessment"]').exists()).toBe(false)
+      expect(wrapper.text()).toContain('Letzte 7 Tage')
+      expect(wrapper.find('[data-test="ai-fallback"]').text()).toContain('nicht gemeldet')
+    })
+
+    it('verspricht keine automatische Anpassung', () => {
+      const wrapper = mountAi(null, {
+        plannedTss: 300,
+        actualTss: 600,
+        chronicTss: 300,
+        status: 'TOO_MUCH',
+      })
+
+      expect(wrapper.text()).not.toContain('quaelmich macht')
+      expect(wrapper.text()).toContain('deine KI')
+      expect(wrapper.find('[data-test="ai-fallback"]').text()).toContain('noch keine Einschätzung')
+    })
   })
 })
