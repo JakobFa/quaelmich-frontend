@@ -75,6 +75,7 @@ function logout() {
         <RouterLink to="/plan">Plan</RouterLink>
         <RouterLink to="/workouts">Workouts</RouterLink>
         <RouterLink to="/profil">Profil</RouterLink>
+        <RouterLink to="/einstellungen">Einstellungen</RouterLink>
         <span class="spacer"></span>
         <span class="user" :title="auth.email.value ?? ''">{{ auth.email.value }}</span>
         <button type="button" class="logout" @click="logout">Abmelden</button>
@@ -278,6 +279,17 @@ function logout() {
   text-transform: none;
   letter-spacing: 0;
   color: var(--color-text-muted);
+}
+
+/* Handy: mit vier Reitern wird es eng – die E-Mail steht dann in den Einstellungen unter „Konto“ */
+@media (max-width: 600px) {
+  .nav {
+    gap: 8px 16px;
+  }
+
+  .user {
+    display: none;
+  }
 }
 
 .logout {

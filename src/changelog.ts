@@ -20,12 +20,17 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.61',
+    version: '0.9.62',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Profil und Einstellungen getrennt',
+        text: 'Unter „Profil“ steht jetzt nur noch dein sportliches Profil: Werte, Zonen, Ziel, Events und Verfügbarkeit. Strava, intervals.icu, Schlaf & Erholung, Kalender, KI-Modus, die App fürs Handy und dein Konto findest du im neuen Reiter „Einstellungen“.',
+      },
       {
         kind: 'Neu',
         title: 'Schlaf & Erholung von intervals.icu',
-        text: 'Schlaf und Erholung kommen jetzt von intervals.icu – egal, woher sie dort stammen: Garmin, Oura, Whoop oder Apple Health über eine Zusatz-App. Schalte es im Profil unter „Schlaf & Erholung“ ein; quaelmich zeigt dir dann Schlafdauer, Schlafbewertung, Ruhepuls, HRV und Schritte der letzten Tage. Nur mit deiner Einwilligung und jederzeit wieder weg, samt allen Daten.',
+        text: 'Schlaf und Erholung kommen jetzt von intervals.icu – egal, woher sie dort stammen: Garmin, Oura, Whoop oder Apple Health über eine Zusatz-App. Schalte es in den Einstellungen unter „Schlaf & Erholung“ ein; quaelmich zeigt dir dann Schlafdauer, Schlafbewertung, Ruhepuls, HRV und Schritte der letzten Tage. Nur mit deiner Einwilligung und jederzeit wieder weg, samt allen Daten.',
       },
     ],
   },

@@ -43,14 +43,14 @@ import { hasImpressum, legal } from '../legal'
         <li>
           <strong>Gemachte Einheiten</strong> (nur wenn du Strava oder intervals.icu verbindest):
           Datum, Sportart, Dauer, Distanz und Trainingslast (TSS). Keine GPS-Strecken, keine Fotos.
-          <strong>Was von Strava kommt, speichert quaelmich höchstens 6 Tage:</strong> Strava erlaubt
-          nicht mehr als 7 Tage Zwischenspeicher. Danach werden die Werte gelöscht und beim nächsten
-          Öffnen des Plans oder in der nächtlichen Abholung neu von Strava geholt. Dauerhaft bleibt
-          nur, was du selbst einträgst (Bewertung, Ausfallgrund, Bestätigung der Zuordnung) und die
-          Zuordnung zur Aktivität.
-          Für die Intervall-Genauigkeit ruft quaelmich beim Öffnen eines Workouts die
-          sekundengenauen Watt- und Pulswerte der zugeordneten Fahrt ab, wertet sie aus und verwirft
-          sie wieder – sie werden nicht gespeichert. Standortdaten werden dabei nicht abgerufen.
+          <strong>Was von Strava kommt, speichert quaelmich höchstens 6 Tage:</strong> Strava
+          erlaubt nicht mehr als 7 Tage Zwischenspeicher. Danach werden die Werte gelöscht und beim
+          nächsten Öffnen des Plans oder in der nächtlichen Abholung neu von Strava geholt.
+          Dauerhaft bleibt nur, was du selbst einträgst (Bewertung, Ausfallgrund, Bestätigung der
+          Zuordnung) und die Zuordnung zur Aktivität. Für die Intervall-Genauigkeit ruft quaelmich
+          beim Öffnen eines Workouts die sekundengenauen Watt- und Pulswerte der zugeordneten Fahrt
+          ab, wertet sie aus und verwirft sie wieder – sie werden nicht gespeichert. Standortdaten
+          werden dabei nicht abgerufen.
         </li>
         <li>
           <strong>Verbindungen:</strong> dein intervals.icu-Schlüssel bzw. deine Strava-Zugangsdaten
@@ -58,22 +58,22 @@ import { hasImpressum, legal } from '../legal'
         </li>
         <li>
           <strong>KI-Modus (nur wenn du ihn selbst einschaltest):</strong> Schaltest du den KI-Modus
-          im Profil ein und verbindest eine KI-App wie Claude, merkt sich quaelmich den Schalter und
-          die Verbindung (Name der App, Zeitpunkt, Zugriffsrechte; die Zugangsschlüssel nur als
-          Hash). Die KI liest deinen Trainingsplan, dein Profil und die Workout-Bibliothek –
+          in den Einstellungen ein und verbindest eine KI-App wie Claude, merkt sich quaelmich den
+          Schalter und die Verbindung (Name der App, Zeitpunkt, Zugriffsrechte; die Zugangsschlüssel
+          nur als Hash). Die KI liest deinen Trainingsplan, dein Profil und die Workout-Bibliothek –
           keine gefahrenen Einheiten, keine Daten aus Strava und keine Freitexte – und kann, wenn du
           es erlaubst, Plan und Profil ändern, auch dein sportliches Ziel. Änderungen bestätigst du
-          in deiner KI-App, quaelmich führt sie dann aus. Die Verarbeitung
-          dort richtet sich nach den Bedingungen deines KI-Anbieters (bei Claude: Anthropic).
-          Ausschalten des KI-Modus beendet alle Verbindungen sofort.
+          in deiner KI-App, quaelmich führt sie dann aus. Die Verarbeitung dort richtet sich nach
+          den Bedingungen deines KI-Anbieters (bei Claude: Anthropic). Ausschalten des KI-Modus
+          beendet alle Verbindungen sofort.
         </li>
         <li>
-          <strong>Schlaf &amp; Erholung (nur wenn du es selbst einschaltest):</strong> Schaltest du im
-          Profil die Übernahme von intervals.icu ein, speichert quaelmich je Tag Schlafdauer,
-          Schlafbewertung, Ruhepuls, Herzfrequenzvariabilität (HRV) und Schritte – so, wie sie in
-          deinem intervals.icu-Konto liegen, egal aus welcher Quelle (z. B. Garmin, Oura, Whoop,
-          Apple Health) –, dazu den Zeitpunkt deiner Einwilligung. Diese Daten gehen nicht an Dritte
-          und nicht an KI-Apps.
+          <strong>Schlaf &amp; Erholung (nur wenn du es selbst einschaltest):</strong> Schaltest du
+          in den Einstellungen die Übernahme von intervals.icu ein, speichert quaelmich je Tag
+          Schlafdauer, Schlafbewertung, Ruhepuls, Herzfrequenzvariabilität (HRV) und Schritte – so,
+          wie sie in deinem intervals.icu-Konto liegen, egal aus welcher Quelle (z. B. Garmin, Oura,
+          Whoop, Apple Health) –, dazu den Zeitpunkt deiner Einwilligung. Diese Daten gehen nicht an
+          Dritte und nicht an KI-Apps.
         </li>
         <li>
           <strong>Feedback (freiwillig):</strong> dein Text, die Seite, auf der du ihn geschrieben
@@ -96,10 +96,10 @@ import { hasImpressum, legal } from '../legal'
         <li>
           Die Verbindung zu Strava und zu einer KI-App gibt es nur mit deiner Einwilligung – Art. 6
           Abs. 1 lit. a DSGVO. Du erteilst sie bei Strava bzw. durch das Einschalten des KI-Modus
-          und die Zustimmungsseite von quaelmich und kannst sie jederzeit widerrufen: Strava im
-          Profil unter „Strava“ mit „Trennen“ (oder in den Einstellungen bei Strava), die KI-App im
-          Profil unter „KI-Modus“.
-          Eine Löschung deiner Daten verlangst du dort oder per Mail an die oben genannte Adresse.
+          und die Zustimmungsseite von quaelmich und kannst sie jederzeit widerrufen: Strava in den
+          Einstellungen unter „Strava“ mit „Trennen“ (oder in den Einstellungen bei Strava), die
+          KI-App in den Einstellungen unter „KI-Modus“. Eine Löschung deiner Daten verlangst du dort
+          oder per Mail an die oben genannte Adresse.
         </li>
         <li>
           Pulsdaten verarbeiten wir nur mit deiner Einwilligung – Art. 9 Abs. 2 lit. a DSGVO. Du
@@ -107,8 +107,8 @@ import { hasImpressum, legal } from '../legal'
         </li>
         <li>
           Schlaf- und Erholungsdaten verarbeiten wir nur mit deiner ausdrücklichen Einwilligung –
-          Art. 9 Abs. 2 lit. a DSGVO. Du erteilst sie im Profil unter „Schlaf &amp; Erholung“ und
-          widerrufst sie dort mit „Beenden und Daten löschen“.
+          Art. 9 Abs. 2 lit. a DSGVO. Du erteilst sie in den Einstellungen unter „Schlaf &amp;
+          Erholung“ und widerrufst sie dort mit „Beenden und Daten löschen“.
         </li>
         <li>
           Schutz vor Missbrauch (Begrenzung von Anmeldeversuchen) – Art. 6 Abs. 1 lit. f DSGVO
@@ -140,9 +140,9 @@ import { hasImpressum, legal } from '../legal'
           verbindest: quaelmich holt dort deine Einheiten ab und schickt Workouts an deinen
           intervals.icu-Kalender. Für die Daten bei diesen Diensten gelten deren
           Datenschutzerklärungen. Strava darf Nutzungsdaten zum Zugriff von quaelmich auf die
-          Strava-Schnittstelle erfassen und für eigene Zwecke verwenden. Strava-Daten gibt
-          quaelmich nicht an Dritte weiter und nutzt sie nicht für Werbung, Auswertungen über mehrere
-          Nutzer oder zum Trainieren von KI.
+          Strava-Schnittstelle erfassen und für eigene Zwecke verwenden. Strava-Daten gibt quaelmich
+          nicht an Dritte weiter und nutzt sie nicht für Werbung, Auswertungen über mehrere Nutzer
+          oder zum Trainieren von KI.
         </li>
       </ul>
       <p>
@@ -161,14 +161,14 @@ import { hasImpressum, legal } from '../legal'
       <ul>
         <li>Deine Daten bleiben gespeichert, solange dein Konto besteht.</li>
         <li>
-          Strava-Werte: höchstens 6 Tage (siehe oben). Trennst du Strava (oder entziehst du den Zugriff
-          bei Strava), werden alle von Strava übernommenen Daten gelöscht und die Verbindung
+          Strava-Werte: höchstens 6 Tage (siehe oben). Trennst du Strava (oder entziehst du den
+          Zugriff bei Strava), werden alle von Strava übernommenen Daten gelöscht und die Verbindung
           entfernt; du bekommst eine Bestätigung per E-Mail. Trennst du intervals.icu, wird dein
           Schlüssel gelöscht.
         </li>
         <li>
-          Schlaf &amp; Erholung: Beendest du die Übernahme im Profil oder trennst du intervals.icu,
-          werden alle diese Daten bei quaelmich sofort gelöscht.
+          Schlaf &amp; Erholung: Beendest du die Übernahme in den Einstellungen oder trennst du
+          intervals.icu, werden alle diese Daten bei quaelmich sofort gelöscht.
         </li>
         <li>
           Löschst du dein Konto, ist alles weg; auch dafür bekommst du eine Bestätigung per E-Mail.
@@ -181,8 +181,8 @@ import { hasImpressum, legal } from '../legal'
       <p>
         Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung,
         Datenübertragbarkeit und Widerspruch sowie das Recht, eine Einwilligung jederzeit zu
-        widerrufen. Deine Daten herunterladen und dein Konto löschen kannst du selbst im Profil
-        unter „Konto &amp; Daten“. Für alles andere schreib einfach eine Mail<template
+        widerrufen. Deine Daten herunterladen und dein Konto löschen kannst du selbst in den
+        Einstellungen unter „Konto &amp; Daten“. Für alles andere schreib einfach eine Mail<template
           v-if="legal.email"
         >
           an <a :href="`mailto:${legal.email}`">{{ legal.email }}</a></template

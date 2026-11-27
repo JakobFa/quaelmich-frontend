@@ -27,7 +27,7 @@ import { hasImpressum, legal } from '../legal'
       <h3>3. Dein Konto</h3>
       <p>
         Du bist für dein Passwort verantwortlich und gibst richtige Angaben an. Du kannst dein Konto
-        jederzeit im Profil unter „Konto &amp; Daten“ löschen. Wie wir mit deinen Daten umgehen,
+        jederzeit in den Einstellungen unter „Konto &amp; Daten“ löschen. Wie wir mit deinen Daten umgehen,
         steht in der <RouterLink to="/datenschutz">Datenschutzerklärung</RouterLink>.
       </p>
 
