@@ -9,6 +9,7 @@ import CalendarSubscription from '../components/CalendarSubscription.vue'
 import HealthPanel from '../components/HealthPanel.vue'
 import HomeScreenHint from '../components/HomeScreenHint.vue'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
+import SettingsSection from '../components/SettingsSection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import type { Athlete } from '../types/athlete'
 
@@ -29,36 +30,70 @@ onMounted(async () => {
     <p class="kicker">// Einstellungen</p>
 
     <h2 class="section-label first">// Verbindungen</h2>
-    <div class="connections-intro">
-      <p>Beide sind freiwillig – mit ihnen wird quaelmich aber erst richtig gut:</p>
-      <ul>
-        <li>
-          <strong>Strava – fürs Feedback:</strong> holt deine gefahrenen Einheiten (auch von Apple
-          Watch &amp; Co.), hakt passende Workouts ab, rechnet die Belastung und passt den Plan an.
-        </li>
-        <li>
-          <strong>intervals.icu – für den Radcomputer:</strong> schickt deine geplanten Workouts
-          dorthin und weiter zu Wahoo oder Garmin. Ohne Strava holt quaelmich die gefahrenen
-          Einheiten auch von hier.
-        </li>
-      </ul>
+    <div class="sections">
+      <SettingsSection
+        id="strava"
+        title="Strava"
+        summary="Holt deine Fahrten, hakt Workouts ab und passt den Plan an"
+      >
+        <template #title>Strava <span class="beta">Beta</span></template>
+        <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
+      </SettingsSection>
+      <SettingsSection
+        id="intervals"
+        title="intervals.icu"
+        summary="Schickt deine Workouts auf Wahoo oder Garmin, holt Fahrten ohne Strava"
+      >
+        <IntervalsConnection />
+      </SettingsSection>
+      <SettingsSection
+        id="schlaf"
+        title="Schlaf & Erholung"
+        summary="Schlaf, Ruhepuls und HRV aus intervals.icu"
+      >
+        <HealthPanel />
+      </SettingsSection>
+      <SettingsSection
+        id="kalender"
+        title="Kalender"
+        summary="Dein Plan als Abo in Apple-, Google- oder Outlook-Kalender"
+      >
+        <CalendarSubscription />
+      </SettingsSection>
     </div>
-    <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
-    <IntervalsConnection />
-    <HealthPanel />
-    <CalendarSubscription />
 
     <h2 class="section-label">// KI</h2>
-    <AiConnections />
+    <div class="sections">
+      <SettingsSection
+        id="ki-modus"
+        title="KI-Modus"
+        summary="Deine eigene KI liest und plant deinen Trainingsplan"
+      >
+        <AiConnections />
+      </SettingsSection>
+    </div>
 
-    <h2 class="section-label">// App</h2>
-    <HomeScreenHint />
-
-    <h2 class="section-label">// Konto</h2>
-    <p v-if="auth.email.value" class="signed-in">
-      Angemeldet als <strong>{{ auth.email.value }}</strong>
-    </p>
-    <AccountPanel />
+    <h2 class="section-label">// App &amp; Konto</h2>
+    <div class="sections">
+      <SettingsSection
+        id="app"
+        title="Als App aufs Handy"
+        summary="quaelmich auf den Home-Bildschirm legen"
+      >
+        <HomeScreenHint />
+      </SettingsSection>
+      <SettingsSection
+        id="konto"
+        title="Konto & Daten"
+        :summary="
+          auth.email.value
+            ? `Angemeldet als ${auth.email.value}`
+            : 'Daten herunterladen, Konto löschen'
+        "
+      >
+        <AccountPanel />
+      </SettingsSection>
+    </div>
   </section>
 </template>
 
@@ -77,35 +112,18 @@ onMounted(async () => {
   margin-top: 24px;
 }
 
-.signed-in {
-  margin: 0 0 12px;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-  overflow-wrap: anywhere;
-}
-
-.signed-in strong {
-  color: var(--color-text);
-}
-
-.connections-intro {
-  margin: 0 0 16px;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-.connections-intro p {
-  margin: 0 0 6px;
-}
-
-.connections-intro ul {
+.sections {
   display: grid;
-  gap: 6px;
-  margin: 0;
-  padding-left: 18px;
+  gap: 10px;
 }
 
-.connections-intro strong {
-  color: var(--color-text);
+.beta {
+  margin-left: 6px;
+  padding: 1px 6px;
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  vertical-align: middle;
+  color: var(--color-ink);
+  background: var(--color-lilac);
 }
 </style>

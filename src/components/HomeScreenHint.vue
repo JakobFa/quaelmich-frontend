@@ -1,11 +1,7 @@
-<script setup lang="ts">
-/** Kurze Anleitung: quaelmich wie eine App auf den Home-Bildschirm legen */
-const isIos = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(navigator.userAgent)
-</script>
-
+<!-- Kurze Anleitung: quaelmich wie eine App auf den Home-Bildschirm legen -->
 <template>
-  <details class="panel home-screen" :open="isIos">
-    <summary class="panel-title">quaelmich als App aufs Handy</summary>
+  <div class="panel home-screen">
+    <h2 class="panel-title">quaelmich als App aufs Handy</h2>
     <p class="hint">
       Auf dem Home-Bildschirm öffnet sich quaelmich wie eine App – ohne Browserleiste, mit eigenem
       Symbol.
@@ -29,14 +25,10 @@ const isIos = typeof navigator !== 'undefined' && /iPhone|iPad|iPod/.test(naviga
       </li>
     </ol>
     <p class="hint small">Einmal anmelden reicht – danach öffnet das Symbol direkt deinen Plan.</p>
-  </details>
+  </div>
 </template>
 
 <style scoped>
-summary {
-  cursor: pointer;
-}
-
 .hint {
   margin: 12px 0 8px;
   font-size: 0.9rem;

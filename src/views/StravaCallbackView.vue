@@ -34,7 +34,7 @@ onMounted(async () => {
   }
   try {
     await connectStrava(param('code'), param('scope'), purpose)
-    router.replace({ name: 'settings' })
+    router.replace({ name: 'settings', hash: '#strava' })
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError && error.status === 422
@@ -50,7 +50,7 @@ onMounted(async () => {
     <LoadingNotice v-if="!errorMessage" label="Verbinde mit Strava …" />
     <div v-else class="panel" role="alert">
       <p class="error">{{ errorMessage }}</p>
-      <RouterLink to="/einstellungen" class="button button-ghost"
+      <RouterLink to="/einstellungen#strava" class="button button-ghost"
         >Zurück zu den Einstellungen</RouterLink
       >
     </div>

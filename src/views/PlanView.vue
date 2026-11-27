@@ -304,9 +304,10 @@ onMounted(async () => {
 
 <template>
   <section>
-    <p class="kicker">// Dein Plan</p>
-
-    <AiModeBanner />
+    <div class="plan-top">
+      <p class="kicker">// Dein Plan</p>
+      <AiModeBanner />
+    </div>
 
     <LoadingNotice v-if="loading" label="Lädt deinen Plan …" />
 
@@ -1143,6 +1144,13 @@ onMounted(async () => {
   margin: 2px 0 0;
   font-family: var(--font-mono);
   font-weight: 600;
+}
+
+.plan-top {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .ai-mark {

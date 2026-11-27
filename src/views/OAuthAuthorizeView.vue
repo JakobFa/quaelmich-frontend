@@ -92,7 +92,7 @@ function deny() {
         <strong>{{ client.name }}</strong> verbinden.
       </p>
       <div class="actions">
-        <RouterLink to="/einstellungen" class="button">Zu den Einstellungen</RouterLink>
+        <RouterLink to="/einstellungen#ki-modus" class="button">Zu den Einstellungen</RouterLink>
         <button type="button" class="button button-ghost" @click="deny">Ablehnen</button>
       </div>
     </template>
