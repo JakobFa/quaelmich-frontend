@@ -2,6 +2,7 @@
 import { computed } from 'vue'
 
 import type { AiAssessment, Progress } from '../api'
+import { streakTile, type StatusTile } from '../plan/status'
 import { mondayOf, type PlanWeek } from '../plan/weeks'
 import { phaseLabels, type Phase } from '../types/plan'
 
@@ -16,6 +17,8 @@ const props = defineProps<{
   aiMode?: boolean
   /** Einschätzung der KI (nur im KI-Modus); ist sie frisch, ersetzt sie die eigene Rechnung */
   aiAssessment?: AiAssessment | null
+  /** Kacheln der Statuskarte (Form, FTP, Schlaf, Erholung), von quaelmich gerechnet */
+  tiles?: StatusTile[]
 }>()
 
 const emit = defineEmits<{ 'select-week': [index: number] }>()
@@ -64,8 +67,12 @@ const loadLabels = {
 } as const
 const load = computed(() => props.progress.load ?? null)
 
-/** Frische Einschätzung der KI – dann steht sie statt der Rechnung von quaelmich da */
-const ai = computed(() => (props.aiMode && props.aiAssessment?.fresh ? props.aiAssessment : null))
+/** Kurze Einschätzung der KI zur Form – nur im KI-Modus, nur frisch, unter der Statuskarte */
+const ai = computed(() =>
+  props.aiMode && props.aiAssessment?.fresh && props.aiAssessment.note ? props.aiAssessment : null,
+)
+
+const streak = computed(() => streakTile(props.progress))
 
 /** Im KI-Modus passt quaelmich nichts selbst an – der Satz dazu darf dann nicht dastehen */
 const loadHint = computed(() => {
@@ -77,13 +84,10 @@ const loadHint = computed(() => {
   return loadLabels[current.status].hint
 })
 
-/** Warum im KI-Modus die eigene Rechnung dasteht */
-const aiFallbackNote = computed(() => {
-  if (!props.aiMode || ai.value) return null
-  if (props.aiAssessment) {
-    return `Deine KI hat sich seit ${formatWhen(props.aiAssessment.updatedAt)} nicht gemeldet – das ist die Rechnung von quaelmich.`
-  }
-  return 'Deine KI hat noch keine Einschätzung gesetzt – das ist die Rechnung von quaelmich.'
+/** Im KI-Modus, wenn die KI lange nichts gesagt hat */
+const aiStaleNote = computed(() => {
+  if (!props.aiMode || ai.value || !props.aiAssessment) return null
+  return `Deine KI hat sich seit ${formatWhen(props.aiAssessment.updatedAt)} nicht zu deiner Form gemeldet.`
 })
 
 function formatWhen(instant: string) {
@@ -162,33 +166,37 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
       </li>
     </ul>
 
-    <dl class="stats">
-      <div v-if="ai" class="load" :class="ai.status.toLowerCase()" data-test="ai-assessment">
-        <dt>Einschätzung deiner KI</dt>
-        <dd>
-          {{ loadLabels[ai.status].title }}
-          <small>Stand {{ formatWhen(ai.updatedAt) }}</small>
-        </dd>
+    <div class="status" data-test="status-card">
+      <div
+        v-for="tile in tiles ?? []"
+        :key="tile.key"
+        class="tile"
+        :class="tile.tone"
+        :data-test="`tile-${tile.key}`"
+      >
+        <span class="tile-label">{{ tile.label }}</span>
+        <strong class="tile-value">{{ tile.value }}</strong>
+        <small v-if="tile.sub">{{ tile.sub }}</small>
       </div>
-      <div v-else-if="load" class="load" :class="load.status.toLowerCase()">
-        <dt>Letzte 7 Tage</dt>
-        <dd>
-          {{ loadLabels[load.status].title }}
-          <small v-if="loadReference"
-            >{{ load.actualTss }} / {{ loadReference.value }} TSS {{ loadReference.label }}</small
-          >
-        </dd>
+      <div v-if="load" class="tile load" :class="load.status.toLowerCase()" data-test="tile-load">
+        <span class="tile-label">Letzte 7 Tage</span>
+        <strong class="tile-value">{{ loadLabels[load.status].title }}</strong>
+        <small v-if="loadReference"
+          >{{ load.actualTss }} / {{ loadReference.value }} TSS {{ loadReference.label }}</small
+        >
       </div>
-      <div v-if="progress.streakWeeks > 0" class="streak">
-        <dt>Serie</dt>
-        <dd>{{ progress.streakWeeks }}<small> Wo.</small></dd>
+      <div v-if="streak" class="tile streak" :class="streak.tone" data-test="tile-streak">
+        <span class="tile-label">{{ streak.label }}</span>
+        <strong class="tile-value">{{ streak.value }}</strong>
+        <small v-if="streak.sub">{{ streak.sub }}</small>
       </div>
-    </dl>
-    <p v-if="ai" class="load-hint">{{ ai.note || loadLabels[ai.status].hint }}</p>
-    <template v-else>
-      <p v-if="loadHint" class="load-hint">{{ loadHint }}</p>
-      <p v-if="aiFallbackNote" class="load-hint" data-test="ai-fallback">{{ aiFallbackNote }}</p>
-    </template>
+    </div>
+    <p v-if="loadHint" class="load-hint">{{ loadHint }}</p>
+    <div v-if="ai" class="ai-note" role="note" data-test="ai-assessment">
+      <span class="ai-label">✦ Deine KI · {{ formatWhen(ai.updatedAt) }}</span>
+      <p>{{ ai.note }}</p>
+    </div>
+    <p v-else-if="aiStaleNote" class="load-hint" data-test="ai-stale">{{ aiStaleNote }}</p>
   </div>
 </template>
 
@@ -335,56 +343,82 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
   background: var(--color-text-muted);
 }
 
-/* ---------- Zahlen ---------- */
+/* ---------- Statuskarte ---------- */
 
-.stats {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 12px 32px;
+.status {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: 8px;
   margin: 18px 0 0;
 }
 
-.stats dt {
+.tile {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  padding: 8px 10px;
+  background: var(--color-panel-raised);
+}
+
+.tile-label {
   font-family: var(--font-mono);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
   color: var(--color-text-muted);
 }
 
-.stats dd {
-  margin: 2px 0 0;
-  font-size: 1.4rem;
+.tile-value {
+  font-size: 1.05rem;
   font-style: italic;
   font-weight: 900;
+  line-height: 1.2;
 }
 
-.stats small {
-  font-size: 0.8rem;
-  font-style: normal;
+.tile small {
+  font-size: 0.72rem;
   font-weight: 600;
   color: var(--color-text-muted);
+  overflow-wrap: anywhere;
 }
 
-.streak dd {
-  color: var(--color-hot);
-}
-
-.load dd small {
-  margin-left: 4px;
-}
-
-.load.on_track dd {
+.tile.good .tile-value,
+.load.on_track .tile-value {
   color: #35b86b;
 }
 
-.load.too_little dd,
-.load.a_bit_much dd {
+.tile.warn .tile-value,
+.load.too_little .tile-value,
+.load.a_bit_much .tile-value {
   color: #f4c430;
 }
 
-.load.too_much dd {
+.tile.bad .tile-value,
+.load.too_much .tile-value,
+.streak.good .tile-value {
   color: var(--color-hot);
+}
+
+.ai-note {
+  margin: 10px 0 0;
+  padding: 8px 10px;
+  border-left: 3px solid var(--color-lilac);
+  background: var(--color-panel-raised);
+}
+
+.ai-note p {
+  margin: 2px 0 0;
+  font-size: 0.9rem;
+}
+
+.ai-label {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-lilac);
 }
 
 .load-hint {
