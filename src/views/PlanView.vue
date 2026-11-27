@@ -8,10 +8,14 @@ import {
   importActivities,
   getAiAssessment,
   getAiMode,
+  getFormCurve,
+  getHealthStatus,
   getProgress,
   pausePlan,
   resumePlan,
   type AiAssessment,
+  type FormCurve,
+  type HealthDay,
   type Progress,
 } from '../api'
 import AiModeBanner from '../components/AiModeBanner.vue'
@@ -24,6 +28,7 @@ import StoryOverlayButton from '../components/StoryOverlayButton.vue'
 import WeekTimeEditor from '../components/WeekTimeEditor.vue'
 import WorkoutProfile from '../components/WorkoutProfile.vue'
 import { missingFeedback, needsFeedback, pausedUntil } from '../plan/feedback'
+import { formTile, ftpTile, recoveryTile, sleepTile, type StatusTile } from '../plan/status'
 import { eventFooter, extraRideOverlay } from '../plan/storyOverlay'
 import {
   addDays,
@@ -76,7 +81,25 @@ async function loadProgress() {
     aiMode.value = false
     aiAssessment.value = null
   }
+  // Statuskarte: Form und – wenn eingeschaltet – Schlaf & Erholung; fehlt etwas, fehlt nur die Kachel
+  const [curve, health] = await Promise.allSettled([getFormCurve(), getHealthStatus()])
+  formCurve.value = curve.status === 'fulfilled' ? curve.value : null
+  healthDays.value =
+    health.status === 'fulfilled' && health.value.importEnabled ? health.value.days : []
 }
+
+const formCurve = ref<FormCurve | null>(null)
+const healthDays = ref<HealthDay[]>([])
+
+/** Kacheln der Statuskarte, die quaelmich selbst rechnet (Belastung und Serie kommen aus progress) */
+const statusTiles = computed(() =>
+  [
+    formTile(formCurve.value),
+    ftpTile(athlete.value?.ftp, athlete.value?.weightKg),
+    sleepTile(healthDays.value, today),
+    recoveryTile(healthDays.value, today),
+  ].filter((tile): tile is StatusTile => tile !== null),
+)
 const loading = ref(true)
 const failed = ref(false)
 const generating = ref(false)
@@ -315,6 +338,7 @@ onMounted(async () => {
         :progress="progress"
         :ai-mode="aiMode"
         :ai-assessment="aiAssessment"
+        :tiles="statusTiles"
         :weeks="weeks"
         :today="today"
         :selected-week="weekIndex"

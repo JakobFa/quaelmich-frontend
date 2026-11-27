@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.65',
+    version: '0.9.66',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Statuskarte im Plan',
+        text: 'Oben im Plan siehst du jetzt auf einen Blick, wie es dir geht: Form (frisch, ausgeglichen, im Training, müde), deine FTP mit Watt pro Kilo, Schlaf der letzten Nacht und Erholung (Ruhepuls, HRV) im Vergleich zu deinem Schnitt, die Belastung der letzten 7 Tage und deine Serie. Alles rechnet quaelmich selbst, Schlaf und Erholung kommen aus intervals.icu, wenn du sie eingeschaltet hast. Im KI-Modus steht darunter ein kurzer Satz deiner KI zu deiner Form.',
+      },
       {
         kind: 'Neu',
         title: 'Schlaf & Erholung für deine KI',

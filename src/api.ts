@@ -208,6 +208,28 @@ export function getPlan() {
 
 export type ProgressLevel = { number: number; name: string; fromXp: number }
 
+/** Ein Tag der Formkurve: bis heute gefahren, danach geplant */
+export type FormDay = {
+  date: string
+  tss: number
+  fitness: number
+  fatigue: number
+  form: number
+  planned: boolean
+}
+
+export type FormCurve = {
+  days: FormDay[]
+  today: FormDay | null
+  eventForm: number | null
+  eventDate: string | null
+}
+
+/** Fitness, Ermüdung und Form; null ohne Plan */
+export async function getFormCurve(): Promise<FormCurve | null> {
+  return requestOrNull<FormCurve>('/me/form')
+}
+
 export type Progress = {
   /** Erfahrungspunkte = gefahrene Trainingslast */
   xp: number
@@ -451,7 +473,8 @@ export type LoadStatus = 'TOO_LITTLE' | 'ON_TRACK' | 'A_BIT_MUCH' | 'TOO_MUCH' |
 
 /** Einschätzung, die die KI im KI-Modus setzt; fresh = noch aktuell genug für die Planseite */
 export type AiAssessment = {
-  status: LoadStatus
+  /** veraltet: die KI schreibt nur noch die Notiz */
+  status: LoadStatus | null
   note: string | null
   updatedAt: string
   fresh: boolean

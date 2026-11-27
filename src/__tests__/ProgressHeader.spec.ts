@@ -74,7 +74,7 @@ describe('ProgressHeader', () => {
 
   describe('im KI-Modus', () => {
     const fresh: AiAssessment = {
-      status: 'A_BIT_MUCH',
+      status: null,
       note: 'Zwei harte Tage, morgen locker.',
       updatedAt: '2026-10-21T05:12:00Z',
       fresh: true,
@@ -93,21 +93,22 @@ describe('ProgressHeader', () => {
       })
     }
 
-    it('zeigt die frische Einschätzung der KI statt der eigenen Rechnung', () => {
+    it('zeigt die Werte von quaelmich und darunter die kurze Einschätzung der KI', () => {
       const wrapper = mountAi(fresh)
 
-      expect(wrapper.find('[data-test="ai-assessment"]').text()).toContain('Etwas viel')
-      expect(wrapper.text()).toContain('Einschätzung deiner KI')
-      expect(wrapper.text()).toContain('Zwei harte Tage, morgen locker.')
-      expect(wrapper.text()).not.toContain('Letzte 7 Tage')
+      expect(wrapper.find('[data-test="tile-load"]').text()).toContain('Auf Kurs')
+      expect(wrapper.find('[data-test="ai-assessment"]').text()).toContain(
+        'Zwei harte Tage, morgen locker.',
+      )
     })
 
-    it('fällt bei alter Einschätzung auf die eigene Rechnung zurück und sagt das', () => {
+    it('zeigt eine alte Einschätzung nicht, sondern sagt, seit wann die KI schweigt', () => {
       const wrapper = mountAi({ ...fresh, fresh: false })
 
       expect(wrapper.find('[data-test="ai-assessment"]').exists()).toBe(false)
-      expect(wrapper.text()).toContain('Letzte 7 Tage')
-      expect(wrapper.find('[data-test="ai-fallback"]').text()).toContain('nicht gemeldet')
+      expect(wrapper.find('[data-test="ai-stale"]').text()).toContain(
+        'nicht zu deiner Form gemeldet',
+      )
     })
 
     it('verspricht keine automatische Anpassung', () => {
@@ -120,7 +121,22 @@ describe('ProgressHeader', () => {
 
       expect(wrapper.text()).not.toContain('quaelmich macht')
       expect(wrapper.text()).toContain('deine KI')
-      expect(wrapper.find('[data-test="ai-fallback"]').text()).toContain('noch keine Einschätzung')
     })
+  })
+
+  it('zeigt die übergebenen Kacheln und die Serie', () => {
+    const wrapper = mount(ProgressHeader, {
+      props: {
+        progress,
+        weeks,
+        today: '2026-10-21',
+        selectedWeek: 2,
+        tiles: [{ key: 'ftp', label: 'FTP', value: '265 W', sub: '3,7 W/kg', tone: null }],
+      },
+    })
+
+    expect(wrapper.find('[data-test="tile-ftp"]').text()).toContain('265 W')
+    expect(wrapper.find('[data-test="tile-streak"]').text()).toContain('4 Wo.')
+    expect(wrapper.text()).not.toContain('Bergziegen-Punk')
   })
 })
