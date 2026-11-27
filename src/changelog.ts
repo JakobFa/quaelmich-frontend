@@ -20,12 +20,12 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.60',
+    version: '0.9.61',
     changes: [
       {
         kind: 'Neu',
-        title: 'Schlaf und Bewegung aus Apple Health',
-        text: 'Im Profil kannst du jetzt Apple Health anbinden: Ein Kurzbefehl auf deinem iPhone schickt jeden Abend Schlafdauer, Schritte, aktive Kalorien, Ruhepuls und HRV an quaelmich. Die letzten Tage siehst du direkt im Profil. Freiwillig, nur mit deiner Einwilligung, und mit einem Tipp wieder weg – samt allen Daten.',
+        title: 'Schlaf & Erholung von intervals.icu',
+        text: 'Schlaf und Erholung kommen jetzt von intervals.icu – egal, woher sie dort stammen: Garmin, Oura, Whoop oder Apple Health über eine Zusatz-App. Schalte es im Profil unter „Schlaf & Erholung“ ein; quaelmich zeigt dir dann Schlafdauer, Schlafbewertung, Ruhepuls, HRV und Schritte der letzten Tage. Nur mit deiner Einwilligung und jederzeit wieder weg, samt allen Daten.',
       },
     ],
   },
