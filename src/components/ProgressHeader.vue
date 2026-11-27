@@ -5,6 +5,7 @@ import type { AiAssessment, Progress } from '../api'
 import { streakTile, type StatusTile } from '../plan/status'
 import { mondayOf, type PlanWeek } from '../plan/weeks'
 import { phaseLabels, type Phase } from '../types/plan'
+import TrendLine from './TrendLine.vue'
 
 const props = defineProps<{
   progress: Progress
@@ -176,6 +177,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
       >
         <span class="tile-label">{{ tile.label }}</span>
         <strong class="tile-value">{{ tile.value }}</strong>
+        <TrendLine v-if="tile.trend" :trend="tile.trend" :tone="tile.tone" />
         <small v-if="tile.sub">{{ tile.sub }}</small>
       </div>
       <div v-if="load" class="tile load" :class="load.status.toLowerCase()" data-test="tile-load">
