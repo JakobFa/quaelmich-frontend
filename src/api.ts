@@ -437,6 +437,22 @@ export function getAiMode() {
   return request<{ enabled: boolean }>('/me/ai-mode')
 }
 
+export type LoadStatus = 'TOO_LITTLE' | 'ON_TRACK' | 'A_BIT_MUCH' | 'TOO_MUCH' | 'RESTING'
+
+/** Einschätzung, die die KI im KI-Modus setzt; fresh = noch aktuell genug für die Planseite */
+export type AiAssessment = {
+  status: LoadStatus
+  note: string | null
+  updatedAt: string
+  fresh: boolean
+}
+
+/** null ohne KI-Modus oder solange die KI noch nichts gesetzt hat */
+export async function getAiAssessment(): Promise<AiAssessment | null> {
+  const response = await send('/me/ai-assessment')
+  return response.status === 204 ? null : ((await response.json()) as AiAssessment)
+}
+
 /** Aus: alle KI-Zugänge enden sofort */
 export function setAiMode(enabled: boolean) {
   return request<{ enabled: boolean }>('/me/ai-mode', {

@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.62',
+    version: '0.9.63',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'Einschätzung von deiner KI',
+        text: 'Im KI-Modus setzt jetzt deine KI die Einschätzung oben auf der Planseite – nach jedem Abgleich mit deinen Fahrten, mit ein, zwei Sätzen, worauf es gerade ankommt. Hat sie sich länger als anderthalb Tage nicht gemeldet, siehst du wieder die Rechnung von quaelmich und einen Hinweis dazu. Den neuen Start-Auftrag findest du in den Einstellungen unter KI-Modus.',
+      },
       {
         kind: 'Besser',
         title: 'Profil und Einstellungen getrennt',

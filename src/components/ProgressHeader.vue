@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 
-import type { Progress } from '../api'
+import type { AiAssessment, Progress } from '../api'
 import { mondayOf, type PlanWeek } from '../plan/weeks'
 import { phaseLabels, type Phase } from '../types/plan'
 
@@ -12,6 +12,10 @@ const props = defineProps<{
   today: string
   /** aktuell angezeigte Woche (wird hervorgehoben) */
   selectedWeek: number
+  /** KI-Modus an: quaelmich passt den Plan nicht selbst an */
+  aiMode?: boolean
+  /** Einschätzung der KI (nur im KI-Modus); ist sie frisch, ersetzt sie die eigene Rechnung */
+  aiAssessment?: AiAssessment | null
 }>()
 
 const emit = defineEmits<{ 'select-week': [index: number] }>()
@@ -59,6 +63,38 @@ const loadLabels = {
   RESTING: { title: 'Ruhephase', hint: 'Gerade steht nichts an.' },
 } as const
 const load = computed(() => props.progress.load ?? null)
+
+/** Frische Einschätzung der KI – dann steht sie statt der Rechnung von quaelmich da */
+const ai = computed(() => (props.aiMode && props.aiAssessment?.fresh ? props.aiAssessment : null))
+
+/** Im KI-Modus passt quaelmich nichts selbst an – der Satz dazu darf dann nicht dastehen */
+const loadHint = computed(() => {
+  const current = load.value
+  if (!current) return null
+  if (props.aiMode && current.status === 'TOO_MUCH') {
+    return 'Deutlich mehr als sonst – gönn dir Erholung. Im KI-Modus passt deine KI den Plan an.'
+  }
+  return loadLabels[current.status].hint
+})
+
+/** Warum im KI-Modus die eigene Rechnung dasteht */
+const aiFallbackNote = computed(() => {
+  if (!props.aiMode || ai.value) return null
+  if (props.aiAssessment) {
+    return `Deine KI hat sich seit ${formatWhen(props.aiAssessment.updatedAt)} nicht gemeldet – das ist die Rechnung von quaelmich.`
+  }
+  return 'Deine KI hat noch keine Einschätzung gesetzt – das ist die Rechnung von quaelmich.'
+})
+
+function formatWhen(instant: string) {
+  return new Date(instant).toLocaleString('de-DE', {
+    weekday: 'short',
+    day: 'numeric',
+    month: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+  })
+}
 
 /** "Zu wenig" vergleicht mit dem Plan, "zu viel" mit dem Schnitt der letzten Wochen */
 const loadReference = computed(() => {
@@ -127,7 +163,14 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
     </ul>
 
     <dl class="stats">
-      <div v-if="load" class="load" :class="load.status.toLowerCase()">
+      <div v-if="ai" class="load" :class="ai.status.toLowerCase()" data-test="ai-assessment">
+        <dt>Einschätzung deiner KI</dt>
+        <dd>
+          {{ loadLabels[ai.status].title }}
+          <small>Stand {{ formatWhen(ai.updatedAt) }}</small>
+        </dd>
+      </div>
+      <div v-else-if="load" class="load" :class="load.status.toLowerCase()">
         <dt>Letzte 7 Tage</dt>
         <dd>
           {{ loadLabels[load.status].title }}
@@ -141,7 +184,11 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
         <dd>{{ progress.streakWeeks }}<small> Wo.</small></dd>
       </div>
     </dl>
-    <p v-if="load" class="load-hint">{{ loadLabels[load.status].hint }}</p>
+    <p v-if="ai" class="load-hint">{{ ai.note || loadLabels[ai.status].hint }}</p>
+    <template v-else>
+      <p v-if="loadHint" class="load-hint">{{ loadHint }}</p>
+      <p v-if="aiFallbackNote" class="load-hint" data-test="ai-fallback">{{ aiFallbackNote }}</p>
+    </template>
   </div>
 </template>
 
