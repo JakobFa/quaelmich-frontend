@@ -64,6 +64,8 @@ export type PlannedWorkout = {
   workout: Workout
   actual: ActualRide | null
   adjustment: Adjustment | null
+  /** Im KI-Modus von der KI geplant oder geändert (bis der Nutzer sie selbst ändert) */
+  aiDecided?: boolean
   /** welche Anpassungen gerade möglich sind (leichter, härter, kürzer, länger, zurück zum Original) */
   options?: AdjustOptions
 }
