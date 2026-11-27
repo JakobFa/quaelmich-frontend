@@ -19,6 +19,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-27',
+    version: '0.9.60',
+    changes: [
+      {
+        kind: 'Neu',
+        title: 'Schlaf und Bewegung aus Apple Health',
+        text: 'Im Profil kannst du jetzt Apple Health anbinden: Ein Kurzbefehl auf deinem iPhone schickt jeden Abend Schlafdauer, Schritte, aktive Kalorien, Ruhepuls und HRV an quaelmich. Die letzten Tage siehst du direkt im Profil. Freiwillig, nur mit deiner Einwilligung, und mit einem Tipp wieder weg – samt allen Daten.',
+      },
+    ],
+  },
+  {
     date: '2026-11-24',
     version: '0.9.59',
     changes: [

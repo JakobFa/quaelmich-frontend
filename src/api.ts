@@ -351,6 +351,45 @@ export function calendarFeedUrl(token: string, scheme: 'https' | 'webcal' = 'htt
   return `${baseUrl.replace(/^https?:/, `${scheme}:`)}/calendar/${token}.ics`
 }
 
+/** Apple Health: Schlaf und Bewegung eines Tages, wie der Kurzbefehl sie geschickt hat */
+export type HealthDay = {
+  date: string
+  sleepMinutes: number | null
+  steps: number | null
+  activeEnergyKcal: number | null
+  restingHeartRate: number | null
+  hrvMs: number | null
+}
+
+export type HealthStatus = {
+  connected: boolean
+  lastChars: string | null
+  lastUploadAt: string | null
+  days: HealthDay[]
+}
+
+export function getHealthStatus() {
+  return request<HealthStatus>('/me/health')
+}
+
+/** Neuen Upload-Schlüssel erzeugen (ein alter wird ungültig); nur mit Einwilligung. Der Schlüssel kommt nur hier. */
+export function createHealthKey() {
+  return request<{ key: string }>('/me/health', {
+    method: 'POST',
+    body: JSON.stringify({ consent: true }),
+  })
+}
+
+/** Verbindung beenden – löscht auch alle Gesundheitsdaten */
+export async function endHealthConnection() {
+  await send('/me/health', { method: 'DELETE' })
+}
+
+/** Adresse, an die der Kurzbefehl schickt */
+export function healthUploadUrl() {
+  return `${baseUrl}/health-data`
+}
+
 /** KI-Anbindung (MCP): Angaben zur KI-App, die um Zugriff bittet (öffentlich) */
 export type OAuthClientInfo = {
   name: string

@@ -68,6 +68,13 @@ import { hasImpressum, legal } from '../legal'
           Ausschalten des KI-Modus beendet alle Verbindungen sofort.
         </li>
         <li>
+          <strong>Apple Health (nur wenn du es selbst einrichtest):</strong> Schickt dein
+          iPhone-Kurzbefehl Werte aus Apple Health, speichert quaelmich je Tag Schlafdauer, Schritte,
+          aktive Kalorien, Ruhepuls und Herzfrequenzvariabilität (HRV), dazu deinen Upload-Schlüssel
+          (nur als Hash) und den Zeitpunkt deiner Einwilligung. Diese Daten gehen nicht an Dritte und
+          nicht an KI-Apps.
+        </li>
+        <li>
           <strong>Feedback (freiwillig):</strong> dein Text, die Seite, auf der du ihn geschrieben
           hast, und der Zeitpunkt – verknüpft mit deinem Konto, damit eine Rückfrage möglich ist.
           Der Betreiber bekommt es per E-Mail und liest es, um quaelmich zu verbessern.
@@ -96,6 +103,11 @@ import { hasImpressum, legal } from '../legal'
         <li>
           Pulsdaten verarbeiten wir nur mit deiner Einwilligung – Art. 9 Abs. 2 lit. a DSGVO. Du
           kannst sie jederzeit widerrufen, indem du die Pulsangaben im Profil löschst.
+        </li>
+        <li>
+          Daten aus Apple Health verarbeiten wir nur mit deiner ausdrücklichen Einwilligung – Art. 9
+          Abs. 2 lit. a DSGVO. Du erteilst sie beim Erstellen des Upload-Schlüssels im Profil und
+          widerrufst sie dort mit „Beenden und Daten löschen“.
         </li>
         <li>
           Schutz vor Missbrauch (Begrenzung von Anmeldeversuchen) – Art. 6 Abs. 1 lit. f DSGVO
@@ -152,6 +164,10 @@ import { hasImpressum, legal } from '../legal'
           bei Strava), werden alle von Strava übernommenen Daten gelöscht und die Verbindung
           entfernt; du bekommst eine Bestätigung per E-Mail. Trennst du intervals.icu, wird dein
           Schlüssel gelöscht.
+        </li>
+        <li>
+          Apple Health: Beendest du die Verbindung im Profil, werden der Schlüssel und alle
+          Gesundheitsdaten sofort gelöscht.
         </li>
         <li>
           Löschst du dein Konto, ist alles weg; auch dafür bekommst du eine Bestätigung per E-Mail.
