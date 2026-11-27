@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.66',
+    version: '0.9.67',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Aufgeräumte Einstellungen',
+        text: 'Die Einstellungen sind jetzt kompakt: Jeder Bereich zeigt zugeklappt nur seinen Namen und eine Zeile, worum es geht. Antippen klappt ihn auf. Im Plan steht im KI-Modus statt des Hinweistexts nur noch ein kleines ✦ KI-Modus an – antippen erklärt, was das heißt.',
+      },
       {
         kind: 'Neu',
         title: 'Statuskarte im Plan',

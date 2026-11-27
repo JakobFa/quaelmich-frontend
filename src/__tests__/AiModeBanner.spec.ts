@@ -19,7 +19,10 @@ describe('AiModeBanner', () => {
     getAiMode.mockResolvedValue({ enabled: true })
     const wrapper = mount(AiModeBanner, { global: { stubs } })
     await flushPromises()
-    expect(wrapper.find('[data-test="ai-mode-banner"]').text()).toContain('KI-Modus an')
+    const banner = wrapper.find('[data-test="ai-mode-banner"]')
+    expect(banner.find('summary').text()).toContain('KI-Modus an')
+    // die Erklärung steht nur aufgeklappt da, nicht direkt auf der Startseite
+    expect(banner.attributes('open')).toBeUndefined()
   })
 
   it('zeigt nichts bei ausgeschaltetem KI-Modus', async () => {
