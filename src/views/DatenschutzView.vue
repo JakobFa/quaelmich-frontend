@@ -68,11 +68,12 @@ import { hasImpressum, legal } from '../legal'
           Ausschalten des KI-Modus beendet alle Verbindungen sofort.
         </li>
         <li>
-          <strong>Apple Health (nur wenn du es selbst einrichtest):</strong> Schickt dein
-          iPhone-Kurzbefehl Werte aus Apple Health, speichert quaelmich je Tag Schlafdauer, Schritte,
-          aktive Kalorien, Ruhepuls und Herzfrequenzvariabilität (HRV), dazu deinen Upload-Schlüssel
-          (nur als Hash) und den Zeitpunkt deiner Einwilligung. Diese Daten gehen nicht an Dritte und
-          nicht an KI-Apps.
+          <strong>Schlaf &amp; Erholung (nur wenn du es selbst einschaltest):</strong> Schaltest du im
+          Profil die Übernahme von intervals.icu ein, speichert quaelmich je Tag Schlafdauer,
+          Schlafbewertung, Ruhepuls, Herzfrequenzvariabilität (HRV) und Schritte – so, wie sie in
+          deinem intervals.icu-Konto liegen, egal aus welcher Quelle (z. B. Garmin, Oura, Whoop,
+          Apple Health) –, dazu den Zeitpunkt deiner Einwilligung. Diese Daten gehen nicht an Dritte
+          und nicht an KI-Apps.
         </li>
         <li>
           <strong>Feedback (freiwillig):</strong> dein Text, die Seite, auf der du ihn geschrieben
@@ -105,8 +106,8 @@ import { hasImpressum, legal } from '../legal'
           kannst sie jederzeit widerrufen, indem du die Pulsangaben im Profil löschst.
         </li>
         <li>
-          Daten aus Apple Health verarbeiten wir nur mit deiner ausdrücklichen Einwilligung – Art. 9
-          Abs. 2 lit. a DSGVO. Du erteilst sie beim Erstellen des Upload-Schlüssels im Profil und
+          Schlaf- und Erholungsdaten verarbeiten wir nur mit deiner ausdrücklichen Einwilligung –
+          Art. 9 Abs. 2 lit. a DSGVO. Du erteilst sie im Profil unter „Schlaf &amp; Erholung“ und
           widerrufst sie dort mit „Beenden und Daten löschen“.
         </li>
         <li>
@@ -166,8 +167,8 @@ import { hasImpressum, legal } from '../legal'
           Schlüssel gelöscht.
         </li>
         <li>
-          Apple Health: Beendest du die Verbindung im Profil, werden der Schlüssel und alle
-          Gesundheitsdaten sofort gelöscht.
+          Schlaf &amp; Erholung: Beendest du die Übernahme im Profil oder trennst du intervals.icu,
+          werden alle diese Daten bei quaelmich sofort gelöscht.
         </li>
         <li>
           Löschst du dein Konto, ist alles weg; auch dafür bekommst du eine Bestätigung per E-Mail.

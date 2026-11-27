@@ -8,7 +8,7 @@ import HomeScreenHint from '../components/HomeScreenHint.vue'
 import MoreEventsPanel from '../components/MoreEventsPanel.vue'
 import AiConnections from '../components/AiConnections.vue'
 import CalendarSubscription from '../components/CalendarSubscription.vue'
-import AppleHealthConnection from '../components/AppleHealthConnection.vue'
+import HealthPanel from '../components/HealthPanel.vue'
 import IntervalsConnection from '../components/IntervalsConnection.vue'
 import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
@@ -332,7 +332,7 @@ function hourOptions(current: number | undefined): number[] {
     </div>
     <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
     <IntervalsConnection />
-    <AppleHealthConnection />
+    <HealthPanel />
     <CalendarSubscription />
     <AiConnections />
 

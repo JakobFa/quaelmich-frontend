@@ -351,43 +351,48 @@ export function calendarFeedUrl(token: string, scheme: 'https' | 'webcal' = 'htt
   return `${baseUrl.replace(/^https?:/, `${scheme}:`)}/calendar/${token}.ics`
 }
 
-/** Apple Health: Schlaf und Bewegung eines Tages, wie der Kurzbefehl sie geschickt hat */
+/** Schlaf und Erholung eines Tages – von intervals.icu, egal aus welcher Quelle sie dort stammen */
 export type HealthDay = {
   date: string
   sleepMinutes: number | null
+  sleepScore: number | null
   steps: number | null
   activeEnergyKcal: number | null
   restingHeartRate: number | null
+  /** rMSSD (Garmin, Oura, Whoop …) */
   hrvMs: number | null
+  /** SDNN (Apple Watch) */
+  hrvSdnnMs: number | null
 }
 
 export type HealthStatus = {
-  connected: boolean
-  lastChars: string | null
-  lastUploadAt: string | null
+  intervalsConnected: boolean
+  importEnabled: boolean
+  consentAt: string | null
+  lastImportAt: string | null
   days: HealthDay[]
 }
 
+/** Status und die letzten zwei Wochen (holt vorher neu, wenn der letzte Abruf älter als eine Stunde ist) */
 export function getHealthStatus() {
   return request<HealthStatus>('/me/health')
 }
 
-/** Neuen Upload-Schlüssel erzeugen (ein alter wird ungültig); nur mit Einwilligung. Der Schlüssel kommt nur hier. */
-export function createHealthKey() {
-  return request<{ key: string }>('/me/health', {
+/** Übernahme von intervals.icu einschalten – nur mit Einwilligung; holt gleich die letzten Wochen */
+export function enableHealthImport() {
+  return request<HealthStatus>('/me/health/intervals', {
     method: 'POST',
     body: JSON.stringify({ consent: true }),
   })
 }
 
-/** Verbindung beenden – löscht auch alle Gesundheitsdaten */
-export async function endHealthConnection() {
-  await send('/me/health', { method: 'DELETE' })
+export function importHealthNow() {
+  return request<HealthStatus>('/me/health/intervals/import', { method: 'POST' })
 }
 
-/** Adresse, an die der Kurzbefehl schickt */
-export function healthUploadUrl() {
-  return `${baseUrl}/health-data`
+/** Ausschalten – löscht alle Gesundheitsdaten bei quaelmich */
+export async function disableHealthImport() {
+  await send('/me/health', { method: 'DELETE' })
 }
 
 /** KI-Anbindung (MCP): Angaben zur KI-App, die um Zugriff bittet (öffentlich) */
