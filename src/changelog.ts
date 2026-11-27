@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.67',
+    version: '0.9.68',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Verlauf in der Statuskarte',
+        text: 'Form, Schlaf und Erholung zeigen jetzt einen kleinen Verlauf der letzten 14 Tage. Das grüne Band ist dein eigener Normalbereich, der Punkt der heutige Wert – so siehst du auf einen Blick, ob du gerade drüber oder drunter liegst. Bei der Form zeigt die gestrichelte Linie die Null: darüber frisch, darunter müde.',
+      },
       {
         kind: 'Besser',
         title: 'Aufgeräumte Einstellungen',

@@ -99,3 +99,45 @@ describe('Statuskarte', () => {
     expect(streakTile({ ...progress, streakWeeks: 0 })).toBeNull()
   })
 })
+
+describe('Statuskarte: Mini-Verlauf', () => {
+  const nights = (minutes: number[]) =>
+    minutes.map((sleepMinutes, i) =>
+      health(`2026-10-${String(25 - i).padStart(2, '0')}`, { sleepMinutes }),
+    )
+
+  it('Schlaf: 14 Tage bis heute, ältester zuerst, mit Band aus den Tagen davor', () => {
+    const trend = sleepTile(nights([300, 420, 440, 400, 430, 410, 420]), TODAY)!.trend!
+    expect(trend.points).toHaveLength(14)
+    expect(trend.points[13]).toBe(300)
+    expect(trend.points.slice(0, 7)).toEqual([null, null, null, null, null, null, null])
+    const [low, high] = trend.band!
+    expect(low).toBeLessThan(420)
+    expect(high).toBeGreaterThan(420)
+    expect(300).toBeLessThan(low)
+    expect(trend.zeroLine).toBe(false)
+  })
+
+  it('Band erst ab genug Vergleichstagen, Verlauf erst ab drei Werten', () => {
+    expect(sleepTile(nights([300, 420, 440, 400]), TODAY)!.trend!.band).toBeNull()
+    expect(sleepTile(nights([300, 420]), TODAY)!.trend).toBeNull()
+  })
+
+  it('Erholung zeigt die HRV, sonst den Ruhepuls', () => {
+    const withHrv = [60, 55, 58, 57].map((hrvMs, i) =>
+      health(`2026-10-${25 - i}`, { hrvMs, restingHeartRate: 48 }),
+    )
+    expect(recoveryTile(withHrv, TODAY)!.trend!.points[13]).toBe(60)
+    const pulseOnly = [50, 48, 47].map((restingHeartRate, i) =>
+      health(`2026-10-${25 - i}`, { restingHeartRate }),
+    )
+    expect(recoveryTile(pulseOnly, TODAY)!.trend!.points[13]).toBe(50)
+  })
+
+  it('Form: Nulllinie statt Band', () => {
+    const trend = formTile(curve(-22))!.trend!
+    expect(trend.zeroLine).toBe(true)
+    expect(trend.band).toBeNull()
+    expect(trend.points[13]).toBe(-22)
+  })
+})

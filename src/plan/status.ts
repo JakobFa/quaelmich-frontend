@@ -6,13 +6,29 @@ import type { FormCurve, HealthDay, Progress } from '../api'
  */
 export type Tone = 'good' | 'warn' | 'bad' | null
 
+/**
+ * Mini-Verlauf der letzten Tage für eine Kachel: ein Wert je Tag (null = kein Wert),
+ * dazu der eigene Normalbereich als Band oder bei der Form die Nulllinie (darüber frisch, darunter müde).
+ */
+export type Trend = {
+  points: (number | null)[]
+  band: [number, number] | null
+  zeroLine: boolean
+}
+
 export type StatusTile = {
   key: string
   label: string
   value: string
   sub: string | null
   tone: Tone
+  trend?: Trend | null
 }
+
+/** So viele Tage zeigt der Mini-Verlauf */
+export const TREND_DAYS = 14
+/** So viele Vergleichstage braucht das Band des Normalbereichs */
+export const BAND_MIN_DAYS = 5
 
 /** So viele Tage Geschichte braucht die Formkurve, bevor ihr Wert etwas aussagt */
 export const FORM_MIN_DAYS = 14
@@ -26,8 +42,9 @@ export function formTile(curve: FormCurve | null): StatusTile | null {
   const history = curve.days.filter((day) => day.date < today.date).length
   const form = Math.round(today.form)
   const value = `${form > 0 ? '+' : ''}${form}`
+  const trend = formTrend(curve.days, today.date)
   if (history < FORM_MIN_DAYS) {
-    return { key: 'form', label: 'Form', value, sub: 'noch wenig Daten', tone: null }
+    return { key: 'form', label: 'Form', value, sub: 'noch wenig Daten', tone: null, trend }
   }
   const [word, tone]: [string, Tone] =
     form > 15
@@ -45,7 +62,17 @@ export function formTile(curve: FormCurve | null): StatusTile | null {
     value: `${value} · ${word}`,
     sub: `Fitness ${Math.round(today.fitness)} · Ermüdung ${Math.round(today.fatigue)}`,
     tone,
+    trend,
   }
+}
+
+function formTrend(days: FormCurve['days'], today: string): Trend | null {
+  const byDate = new Map(days.map((day) => [day.date, day.form]))
+  return trendOf(
+    lastDates(today).map((date) => byDate.get(date) ?? null),
+    null,
+    true,
+  )
 }
 
 export function ftpTile(
@@ -75,6 +102,46 @@ function hours(minutes: number) {
 
 function average(values: number[]) {
   return values.reduce((sum, value) => sum + value, 0) / values.length
+}
+
+function standardDeviation(values: number[]) {
+  const mean = average(values)
+  return Math.sqrt(average(values.map((value) => (value - mean) ** 2)))
+}
+
+/** Die letzten TREND_DAYS Tage bis heute, ältester zuerst */
+function lastDates(today: string) {
+  const dates = [today]
+  while (dates.length < TREND_DAYS) dates.unshift(dayBefore(dates[0]!))
+  return dates
+}
+
+/** Ohne mindestens drei Werte sagt ein Verlauf nichts */
+function trendOf(points: (number | null)[], band: [number, number] | null, zeroLine = false) {
+  return points.filter((point) => point != null).length >= 3 ? { points, band, zeroLine } : null
+}
+
+/**
+ * Verlauf eines Gesundheitswerts: dazu der Normalbereich aus den Tagen vor dem neuesten Wert
+ * (Schnitt ± Streuung, mindestens ± minSpread, damit ein sehr gleichmäßiger Verlauf kein Strich wird)
+ */
+function healthTrend(
+  days: HealthDay[],
+  today: string,
+  pick: (day: HealthDay) => number | null,
+  minSpread: number,
+): Trend | null {
+  const byDate = new Map(days.map((day) => [day.date, pick(day)]))
+  const points = lastDates(today).map((date) => byDate.get(date) ?? null)
+  const values = points.filter((point): point is number => point != null)
+  const before = values.slice(0, -1)
+  let band: [number, number] | null = null
+  if (before.length >= BAND_MIN_DAYS) {
+    const mean = average(before)
+    const spread = Math.max(standardDeviation(before), minSpread)
+    band = [mean - spread, mean + spread]
+  }
+  return trendOf(points, band)
 }
 
 function dayBefore(iso: string) {
@@ -109,7 +176,14 @@ export function sleepTile(days: HealthDay[], today: string): StatusTile | null {
   if (last.day.sleepScore != null) {
     sub = sub ? `${sub} · Score ${last.day.sleepScore}` : `Score ${last.day.sleepScore}`
   }
-  return { key: 'sleep', label: 'Schlaf', value: hours(last.value), sub, tone }
+  return {
+    key: 'sleep',
+    label: 'Schlaf',
+    value: hours(last.value),
+    sub,
+    tone,
+    trend: healthTrend(days, today, (day) => day.sleepMinutes, 20),
+  }
 }
 
 /** Ruhepuls und HRV im Vergleich zum eigenen Schnitt: erhöhter Puls oder niedrige HRV heißt "weniger erholt" */
@@ -148,6 +222,9 @@ export function recoveryTile(days: HealthDay[], today: string): StatusTile | nul
       value: `${pulse.value} Ruhepuls`,
       sub: parts.length ? parts.join(' · ') : null,
       tone,
+      trend: hrv
+        ? healthTrend(days, today, (day) => day.hrvMs ?? day.hrvSdnnMs, 3)
+        : healthTrend(days, today, (day) => day.restingHeartRate, 2),
     }
   }
   return {
@@ -156,6 +233,7 @@ export function recoveryTile(days: HealthDay[], today: string): StatusTile | nul
     value: `${Math.round(hrv!.value)} ms HRV`,
     sub: verdict,
     tone,
+    trend: healthTrend(days, today, (day) => day.hrvMs ?? day.hrvSdnnMs, 3),
   }
 }
 
