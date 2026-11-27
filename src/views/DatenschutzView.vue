@@ -61,7 +61,8 @@ import { hasImpressum, legal } from '../legal'
           in den Einstellungen ein und verbindest eine KI-App wie Claude, merkt sich quaelmich den
           Schalter und die Verbindung (Name der App, Zeitpunkt, Zugriffsrechte; die Zugangsschlüssel
           nur als Hash). Die KI liest deinen Trainingsplan, dein Profil und die Workout-Bibliothek –
-          keine gefahrenen Einheiten, keine Daten aus Strava und keine Freitexte – und kann, wenn du
+          keine gefahrenen Einheiten, keine Daten aus Strava und keine Freitexte, Schlaf und Erholung
+          nur, wenn du sie freigibst – und kann, wenn du
           es erlaubst, Plan und Profil ändern, auch dein sportliches Ziel. Änderungen bestätigst du
           in deiner KI-App, quaelmich führt sie dann aus. Die Verarbeitung dort richtet sich nach
           den Bedingungen deines KI-Anbieters (bei Claude: Anthropic). Deine KI kann außerdem eine
@@ -75,7 +76,8 @@ import { hasImpressum, legal } from '../legal'
           Schlafdauer, Schlafbewertung, Ruhepuls, Herzfrequenzvariabilität (HRV) und Schritte – so,
           wie sie in deinem intervals.icu-Konto liegen, egal aus welcher Quelle (z. B. Garmin, Oura,
           Whoop, Apple Health) –, dazu den Zeitpunkt deiner Einwilligung. Diese Daten gehen nicht an
-          Dritte und nicht an KI-Apps.
+          Dritte. Nur wenn du sie dort zusätzlich „für meine KI freigibst“, kann deine verbundene
+          KI-App sie im KI-Modus lesen; dann gelten dafür die Bedingungen deines KI-Anbieters.
         </li>
         <li>
           <strong>Feedback (freiwillig):</strong> dein Text, die Seite, auf der du ihn geschrieben
@@ -110,7 +112,8 @@ import { hasImpressum, legal } from '../legal'
         <li>
           Schlaf- und Erholungsdaten verarbeiten wir nur mit deiner ausdrücklichen Einwilligung –
           Art. 9 Abs. 2 lit. a DSGVO. Du erteilst sie in den Einstellungen unter „Schlaf &amp;
-          Erholung“ und widerrufst sie dort mit „Beenden und Daten löschen“.
+          Erholung“ und widerrufst sie dort mit „Beenden und Daten löschen“. Die Freigabe für deine
+          KI ist eine eigene Einwilligung, die du dort jederzeit zurücknimmst.
         </li>
         <li>
           Schutz vor Missbrauch (Begrenzung von Anmeldeversuchen) – Art. 6 Abs. 1 lit. f DSGVO

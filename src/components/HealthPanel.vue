@@ -6,6 +6,7 @@ import {
   enableHealthImport,
   getHealthStatus,
   importHealthNow,
+  shareHealthWithAi,
   type HealthDay,
   type HealthStatus,
 } from '../api'
@@ -53,6 +54,14 @@ function enable() {
 
 function refresh() {
   run(importHealthNow, 'intervals.icu hat gerade nicht geantwortet. Versuch es gleich nochmal.')
+}
+
+const aiConsent = ref(false)
+
+function shareWithAi(share: boolean) {
+  if (share && !aiConsent.value) return
+  run(() => shareHealthWithAi(share), 'Das hat nicht geklappt. Bitte versuch es nochmal.')
+  if (!share) aiConsent.value = false
 }
 
 function disable() {
@@ -121,7 +130,7 @@ function when(instant: string) {
           Ich willige ein, dass quaelmich meine Gesundheitsdaten (Schlaf, Ruhepuls, HRV, Schritte)
           von intervals.icu übernimmt, speichert und für mein Training auswertet. Ich kann das
           jederzeit hier widerrufen; dann werden alle diese Daten gelöscht. Sie gehen nicht an
-          Dritte und nicht an KI-Apps.
+          Dritte und nur an deine KI, wenn du das unten extra freigibst.
         </span>
       </label>
       <button type="button" class="button" :disabled="busy || !consent" @click="enable">
@@ -169,6 +178,36 @@ function when(instant: string) {
         * HRV als SDNN (Apple Watch) – nicht direkt mit rMSSD-Werten anderer Uhren vergleichbar.
       </p>
 
+      <div class="ai-share" data-test="health-ai">
+        <template v-if="status.sharedWithAi">
+          <p class="hint">
+            <strong>Für deine KI freigegeben:</strong> Im KI-Modus kann deine KI diese Werte lesen
+            und in ihre Einschätzung und Planung einbeziehen.
+          </p>
+          <button type="button" class="link" :disabled="busy" @click="shareWithAi(false)">
+            Freigabe für die KI zurücknehmen
+          </button>
+        </template>
+        <template v-else>
+          <label class="consent">
+            <input v-model="aiConsent" type="checkbox" data-test="health-ai-consent" />
+            <span>
+              Auch meiner KI zeigen: Ich willige ein, dass quaelmich diese Gesundheitsdaten im
+              KI-Modus an meine verbundene KI-App (zum Beispiel Claude) gibt. Dort gelten die
+              Bedingungen meines KI-Anbieters. Ich kann das jederzeit hier zurücknehmen.
+            </span>
+          </label>
+          <button
+            type="button"
+            class="button button-ghost"
+            :disabled="busy || !aiConsent"
+            @click="shareWithAi(true)"
+          >
+            Für meine KI freigeben
+          </button>
+        </template>
+      </div>
+
       <div class="actions">
         <button type="button" class="link" :disabled="busy" @click="refresh">Jetzt abrufen</button>
         <button type="button" class="link" :disabled="busy" @click="disable">
@@ -198,6 +237,12 @@ function when(instant: string) {
 
 .consent input {
   margin-top: 3px;
+}
+
+.ai-share {
+  margin: 4px 0 14px;
+  padding-top: 10px;
+  border-top: 1px solid var(--color-panel-raised);
 }
 
 .actions {
