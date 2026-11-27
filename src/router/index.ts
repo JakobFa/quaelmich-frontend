@@ -17,6 +17,7 @@ import WorkoutLibraryView from '../views/WorkoutLibraryView.vue'
 import WorkoutBuilderView from '../views/WorkoutBuilderView.vue'
 import WorkoutPlayerView from '../views/WorkoutPlayerView.vue'
 import ProfileView from '../views/ProfileView.vue'
+import SettingsView from '../views/SettingsView.vue'
 import StravaCallbackView from '../views/StravaCallbackView.vue'
 import OAuthAuthorizeView from '../views/OAuthAuthorizeView.vue'
 
@@ -27,7 +28,11 @@ const router = createRouter({
     { path: '/login', name: 'login', component: LoginView },
     { path: '/impressum', name: 'impressum', component: ImpressumView },
     { path: '/datenschutz', name: 'datenschutz', component: DatenschutzView },
-    { path: '/nutzungsbedingungen', name: 'nutzungsbedingungen', component: NutzungsbedingungenView },
+    {
+      path: '/nutzungsbedingungen',
+      name: 'nutzungsbedingungen',
+      component: NutzungsbedingungenView,
+    },
     { path: '/neuigkeiten', name: 'news', component: NewsView },
     { path: '/passwort-vergessen', name: 'forgot-password', component: ForgotPasswordView },
     { path: '/passwort-zuruecksetzen', name: 'reset-password', component: ResetPasswordView },
@@ -66,6 +71,12 @@ const router = createRouter({
     { path: '/workouts/:id', name: 'workout', component: WorkoutDetailView },
     { path: '/workouts/:id/fahren', name: 'workout-player', component: WorkoutPlayerView },
     { path: '/profil', name: 'profile', component: ProfileView, meta: { requiresAuth: true } },
+    {
+      path: '/einstellungen',
+      name: 'settings',
+      component: SettingsView,
+      meta: { requiresAuth: true },
+    },
     {
       path: '/oauth/authorize',
       name: 'oauth-authorize',

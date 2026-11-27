@@ -3,14 +3,7 @@ import { computed, onMounted, ref } from 'vue'
 import { useRoute } from 'vue-router'
 
 import { generatePlan, getMyAthlete, saveMyAthlete } from '../api'
-import AccountPanel from '../components/AccountPanel.vue'
-import HomeScreenHint from '../components/HomeScreenHint.vue'
 import MoreEventsPanel from '../components/MoreEventsPanel.vue'
-import AiConnections from '../components/AiConnections.vue'
-import CalendarSubscription from '../components/CalendarSubscription.vue'
-import HealthPanel from '../components/HealthPanel.vue'
-import IntervalsConnection from '../components/IntervalsConnection.vue'
-import StravaConnection from '../components/StravaConnection.vue'
 import LoadingNotice from '../components/LoadingNotice.vue'
 import { powerZones, type PowerZone } from '../plan/zones'
 import { formatRange, heartRateZonesOf, rangeFor } from '../plan/heartRate'
@@ -116,6 +109,11 @@ function hourOptions(current: number | undefined): number[] {
 <template>
   <section>
     <p class="kicker">// Profil</p>
+    <p class="intro">
+      Dein sportliches Profil: Werte, Zonen, Ziel und Zeit fürs Training. Verbindungen, KI und Konto
+      findest du unter
+      <RouterLink to="/einstellungen" class="intro-link">Einstellungen</RouterLink>.
+    </p>
     <p v-if="savedSection" class="saved" role="status">
       ✓ Gespeichert – der Plan ist ab heute angepasst, Erledigtes bleibt erhalten.
     </p>
@@ -264,15 +262,19 @@ function hourOptions(current: number | undefined): number[] {
                 v-model.number="availabilityDraft[day]"
                 class="hours-input"
               >
-                <option v-for="hours in hourOptions(availabilityDraft[day])" :key="hours" :value="hours">
+                <option
+                  v-for="hours in hourOptions(availabilityDraft[day])"
+                  :key="hours"
+                  :value="hours"
+                >
                   {{ formatNumber(hours) }}
                 </option>
               </select>
             </li>
           </ul>
           <p class="hint">
-            Stunden pro Tag (0 = frei). Der Plan wird ab heute angepasst – erledigte Workouts, Bewertungen und
-            gefahrene Einheiten bleiben.
+            Stunden pro Tag (0 = frei). Der Plan wird ab heute angepasst – erledigte Workouts,
+            Bewertungen und gefahrene Einheiten bleiben.
           </p>
           <p v-if="availabilityError" class="error" role="alert">
             Speichern hat nicht geklappt. Bitte versuch es nochmal.
@@ -314,44 +316,22 @@ function hourOptions(current: number | undefined): number[] {
         </template>
       </div>
     </template>
-
-    <h2 class="section-label">// Verbindungen</h2>
-    <div class="connections-intro">
-      <p>Beide sind freiwillig – mit ihnen wird quaelmich aber erst richtig gut:</p>
-      <ul>
-        <li>
-          <strong>Strava – fürs Feedback:</strong> holt deine gefahrenen Einheiten (auch von Apple
-          Watch &amp; Co.), hakt passende Workouts ab, rechnet die Belastung und passt den Plan an.
-        </li>
-        <li>
-          <strong>intervals.icu – für den Radcomputer:</strong> schickt deine geplanten Workouts
-          dorthin und weiter zu Wahoo oder Garmin. Ohne Strava holt quaelmich die gefahrenen
-          Einheiten auch von hier.
-        </li>
-      </ul>
-    </div>
-    <StravaConnection :athlete="athlete" @athlete-updated="athlete = $event" />
-    <IntervalsConnection />
-    <HealthPanel />
-    <CalendarSubscription />
-    <AiConnections />
-
-    <HomeScreenHint />
-
-    <h2 class="section-label">// Konto</h2>
-    <AccountPanel />
   </section>
 </template>
 
 <style scoped>
-.section-label {
-  margin: 40px 0 12px;
-  font-family: var(--font-mono);
-  font-size: 0.8rem;
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
+.intro {
+  margin: 0 0 16px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+
+.intro-link {
   color: var(--color-lilac);
+}
+
+.intro-link:hover {
+  color: var(--color-hot);
 }
 
 .panel {
@@ -528,27 +508,6 @@ form .week li {
   font-family: var(--font-mono);
   font-size: 0.8rem;
   color: var(--color-lilac);
-}
-
-.connections-intro {
-  margin: 0 0 16px;
-  font-size: 0.9rem;
-  color: var(--color-text-muted);
-}
-
-.connections-intro p {
-  margin: 0 0 6px;
-}
-
-.connections-intro ul {
-  display: grid;
-  gap: 6px;
-  margin: 0;
-  padding-left: 18px;
-}
-
-.connections-intro strong {
-  color: var(--color-text);
 }
 
 .goal-title {

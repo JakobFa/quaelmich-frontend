@@ -114,7 +114,7 @@ describe('OAuthAuthorizeView', () => {
     expect(wrapper.findAll('button').some((b) => b.text() === 'Erlauben')).toBe(false)
   })
 
-  it('erlaubt nichts, solange der KI-Modus aus ist, und führt zum Profil', async () => {
+  it('erlaubt nichts, solange der KI-Modus aus ist, und führt zu den Einstellungen', async () => {
     getOAuthClient.mockResolvedValue({ name: 'Claude', redirectUriRegistered: true, redirectHost: 'claude.ai' })
     getAiMode.mockResolvedValue({ enabled: false })
     const wrapper = mount(OAuthAuthorizeView, { global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } } })

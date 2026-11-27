@@ -18,8 +18,8 @@ onMounted(async () => {
 
 <template>
   <p v-if="enabled" class="panel hint" role="status" data-test="ai-mode-banner">
-    <strong>KI-Modus an:</strong> Dein Plan passt sich nicht mehr von selbst an deine Fahrten an. Änderungen kommen von
-    dir oder deiner KI.
-    <RouterLink to="/profil">Im Profil ausschalten</RouterLink>
+    <strong>KI-Modus an:</strong> Dein Plan passt sich nicht mehr von selbst an deine Fahrten an.
+    Änderungen kommen von dir oder deiner KI.
+    <RouterLink to="/einstellungen">In den Einstellungen ausschalten</RouterLink>
   </p>
 </template>

@@ -21,14 +21,15 @@ const params = computed(() => ({
 
 const scopeLabels: Record<string, string> = {
   'plan:read': 'Deinen Trainingsplan lesen',
-  'plan:write': 'Deinen Plan und dein Profil ändern, auch dein sportliches Ziel (die KI-App fragt dich vorher)',
+  'plan:write':
+    'Deinen Plan und dein Profil ändern, auch dein sportliches Ziel (die KI-App fragt dich vorher)',
 }
 
 const scopes = computed(() => params.value.scope.split(/\s+/).filter(Boolean))
 const knownScopes = computed(() => scopes.value.every((scope) => scope in scopeLabels))
 
 const client = ref<OAuthClientInfo | null>(null)
-/** KI-Modus im Profil an? Ohne ihn gibt es keine Erlaubnis */
+/** KI-Modus in den Einstellungen an? Ohne ihn gibt es keine Erlaubnis */
 const aiMode = ref(true)
 const loading = ref(true)
 const busy = ref(false)
@@ -87,11 +88,11 @@ function deny() {
 
     <template v-else-if="valid && client && !aiMode">
       <p class="lead" data-test="ai-mode-off">
-        Der KI-Modus ist noch aus. Schalte ihn im Profil ein, dann kannst du
+        Der KI-Modus ist noch aus. Schalte ihn in den Einstellungen ein, dann kannst du
         <strong>{{ client.name }}</strong> verbinden.
       </p>
       <div class="actions">
-        <RouterLink to="/profil" class="button">Zum Profil</RouterLink>
+        <RouterLink to="/einstellungen" class="button">Zu den Einstellungen</RouterLink>
         <button type="button" class="button button-ghost" @click="deny">Ablehnen</button>
       </div>
     </template>
@@ -109,7 +110,7 @@ function deny() {
         >. Die KI sieht nur deinen Plan, dein Profil und die Workout-Bibliothek, keine gefahrenen
         Fahrten, keine Strava-Daten und keine Freitexte. Wenn die KI Fahrten braucht, gibst du sie
         ihr selbst, zum Beispiel über den Strava-Konnektor in Claude. Du kannst die Verbindung
-        jederzeit im Profil beenden.
+        jederzeit in den Einstellungen beenden.
       </p>
       <div class="actions">
         <button type="button" class="button" :disabled="busy" @click="allow">Erlauben</button>

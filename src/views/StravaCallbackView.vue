@@ -24,7 +24,7 @@ onMounted(async () => {
   }
   if (!expectedState || param('state') !== expectedState) {
     errorMessage.value =
-      'Die Anmeldung bei Strava ist abgelaufen. Bitte starte sie nochmal im Profil.'
+      'Die Anmeldung bei Strava ist abgelaufen. Bitte starte sie nochmal in den Einstellungen.'
     return
   }
   if (!param('scope').includes('activity:read')) {
@@ -34,7 +34,7 @@ onMounted(async () => {
   }
   try {
     await connectStrava(param('code'), param('scope'), purpose)
-    router.replace({ name: 'profile' })
+    router.replace({ name: 'settings' })
   } catch (error) {
     errorMessage.value =
       error instanceof ApiError && error.status === 422
@@ -50,7 +50,9 @@ onMounted(async () => {
     <LoadingNotice v-if="!errorMessage" label="Verbinde mit Strava …" />
     <div v-else class="panel" role="alert">
       <p class="error">{{ errorMessage }}</p>
-      <RouterLink to="/profil" class="button button-ghost">Zurück zum Profil</RouterLink>
+      <RouterLink to="/einstellungen" class="button button-ghost"
+        >Zurück zu den Einstellungen</RouterLink
+      >
     </div>
   </section>
 </template>
