@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.68',
+    version: '0.9.69',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Schlaf & Erholung: Verlauf bis 12 Monate zurück',
+        text: 'quaelmich holt deine Werte aus intervals.icu jetzt bis zu einem Jahr zurück, nicht nur die letzten vier Wochen. Hast du die Übernahme schon an, tippe in den Einstellungen einmal auf „Jetzt abrufen“.',
+      },
       {
         kind: 'Neu',
         title: 'Deine KI setzt die Wochenart',
