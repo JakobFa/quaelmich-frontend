@@ -586,10 +586,23 @@ onMounted(async () => {
                   ? Rückmeldung fehlt
                 </span>
                 {{ workoutTypeLabels[planned.workout.type] }}
+                <span
+                  v-if="planned.aiDecided"
+                  class="ai-mark"
+                  title="Von deiner KI geplant"
+                  aria-label="Von deiner KI geplant"
+                  data-test="ai-mark"
+                  >✦ KI</span
+                >
               </span>
               <h3 class="session-title">{{ planned.workout.title }}</h3>
               <p v-if="planned.adjustment" class="adjusted">
-                ↻ angepasst – statt {{ planned.adjustment.originalTitle }}
+                <template v-if="planned.aiDecided"
+                  >statt {{ planned.adjustment.originalTitle }}</template
+                >
+                <template v-else
+                  >↻ angepasst – statt {{ planned.adjustment.originalTitle }}</template
+                >
               </p>
             </div>
             <div class="session-duration">
@@ -643,7 +656,6 @@ onMounted(async () => {
             <span v-else class="source-tag">intervals.icu</span>
             <StoryOverlayButton v-if="overlayOf(ride)" :data="overlayOf(ride)!" />
           </div>
-
         </li>
       </ol>
     </template>
@@ -1107,6 +1119,18 @@ onMounted(async () => {
   margin: 2px 0 0;
   font-family: var(--font-mono);
   font-weight: 600;
+}
+
+.ai-mark {
+  margin-left: 6px;
+  padding: 0 5px;
+  border: 1px solid var(--color-lilac);
+  color: var(--color-lilac);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  vertical-align: 1px;
 }
 
 .adjusted {

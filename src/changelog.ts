@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-27',
-    version: '0.9.63',
+    version: '0.9.64',
     changes: [
+      {
+        kind: 'Neu',
+        title: 'KI-Zeichen im Plan',
+        text: 'Einheiten, die deine KI im KI-Modus geplant oder geändert hat, tragen jetzt ein kleines ✦ KI – statt überall „angepasst“. Änderst du eine Einheit selbst in der App, ist sie wieder deine Entscheidung und das Zeichen verschwindet.',
+      },
       {
         kind: 'Neu',
         title: 'Einschätzung von deiner KI',

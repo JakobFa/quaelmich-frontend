@@ -91,3 +91,30 @@ describe('PlannedWorkoutView: ab diesem Tag wieder gesund', () => {
     expect(wrapper.find('[data-test="healthy-since"]').exists()).toBe(false)
   })
 })
+
+describe('PlannedWorkoutView: KI-Zeichen', () => {
+  it('zeigt, dass deine KI die Einheit geplant hat', async () => {
+    getMyAthlete.mockResolvedValue(null)
+    getPlannedWorkout.mockReset()
+    getPlannedWorkout.mockResolvedValue(
+      sickWorkout(daysAgo(-2), { skipReason: null, aiDecided: true }),
+    )
+    const wrapper = mount(PlannedWorkoutView, {
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="ai-decided"]').text()).toContain('Von deiner KI geplant')
+  })
+
+  it('zeigt es nicht für eigene Einheiten', async () => {
+    getPlannedWorkout.mockReset()
+    getPlannedWorkout.mockResolvedValue(sickWorkout(daysAgo(-2), { skipReason: null }))
+    const wrapper = mount(PlannedWorkoutView, {
+      global: { stubs: { RouterLink: { template: '<a><slot /></a>' } } },
+    })
+    await flushPromises()
+
+    expect(wrapper.find('[data-test="ai-decided"]').exists()).toBe(false)
+  })
+})

@@ -375,8 +375,8 @@ function formatDate(iso: string) {
             Ab diesem Tag war ich wieder gesund
           </button>
           <p class="hint">
-            Dieser Tag und die folgenden Krankheitstage werden wieder normale Trainingstage. Die Tage
-            davor bleiben als krank markiert.
+            Dieser Tag und die folgenden Krankheitstage werden wieder normale Trainingstage. Die
+            Tage davor bleiben als krank markiert.
           </p>
           <p v-if="healthyError" class="error" role="alert">
             Das hat nicht geklappt. Bitte versuch es nochmal.
@@ -446,9 +446,18 @@ function formatDate(iso: string) {
       </div>
 
       <div v-if="planned.adjustment" class="panel adjustment" role="note">
-        <p class="adjustment-title">↻ Statt {{ planned.adjustment.originalTitle }}</p>
-        <p>{{ planned.adjustment.note }}</p>
+        <p class="adjustment-title">
+          <template v-if="planned.aiDecided">✦ Von deiner KI · </template>↻ Statt
+          {{ planned.adjustment.originalTitle }}
+        </p>
+        <p v-if="!planned.aiDecided">{{ planned.adjustment.note }}</p>
+        <p v-else>
+          Diese Einheit hat deine KI geplant. Änderst du sie hier, ist es deine Entscheidung.
+        </p>
       </div>
+      <p v-else-if="planned.aiDecided" class="ai-decided" role="note" data-test="ai-decided">
+        ✦ Von deiner KI geplant
+      </p>
 
       <dl class="facts">
         <div>
@@ -947,6 +956,16 @@ function formatDate(iso: string) {
 }
 
 /* ---------- Angepasst ---------- */
+
+.ai-decided {
+  margin: 0 0 12px;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--color-lilac);
+}
 
 .adjustment {
   border-left-color: var(--color-lilac);
