@@ -6,6 +6,9 @@
   --color-lilac-dim: #9d82b8;
   --color-plum: #561a44;
   --color-hot: #ff5fb0;
+  /* Signal-Orange: nur für das, was jetzt zu tun ist – Hauptknopf und „heute“ */
+  --color-signal: #ff5a1f;
+  --color-signal-hover: #ff7a47;
   --color-text: #f2edf6;
   --color-text-muted: #98a29e;
 
@@ -76,9 +79,9 @@ body {
 .button {
   display: inline-block;
   padding: 12px 22px;
-  border: 2px solid var(--color-lilac);
-  background: var(--color-lilac);
-  color: var(--color-plum);
+  border: 2px solid var(--color-signal);
+  background: var(--color-signal);
+  color: var(--color-ink);
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 900;
@@ -90,8 +93,8 @@ body {
 }
 
 .button:hover {
-  background: var(--color-hot);
-  border-color: var(--color-hot);
+  background: var(--color-signal-hover);
+  border-color: var(--color-signal-hover);
 }
 
 .button:disabled {
@@ -101,6 +104,7 @@ body {
 
 .button-ghost {
   background: transparent;
+  border-color: var(--color-lilac);
   color: var(--color-lilac);
 }
 

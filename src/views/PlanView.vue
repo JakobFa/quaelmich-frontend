@@ -879,7 +879,7 @@ onMounted(async () => {
 }
 
 .day.today {
-  border-left-color: var(--color-hot);
+  border-left-color: var(--color-signal);
 }
 
 .day-label {
@@ -895,7 +895,7 @@ onMounted(async () => {
 }
 
 .today .weekday {
-  color: var(--color-hot);
+  color: var(--color-signal);
 }
 
 .date {

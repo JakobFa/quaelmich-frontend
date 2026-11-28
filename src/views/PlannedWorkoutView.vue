@@ -672,7 +672,7 @@ function formatDate(iso: string) {
       </div>
 
       <div class="download">
-        <button type="button" class="button" :disabled="downloading" @click="download">
+        <button type="button" class="button button-ghost" :disabled="downloading" @click="download">
           {{ downloading ? 'Lädt …' : '.fit herunterladen' }}
         </button>
         <p v-if="downloadError" class="error" role="alert">Download hat nicht geklappt.</p>

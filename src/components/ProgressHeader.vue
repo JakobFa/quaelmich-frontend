@@ -286,7 +286,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
   bottom: -4px;
   width: 3px;
   transform: translateX(-50%);
-  background: var(--color-text);
+  background: var(--color-signal);
   pointer-events: none;
 }
 
@@ -299,7 +299,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
-  color: var(--color-text);
+  color: var(--color-signal);
   pointer-events: none;
   white-space: nowrap;
 }
