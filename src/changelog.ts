@@ -20,8 +20,13 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-28',
-    version: '0.9.71',
+    version: '0.9.72',
     changes: [
+      {
+        kind: 'Besser',
+        title: 'Klare Ampel in der Statuskarte',
+        text: 'Grün heißt gut, Gelb heißt aufpassen, Rot heißt zu viel oder zu wenig – Rot ist jetzt ein echtes Rot und nicht mehr mit dem Orange der Hervorhebungen zu verwechseln. Auch das Logo trägt jetzt das neue Orchideen-Pink.',
+      },
       {
         kind: 'Besser',
         title: 'Neue Farben: Orchidee, Violett und Orange',

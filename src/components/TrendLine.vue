@@ -106,7 +106,7 @@ const lastPoint = computed(() => {
 }
 
 .band {
-  fill: #35b86b;
+  fill: var(--color-good);
   opacity: 0.3;
 }
 
@@ -131,14 +131,14 @@ const lastPoint = computed(() => {
 }
 
 .good .dot {
-  stroke: #35b86b;
+  stroke: var(--color-good);
 }
 
 .warn .dot {
-  stroke: #f4c430;
+  stroke: var(--color-warn);
 }
 
 .bad .dot {
-  stroke: var(--color-hot);
+  stroke: var(--color-bad);
 }
 </style>

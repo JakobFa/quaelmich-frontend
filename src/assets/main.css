@@ -10,6 +10,10 @@
   --color-hot: #ff5a1f;
   --color-signal: #ff5a1f;
   --color-signal-hover: #ff7a47;
+  /* Ampel der Statuskarte – eigene Farben, damit sie nicht mit den Orange-Hervorhebungen verwechselt wird */
+  --color-good: #35b86b;
+  --color-warn: #f4c430;
+  --color-bad: #ff3d5e;
   --color-text: #f2edf6;
   --color-text-muted: #98a29e;
 
