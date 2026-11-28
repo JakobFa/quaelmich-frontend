@@ -314,8 +314,8 @@ function logout() {
 
 /* aktive Seite markiert der Router automatisch mit dieser Klasse */
 .nav a.router-link-active {
-  color: var(--color-lilac);
-  border-bottom-color: var(--color-lilac);
+  color: var(--color-signal);
+  border-bottom-color: var(--color-signal);
 }
 
 .content {

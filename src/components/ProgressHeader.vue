@@ -267,7 +267,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
 }
 
 .taper {
-  background: #f6c1df;
+  background: #f3d3ee;
 }
 
 .recovery {
@@ -339,7 +339,7 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
   background: var(--color-hot);
 }
 .legend .taper::before {
-  background: #f6c1df;
+  background: #f3d3ee;
 }
 .legend .recovery::before {
   background: var(--color-text-muted);

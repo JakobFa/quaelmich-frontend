@@ -2,11 +2,12 @@
   --color-ink: #141615;
   --color-panel: #1f2422;
   --color-panel-raised: #2a312e;
-  --color-lilac: #dcbaf7;
-  --color-lilac-dim: #9d82b8;
-  --color-plum: #561a44;
-  --color-hot: #ff5fb0;
-  /* Signal-Orange: nur für das, was jetzt zu tun ist – Hauptknopf und „heute“ */
+  /* Drei Farben, alle drei tragen: Orchideen-Pink für Text und Linien, tiefes Violett für Flächen,
+     Signal-Orange für alles, was hervorsticht (Zahlen, Kicker, aktiv, heute, Hauptknopf, Hinweise) */
+  --color-lilac: #e7b0de;
+  --color-lilac-dim: #a8789f;
+  --color-plum: #400849;
+  --color-hot: #ff5a1f;
   --color-signal: #ff5a1f;
   --color-signal-hover: #ff7a47;
   --color-text: #f2edf6;
@@ -36,7 +37,7 @@ body {
   line-height: 1.45;
   background-color: var(--color-ink);
   /* Mesh wie auf den Trikot-Ärmeln */
-  background-image: radial-gradient(rgba(220, 186, 247, 0.07) 1px, transparent 1.4px);
+  background-image: radial-gradient(rgba(231, 176, 222, 0.07) 1px, transparent 1.4px);
   background-size: 7px 7px;
 }
 
@@ -49,7 +50,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
-  color: var(--color-lilac);
+  color: var(--color-signal);
 }
 
 .label {
