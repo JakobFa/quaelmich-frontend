@@ -19,6 +19,17 @@ export type Release = {
 
 export const changelog: Release[] = [
   {
+    date: '2026-11-28',
+    version: '0.9.70',
+    changes: [
+      {
+        kind: 'Besser',
+        title: 'Signal-Orange für das, was jetzt dran ist',
+        text: 'Der wichtigste Knopf auf einer Seite und der heutige Tag im Plan leuchten jetzt orange – so findest du sofort, was jetzt zu tun ist. Flieder und Pink bleiben für alles andere.',
+      },
+    ],
+  },
+  {
     date: '2026-11-27',
     version: '0.9.69',
     changes: [
