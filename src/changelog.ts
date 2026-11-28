@@ -20,12 +20,12 @@ export type Release = {
 export const changelog: Release[] = [
   {
     date: '2026-11-28',
-    version: '0.9.70',
+    version: '0.9.71',
     changes: [
       {
         kind: 'Besser',
-        title: 'Signal-Orange für das, was jetzt dran ist',
-        text: 'Der wichtigste Knopf auf einer Seite und der heutige Tag im Plan leuchten jetzt orange – so findest du sofort, was jetzt zu tun ist. Flieder und Pink bleiben für alles andere.',
+        title: 'Neue Farben: Orchidee, Violett und Orange',
+        text: 'quaelmich hat drei Farben, die alle mitspielen: Orchideen-Pink für Text und Linien, tiefes Violett für Flächen und Signal-Orange für alles, was heraussticht – Zahlen, Überschriften, der aktive Menüpunkt, der heutige Tag und der wichtigste Knopf.',
       },
     ],
   },

@@ -184,11 +184,11 @@ export function drawOverlay(
   ctx.fillStyle = 'rgba(20, 22, 21, 0.68)'
   ctx.fill()
   ctx.lineWidth = 4
-  ctx.strokeStyle = 'rgba(220, 186, 247, 0.85)'
+  ctx.strokeStyle = 'rgba(231, 176, 222, 0.85)'
   ctx.stroke()
 
   // pinker Streifen links, wie ein Startnummer-Band
-  ctx.fillStyle = '#ff5fb0'
+  ctx.fillStyle = '#ff5a1f'
   ctx.fillRect(left, top + 48, 14, height - 96)
 
   ctx.save()
@@ -198,7 +198,7 @@ export function drawOverlay(
   ctx.textBaseline = 'alphabetic'
 
   const inner = left + 60
-  ctx.fillStyle = '#dcbaf7'
+  ctx.fillStyle = '#e7b0de'
   ctx.font = '500 34px "Space Mono", monospace'
   ctx.fillText(data.date, inner, top + 80)
 
@@ -214,7 +214,7 @@ export function drawOverlay(
 
   data.stats.forEach((stat, index) => {
     const y = top + header + profile + index * rowHeight
-    ctx.fillStyle = '#dcbaf7'
+    ctx.fillStyle = '#e7b0de'
     ctx.font = '500 32px "Space Mono", monospace'
     ctx.fillText(stat.label.toUpperCase(), inner, y + 30)
     ctx.fillStyle = '#ffffff'
@@ -224,7 +224,7 @@ export function drawOverlay(
 
   const base = top + height
   if (data.footer) {
-    ctx.fillStyle = '#ff5fb0'
+    ctx.fillStyle = '#ff5a1f'
     ctx.font = '500 32px "Space Mono", monospace'
     ctx.fillText(fit(ctx, data.footer.toUpperCase(), width - 120), inner, base - 36)
   }
@@ -300,7 +300,7 @@ function drawRide(ctx: CanvasRenderingContext2D, ride: RideChart, x: number, y: 
     ctx.lineTo(from, level(band.lowStart))
     ctx.closePath()
     ctx.globalAlpha = 0.55
-    ctx.fillStyle = band.percent === null ? '#dcbaf7' : powerZoneFor(band.percent).color
+    ctx.fillStyle = band.percent === null ? '#e7b0de' : powerZoneFor(band.percent).color
     ctx.fill()
   }
   ctx.globalAlpha = 1
