@@ -386,20 +386,20 @@ const legend = computed(() => [...new Set(segments.value.map((segment) => segmen
 }
 
 .tile.good .tile-value,
-.load.on_track .tile-value {
-  color: #35b86b;
+.load.on_track .tile-value,
+.streak.good .tile-value {
+  color: var(--color-good);
 }
 
 .tile.warn .tile-value,
 .load.too_little .tile-value,
 .load.a_bit_much .tile-value {
-  color: #f4c430;
+  color: var(--color-warn);
 }
 
 .tile.bad .tile-value,
-.load.too_much .tile-value,
-.streak.good .tile-value {
-  color: var(--color-hot);
+.load.too_much .tile-value {
+  color: var(--color-bad);
 }
 
 .ai-note {
